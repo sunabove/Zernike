@@ -16,7 +16,8 @@ import numpy as np
 import math
 from random import random
 from math import factorial, perm
-from time import time, sleep
+import time
+#from time import time, sleep
 
 from Profiler import *
 
@@ -28,14 +29,25 @@ class Zernike :
         self.create_table()
     pass
 
+    def __del__(self) :
+        self.conn.commit()
+
+        log.info( "Commit" )
+    pass
+
     def create_table(self):
         conn = self.conn
         cursor = self.cursor
 
+        log.info( "Create tables ...\n " )
+
         dropAnyway = True
         if dropAnyway :
-            sql = "DROP TABLE IF EXISTS polynomial"
-            cursor.execute( sql )
+            tables = [ "fun", "polynomial", ]
+            for table in tables :
+                sql = f"DROP TABLE IF EXISTS {table}"
+                cursor.execute( sql )
+            pass
         pass
 
         sql = """
@@ -47,8 +59,20 @@ class Zernike :
             )
         """
         cursor.execute( sql )
+
+        sql = """
+                   CREATE TABLE IF NOT EXISTS fun
+                   ( n INTEGER, m INTEGER, x DOUBLE, y DOBULE 
+                     , value DOUBLE
+                     , calc_time DOUBLE NOT NULL DEFAULT 0
+                     , PRIMARY KEY ( n, m, x, y )
+                   )
+               """
+        cursor.execute(sql)
+
     pass # -- create_table
 
+    @profile
     def calc_polynomial(self, n, m, rho):
         # -------------------------------------------------------------------------
         #   n = the order of Zernike polynomial
@@ -77,28 +101,7 @@ class Zernike :
         return R
     pass # -- polynomial
 
-    def _insert(self, n, m, rho ):
-        conn = self.conn
-        cursor = self.cursor
-
-        then = time()
-        R = self.calc_polynomial(n, m, rho)
-        now = time()
-
-        calc_time = now - then
-
-        sql = '''
-            INSERT INTO polynomial( n, m, rho, value, calc_time )
-            VALUES ( ?, ?, ?, ?, ? )
-        '''
-
-        cursor.execute( sql, [ n, m, rho, R, calc_time])
-
-        conn.commit()
-
-        return R
-    pass #-- insert
-
+    @profile
     def select_polynomial(self, n, m, rho):
         R = 1.0
 
@@ -115,7 +118,17 @@ class Zernike :
             cnt = len( rows )
 
             if cnt < 1 :
-                R = self._insert( n, m, rho )
+                then = time.time()
+                R = self.calc_polynomial(n, m, rho)
+                now = time.time()
+
+                calc_time = now - then
+
+                sql = '''
+                    INSERT INTO polynomial( n, m, rho, value, calc_time )
+                    VALUES ( ?, ?, ?, ?, ? )
+                    '''
+                cursor.execute(sql, [n, m, rho, R, calc_time])
             else :
                 for row in rows:
                     R = row[ 0 ]
@@ -126,6 +139,7 @@ class Zernike :
         return R
     pass # -- select
 
+    @profile
     def zernike_function(self, n, m, x, y ):
         rho = math.sqrt( x*x + y*y )
 
@@ -159,6 +173,8 @@ if __name__ == '__main__':
             db.zernike_function(n, m, x, y )
         pass
     pass
+
+    print_profile()
 
     log.info( "\nGood bye!" )
 pass
