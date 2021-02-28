@@ -1,0 +1,8 @@
+tensorflow
+matplotlib
+scikit-image
+shapely
+imutils
+numpy
+opencv-python
+scipy
