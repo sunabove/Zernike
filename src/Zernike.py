@@ -5,7 +5,7 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 import logging as log
-log.basicConfig( format='%(asctime)s, %(levelname)-8s [%(filename)s:%(lineno)04d] %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=log.INFO )
+log.basicConfig( format='%(levelname)s %(filename)s:%(lineno)04d %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=log.INFO )
 
 from os.path import join
 from glob import glob
@@ -13,9 +13,9 @@ from glob import glob
 import sqlite3
 
 import numpy as np
-import math
+import math, cmath
 from random import random
-from math import factorial, perm
+from math import factorial, perm, atan2
 #import time
 from time import time, sleep
 
@@ -36,7 +36,6 @@ class Zernike :
     pass
 
     def create_table(self):
-        conn = self.conn
         cursor = self.cursor
 
         log.info( "Create tables ...\n " )
@@ -143,18 +142,22 @@ class Zernike :
     def zernike_function(self, n, m, x, y ):
         rho = math.sqrt( x*x + y*y )
 
-        R = self.select_polynomial(n, m, rho)
-
-        log.info(f"R(n={n}, m={m}, rho={rho:.4}, x={x:.4f}, y={y:.4f}) = {R}")
-
         V = 1.0
 
-        if rho != 0 :
-            e = x/rho + y/rho*1j
+        if rho == 0 : 
+            V = 0 
+        elif rho != 0 :
+            R = self.select_polynomial(n, m, rho)
+
+            log.info(f"R(n={n}, m={m}, rho={rho:.4}, x={x:.4f}, y={y:.4f}) = {R}")
+        
+            theta = atan2(y, x)
+            e = cmath.exp( 1j*m*theta )
+            
             V = R*e
-        else :
-            V = 0
         pass
+    
+        log.info(f"V(n={n}, m={m}, rho={rho:.4}, x={x:.4f}, y={y:.4f}) = {V}")
 
         return V
     pass # -- zernike_function
