@@ -16,8 +16,8 @@ import numpy as np
 import math
 from random import random
 from math import factorial, perm
-import time
-#from time import time, sleep
+#import time
+from time import time, sleep
 
 from Profiler import *
 
@@ -118,9 +118,9 @@ class Zernike :
             cnt = len( rows )
 
             if cnt < 1 :
-                then = time.time()
+                then = time()
                 R = self.calc_polynomial(n, m, rho)
-                now = time.time()
+                now = time()
 
                 calc_time = now - then
 

@@ -13,7 +13,7 @@ log.basicConfig( format='%(asctime)s, %(levelname)-8s [%(filename)s:%(lineno)04d
 # your_function( ... )
 # print_prof_data()
 
-import time
+from time import time
 from functools import wraps, cmp_to_key
 
 PROF_DATA = {}
@@ -47,11 +47,11 @@ pass # -- Profiler
 def profile(fn):
     @wraps(fn)
     def with_profiling(*args, **kwargs):
-        start_time = time.time()
+        start_time = time()
 
         ret = fn(*args, **kwargs)
 
-        elapsed_time = time.time() - start_time
+        elapsed_time = time() - start_time
 
         fn_name = fn.__name__
 
