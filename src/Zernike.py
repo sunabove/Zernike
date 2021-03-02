@@ -61,10 +61,10 @@ class Zernike :
 
         sql = """
                    CREATE TABLE IF NOT EXISTS fun
-                   ( n INTEGER, m INTEGER, x DOUBLE, y DOBULE 
+                   ( n INTEGER, m INTEGER,  rho DOUBLE, theta DOUBLE
                      , value DOUBLE
                      , calc_time DOUBLE NOT NULL DEFAULT 0
-                     , PRIMARY KEY ( n, m, x, y )
+                     , PRIMARY KEY ( n, m, rho, theta )
                    )
                """
         cursor.execute(sql)
@@ -142,27 +142,30 @@ class Zernike :
     def zernike_function(self, n, m, x, y ):
         rho = math.sqrt( x*x + y*y )
 
-        V = 1.0
+        v = 1.0
+        theta = 0
 
         if rho == 0 : 
-            V = 0 
+            v = 0 
         elif rho != 0 :
-            R = self.select_polynomial(n, m, rho)
+            r = self.select_polynomial(n, m, rho)
 
-            log.info(f"R(n={n}, m={m}, rho={rho:.4}, x={x:.4f}, y={y:.4f}) = {R}")
+            log.info(f"R(n={n}, m={m}, rho={rho:.4f}, x={x:.4f}, y={y:.4f}) = {r}")
         
             theta = atan2(y, x)
+            theta = theta % 360
+            
             e = cmath.exp( 1j*m*theta )
             
-            V = R*e
+            v = r*e
         pass
     
-        log.info(f"V(n={n}, m={m}, rho={rho:.4}, x={x:.4f}, y={y:.4f}) = {V}")
+        log.info(f"V(n={n}, m={m}, rho={rho:.4f}, theta={theta:.4f}, x={x:.4f}, y={y:.4f}) = {v}")
 
-        return V
+        return v
     pass # -- zernike_function
 
-pass
+pass # -- class Zernike
 
 if __name__ == '__main__':
     log.info( "Hello ...\n" )
