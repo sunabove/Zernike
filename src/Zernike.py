@@ -15,7 +15,7 @@ import sqlite3
 import numpy as np
 import math, cmath
 from random import random
-from math import factorial, perm, atan2
+from math import factorial, perm, atan2, pi
 #import time
 from time import time, sleep
 
@@ -50,7 +50,7 @@ class Zernike :
         pass
 
         sql = """
-            CREATE TABLE IF NOT EXISTS polynomial
+            CREATE TABLE IF NOT EXISTS zernike_polynomial
             ( n INTEGER, m INTEGER, rho DOUBLE
               , value DOUBLE
               , calc_time DOUBLE NOT NULL DEFAULT 0
@@ -60,9 +60,9 @@ class Zernike :
         cursor.execute( sql )
 
         sql = """
-                   CREATE TABLE IF NOT EXISTS fun
+                   CREATE TABLE IF NOT EXISTS zernike_function
                    ( n INTEGER, m INTEGER,  rho DOUBLE, theta DOUBLE
-                     , value DOUBLE
+                     , x DOUBLE, y DOUBLE
                      , calc_time DOUBLE NOT NULL DEFAULT 0
                      , PRIMARY KEY ( n, m, rho, theta )
                    )
@@ -110,7 +110,7 @@ class Zernike :
             cursor = self.cursor
 
             rows = cursor.execute(
-                "SELECT value FROM polynomial WHERE n = ? and m = ? and rho = ?",
+                "SELECT value FROM zernike_polynomial WHERE n = ? and m = ? and rho = ?",
                 [n, m, rho],
             ).fetchall()
 
@@ -124,7 +124,7 @@ class Zernike :
                 calc_time = now - then
 
                 sql = '''
-                    INSERT INTO polynomial( n, m, rho, value, calc_time )
+                    INSERT INTO zernike_polynomial( n, m, rho, value, calc_time )
                     VALUES ( ?, ?, ?, ?, ? )
                     '''
                 cursor.execute(sql, [n, m, rho, R, calc_time])
@@ -148,14 +148,14 @@ class Zernike :
         if rho == 0 : 
             v = 0 
         elif rho != 0 :
+            theta = atan2(y, x)
+            theta = (theta*m) % pi 
+            
             r = self.select_polynomial(n, m, rho)
 
             log.info(f"R(n={n}, m={m}, rho={rho:.4f}, x={x:.4f}, y={y:.4f}) = {r}")
-        
-            theta = atan2(y, x)
-            theta = theta % 360
             
-            e = cmath.exp( 1j*m*theta )
+            e = cmath.exp( 1j*theta )
             
             v = r*e
         pass
