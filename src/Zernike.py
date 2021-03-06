@@ -148,12 +148,12 @@ class Zernike :
         if rho == 0 : 
             v = 0 
         elif rho != 0 :
-            theta = atan2(y, x)
-            theta = (theta*m) % pi 
-            
             r = self.select_polynomial(n, m, rho)
 
             log.info(f"R(n={n}, m={m}, rho={rho:.4f}, x={x:.4f}, y={y:.4f}) = {r}")
+            
+            theta = atan2(y, x)
+            theta = (theta*m) % pi 
             
             e = cmath.exp( 1j*theta )
             
@@ -170,13 +170,15 @@ pass # -- class Zernike
 if __name__ == '__main__':
     log.info( "Hello ...\n" )
 
-    db = Zernike()
+    zernike = Zernike()
 
     for n in range( 10 ) :
         for m in range( n + 1 ) :
             x = random()
             y = random()
-            db.zernike_function(n, m, x, y )
+            if x*x + y*y <= 1 : 
+                zernike.zernike_function(n, m, x, y )
+            pass
         pass
     pass
 
