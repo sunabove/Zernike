@@ -169,6 +169,22 @@ pass # -- class Zernike
 
 if __name__ == '__main__':
     log.info( "Hello ...\n" )
+    
+    from skimage import data
+    from skimage import color
+    img = data.camera()
+    
+    import mahotas
+    img = mahotas.demos.load('lena')
+    
+    img = color.rgb2gray( img )
+    
+    import matplotlib.pyplot as plt
+    
+    print( f"image shape = {img.shape}" )
+    
+    plt.imshow( img , cmap='gray')
+    plt.show()
 
     zernike = Zernike()
 
@@ -176,6 +192,8 @@ if __name__ == '__main__':
         for m in range( n + 1 ) :
             x = random()
             y = random()
+            x = 1
+            y = 0
             if x*x + y*y <= 1 : 
                 zernike.zernike_function(n, m, x, y )
             pass
