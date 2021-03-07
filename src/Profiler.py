@@ -90,6 +90,10 @@ def print_profile_last( ) :
 pass
 
 def print_profile():
+    if not PROF_DATA :
+        return 
+    pass
+
     max_len = max( len(fn_name) for fn_name in PROF_DATA )
 
     profs = PROF_DATA.values()
