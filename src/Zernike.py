@@ -212,7 +212,7 @@ class Zernike :
         radius = max( h, w )/sqrt(2)
         log.info( f"Radius = {radius}" )
         
-        moments = np.empty([w*ns_count, h*ns_count]).astype(complex)
+        moments = np.zeros([w*ns_count, h*ns_count]).astype(complex)
         
         for y0, row in enumerate(img) :
             for x0, pixel in enumerate( row ) :
@@ -263,7 +263,7 @@ if __name__ == '__main__':
     Ts = [ 20, 40, 60, 80, 100, 120 ]
     Ks = [ 1, 3, 5, 7 ]
     
-    moment = zernike.zernike_moment(img, k=1)
+    moment = zernike.zernike_moment(img, 10, 10, k=1)
     
     print( f"zernike moment = {moment}" )
 
