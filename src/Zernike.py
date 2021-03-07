@@ -14,9 +14,7 @@ import sqlite3
 
 import numpy as np
 import math, cmath
-from random import random
-from math import factorial, perm, atan2, pi
-#import time
+from math import factorial, perm, atan2, pi, sqrt
 from time import time, sleep
 
 from Profiler import *
@@ -40,9 +38,9 @@ class Zernike :
 
         log.info( "Create tables ...\n " )
 
-        dropAnyway = True
+        dropAnyway = False 
         if dropAnyway :
-            tables = [ "fun", "polynomial", ]
+            tables = [ "zernike_function", "zernike_polynomial", ]
             for table in tables :
                 sql = f"DROP TABLE IF EXISTS {table}"
                 cursor.execute( sql )
@@ -56,16 +54,16 @@ class Zernike :
               , calc_time DOUBLE NOT NULL DEFAULT 0
               , PRIMARY KEY ( n, m, rho )
             )
-        """
+            """
         cursor.execute( sql )
 
         sql = """
-                   CREATE TABLE IF NOT EXISTS zernike_function
-                   ( n INTEGER, m INTEGER,  rho DOUBLE, theta DOUBLE
-                     , x DOUBLE, y DOUBLE
-                     , calc_time DOUBLE NOT NULL DEFAULT 0
-                     , PRIMARY KEY ( n, m, rho, theta )
-                   )
+               CREATE TABLE IF NOT EXISTS zernike_function
+               ( n INTEGER, m INTEGER,  rho DOUBLE, theta DOUBLE
+                 , vx DOUBLE, vy DOUBLE
+                 , calc_time DOUBLE NOT NULL DEFAULT 0
+                 , PRIMARY KEY ( n, m, rho, theta )
+               )
                """
         cursor.execute(sql)
 
@@ -83,15 +81,12 @@ class Zernike :
         if rho == 0 :
             R = 0
         else :
-            m = abs( m )
-
-            for s in range( n - m + 1 ) :
-                #R *= factorial(2*n + 1 - s)/factorial(s)/factorial(n + m + 1 - s)/factorial(n - m - s)
-                #R *= factorial(2 * n + 1 - s) / factorial(s) / perm(n + m + 1 - s, n - m - s)
-                r = 1.0
-                r *= perm(2 * n + 1 - s, s) / factorial(n + m + 1 - s) / factorial(n - m - s)
-                r *= (-1) ** (s % 4)
-                r *= rho**(n - s)
+            for k in range( 0, n - abs(m) + 1 ) :
+                #R *= factorial(2*n + 1 - k)/factorial(k)/factorial(n + m + 1 - k)/factorial(n - m - k)
+                #R *= factorial(2 * n + 1 - k) / factorial(k) / perm(n + m + 1 - k, n - m - k)
+                r = (-1) ** (k % 4)
+                r *= perm(2*n + 1 - k, k) / factorial(n + abs(m) + 1 - k) / factorial(n - abs(m) - k)
+                r *= rho**(n - k)
 
                 R += r
             pass
@@ -143,29 +138,101 @@ class Zernike :
         rho = math.sqrt( x*x + y*y )
 
         v = 1.0
-        theta = 0
+        
+        theta = atan2(y, x)
+        theta = (theta*m) % pi
+        calc_time = -1        
 
         if rho == 0 : 
             v = 0 
         elif rho != 0 :
-            r = self.select_polynomial(n, m, rho)
+            cursor = self.cursor
+            
+            rows = cursor.execute(
+                "SELECT vx, vy FROM zernike_function WHERE n = ? and m = ? and rho = ? and theta = ?",
+                [n, m, rho, theta],
+            ).fetchall()
 
-            log.info(f"R(n={n}, m={m}, rho={rho:.4f}, x={x:.4f}, y={y:.4f}) = {r}")
+            cnt = len( rows )
             
-            theta = atan2(y, x)
-            theta = (theta*m) % pi 
+            if cnt > 0 :
+                vx = 0
+                vy = 0 
+                for row in rows : 
+                    vx = row[0]
+                    vy = row[1]
+                pass
             
-            e = cmath.exp( 1j*theta )
+                v = vx + 1j*vy
+            elif cnt < 1 :
+                then = time()
+                r = self.select_polynomial(n, m, rho)
+    
+                log.info(f"R(n={n}, m={m}, rho={rho:.4f}, x={x:.4f}, y={y:.4f}) = {r}")
+                
+                e = cmath.exp( 1j*theta )
             
-            v = r*e
+                v = r*e
+                
+                now = time()
+                
+                calc_time = now - then
+                
+                sql = '''
+                    INSERT INTO zernike_function( n, m, rho, theta, vx, vy, calc_time )
+                    VALUES ( ?, ?, ?, ?, ?, ?, ? )
+                    '''
+                cursor.execute(sql, [n, m, rho, theta, v.real, v.imag, calc_time])
+            pass
         pass
     
-        log.info(f"V(n={n}, m={m}, rho={rho:.4f}, theta={theta:.4f}, x={x:.4f}, y={y:.4f}) = {v}")
+        log.info(f"V(n={n}, m={m}, rho={rho:.4f}, theta={theta:.4f}, x={x:.4f}, y={y:.4f}) = {v}, calc_time={calc_time}")
 
         return v
     pass # -- zernike_function
 
-pass # -- class Zernike
+    @profile
+    def zernike_moment(self, img, n, m, T=20, numerical_scheme=1 ):
+        if numerical_scheme < 1 :
+            numerical_scheme = 1
+        pass
+    
+        ns = np.arange( 0, 1, 1/numerical_scheme )
+        ns_count = len( ns )
+        
+        h = img.shape[0]
+        w = img.shape[1]
+        
+        radius = max( h, w )/sqrt(2)
+        log.info( f"Radius = {radius}" )
+        
+        moments = np.empty([w*ns_count, h*ns_count]).astype(complex)
+        
+        for y0, row in enumerate(img) :
+            for x0, pixel in enumerate( row ) :
+                for r, dy in enumerate( ns ) : 
+                    for c, dx in enumerate( ns ) :
+                        y = y0 + dy
+                        x = x0 + dx
+                        
+                        # convert coordinate into unit circle coordinate system
+                        y = (y - h/2)/radius
+                        x = (x - w/2)/radius
+                        
+                        zf = self.zernike_function(n, m, x, y)
+                        a = pixel*zf
+                    pass
+                pass
+            pass
+        pass
+    
+        moment = np.sum( moments ) 
+    
+        return moment
+                
+    pass # -- moment
+
+pass # -- class zernike moment
 
 if __name__ == '__main__':
     log.info( "Hello ...\n" )
@@ -183,24 +250,17 @@ if __name__ == '__main__':
     
     print( f"image shape = {img.shape}" )
     
-    plt.imshow( img , cmap='gray')
-    plt.show()
+    plt.imshow( img , cmap='gray')    
 
-    zernike = Zernike()
-
-    for n in range( 10 ) :
-        for m in range( n + 1 ) :
-            x = random()
-            y = random()
-            x = 1
-            y = 0
-            if x*x + y*y <= 1 : 
-                zernike.zernike_function(n, m, x, y )
-            pass
-        pass
-    pass
+    zernike = Zernike() 
+    
+    moment = zernike.zernike_moment(img, T=20, numerical_scheme=1)
+    
+    print( f"zernike moment = {moment}" )
 
     print_profile()
+    
+    plt.show()
 
     log.info( "\nGood bye!" )
 pass
