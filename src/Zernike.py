@@ -192,12 +192,18 @@ class Zernike :
     pass # -- zernike_function
 
     @profile
-    def zernike_moment(self, img, n, m, T=20, numerical_scheme=1 ):
-        if numerical_scheme < 1 :
-            numerical_scheme = 1
+    def zernike_moment(self, img, n, m, k=1 ):
+        '''
+        Parameters
+        ----------
+        T : 
+        k : numerical scheme        
+        '''
+        if k < 1 :
+            k = 1
         pass
     
-        ns = np.arange( 0, 1, 1/numerical_scheme )
+        ns = np.arange( 0, 1, 1/k)
         ns_count = len( ns )
         
         h = img.shape[0]
@@ -252,9 +258,12 @@ if __name__ == '__main__':
     
     plt.imshow( img , cmap='gray')    
 
-    zernike = Zernike() 
+    zernike = Zernike()
     
-    moment = zernike.zernike_moment(img, T=20, numerical_scheme=1)
+    Ts = [ 20, 40, 60, 80, 100, 120 ]
+    Ks = [ 1, 3, 5, 7 ]
+    
+    moment = zernike.zernike_moment(img, k=1)
     
     print( f"zernike moment = {moment}" )
 
