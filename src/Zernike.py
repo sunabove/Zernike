@@ -20,11 +20,12 @@ from time import time, sleep
 from Profiler import *
 
 class Zernike :
-    def __init__(self) :
+    def __init__(self, **kwargs) :
         self.conn = sqlite3.connect("c:/temp/zernike.db")
+        self.conn.set_trace_callback(print)
         self.cursor = self.conn.cursor()
 
-        self.create_table()
+        self.create_table( kwargs )
     pass
 
     def __del__(self) :
@@ -33,12 +34,12 @@ class Zernike :
         log.info( "Commit" )
     pass
 
-    def create_table(self):
+    def create_table(self, kwargs):
         cursor = self.cursor
 
         log.info( "Create tables ...\n " )
 
-        dropAnyway = False 
+        dropAnyway = "dropTable" in kwargs and kwargs["dropTable"] 
         if dropAnyway :
             tables = [ "zernike_function", "zernike_polynomial", ]
             for table in tables :
