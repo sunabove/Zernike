@@ -22,7 +22,7 @@ from Profiler import *
 class Zernike :
     def __init__(self, **kwargs) :
         self.conn = sqlite3.connect("c:/temp/zernike.db")
-        self.conn.set_trace_callback(print)
+        #self.conn.set_trace_callback(print)
         self.cursor = self.conn.cursor()
 
         self.create_table( kwargs )
@@ -175,9 +175,7 @@ class Zernike :
             
                 v = r*e
                 
-                now = time()
-                
-                calc_time = now - then
+                calc_time = time() - then
                 
                 sql = '''
                     INSERT INTO zernike_function( n, m, rho, theta, vx, vy, calc_time )
@@ -213,7 +211,7 @@ class Zernike :
         radius = max( h, w )/sqrt(2)
         log.info( f"Radius = {radius}" )
         
-        moments = np.zeros([w*ns_count, h*ns_count]).astype(complex)
+        moments = np.zeros([h*ns_count, w*ns_count]).astype(complex)
         
         for y0, row in enumerate(img) :
             for x0, pixel in enumerate( row ) :
@@ -227,7 +225,10 @@ class Zernike :
                         x = (x - w/2)/radius
                         
                         zf = self.zernike_function(n, m, x, y)
+                        zf = zf.conjugate()
                         a = pixel*zf
+                        
+                        moments[y0*ns_count + r, x0*ns_count + c] = a
                     pass
                 pass
             pass
@@ -255,7 +256,7 @@ if __name__ == '__main__':
     
     import matplotlib.pyplot as plt
     
-    print( f"image shape = {img.shape}" )
+    log.info( f"image shape = {img.shape}" )
     
     plt.imshow( img , cmap='gray')    
 
@@ -264,9 +265,9 @@ if __name__ == '__main__':
     Ts = [ 20, 40, 60, 80, 100, 120 ]
     Ks = [ 1, 3, 5, 7 ]
     
-    moment = zernike.zernike_moment(img, 10, 10, k=1)
+    moment = zernike.zernike_moment(img, 10, 1, k=1)
     
-    print( f"zernike moment = {moment}" )
+    log.info( f"zernike moment = {moment}" )
 
     print_profile()
     
