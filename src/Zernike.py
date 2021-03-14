@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import warnings
+from gevent.libev.corecext import NONE
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
@@ -14,13 +15,15 @@ import sqlite3
 
 import numpy as np
 import math, cmath
-from math import factorial, perm, atan2, pi, sqrt
+from math import factorial, perm, atan2, pi, sqrt, log10
 from time import time, sleep
 
 from Profiler import *
 
 class Zernike :
     def __init__(self, **kwargs) :
+        self.debug = False 
+        
         self.conn = sqlite3.connect("c:/temp/zernike.db")
         #self.conn.set_trace_callback(print)
         self.cursor = self.conn.cursor()
@@ -135,7 +138,9 @@ class Zernike :
     pass # -- select
 
     @profile
-    def zernike_function(self, n, m, x, y ):
+    def zernike_function(self, n, m, x, y):
+        debug = self.debug 
+        
         rho = math.sqrt( x*x + y*y )
 
         v = 1.0
@@ -156,7 +161,12 @@ class Zernike :
 
             cnt = len( rows )
             
-            if cnt > 0 :
+            if cnt > 1 : 
+                log.info( "Invalid count for zernike function")
+                
+                import sys
+                sys.exit(1)     
+            elif cnt == 1 :
                 vx = 0
                 vy = 0 
                 for row in rows : 
@@ -169,7 +179,7 @@ class Zernike :
                 then = time()
                 r = self.select_polynomial(n, m, rho)
     
-                log.info(f"R(n={n}, m={m}, rho={rho:.4f}, x={x:.4f}, y={y:.4f}) = {r}")
+                debug and log.info(f"R(n={n}, m={m}, rho={rho:.4f}, x={x:.4f}, y={y:.4f}) = {r}")
                 
                 e = cmath.exp( 1j*theta )
             
@@ -185,7 +195,7 @@ class Zernike :
             pass
         pass
     
-        log.info(f"V(n={n}, m={m}, rho={rho:.4f}, theta={theta:.4f}, x={x:.4f}, y={y:.4f}) = {v}, calc_time={calc_time}")
+        debug and log.info(f"V(n={n}, m={m}, rho={rho:.4f}, theta={theta:.4f}, x={x:.4f}, y={y:.4f}) = {v}, calc_time={calc_time}")
 
         return v
     pass # -- zernike_function
@@ -198,6 +208,12 @@ class Zernike :
         T : 
         k : numerical scheme        
         '''
+        debug = self.debug 
+        
+        log.info( f"n={n}, m={m}, k={k}" )
+        
+        then = time()
+        
         if k < 1 :
             k = 1
         pass
@@ -209,36 +225,97 @@ class Zernike :
         w = img.shape[1]
         
         radius = max( h, w )/sqrt(2)
-        log.info( f"Radius = {radius}" )
+        debug and log.info( f"Radius = {radius}" )
         
-        moments = np.zeros([h*ns_count, w*ns_count]).astype(complex)
+        moments = np.zeros([h, w], dtype=np.complex) 
+        
+        ds = 1/ns_count/ns_count
         
         for y0, row in enumerate(img) :
             for x0, pixel in enumerate( row ) :
-                for r, dy in enumerate( ns ) : 
-                    for c, dx in enumerate( ns ) :
-                        y = y0 + dy
+                a = 0
+                for dy in ns :
+                    y = y0 + dy
+                         
+                    for dx in ns :
                         x = x0 + dx
                         
                         # convert coordinate into unit circle coordinate system
-                        y = (y - h/2)/radius
-                        x = (x - w/2)/radius
+                        ry = (y - h/2)/radius
+                        rx = (x - w/2)/radius
                         
-                        zf = self.zernike_function(n, m, x, y)
+                        zf = self.zernike_function(n, m, rx, ry)
                         zf = zf.conjugate()
-                        a = pixel*zf
                         
-                        moments[y0*ns_count + r, x0*ns_count + c] = a
+                        a += zf
                     pass
                 pass
+            
+                a = pixel*zf*ds
+                moments[y0, x0] = a
             pass
         pass
     
         moment = np.sum( moments ) 
+        
+        elapsed = time() - then
+        
+        log.info( f"Elapsed time to calculate zernike moment = {elapsed}" )
+        log.info( f"zernike moment = {moment}" )    
     
         return moment
                 
     pass # -- moment
+
+    @profile
+    def image_reconstruct(self, img, t = 20, k = 1 ):
+        then = time()
+        
+        h = img.shape[0]
+        w = img.shape[1]
+        
+        radius = max( h, w )/sqrt(2)
+        
+        img_recon = np.zeros([h, w], dtype=np.complex)
+        
+        moments = {}
+        
+        for y in range(h) :
+            for x in range(w) :
+                pixel = 0
+                for n in range(t + 1 ):
+                    for m in range( - n, n+1) :
+                        ry = (y - h/2)/radius
+                        rx = (x - w/2)/radius
+                        
+                        key = f"{n}:{m}"
+                        moment = None 
+                        
+                        if key in moments : 
+                            moment = moments[ key ]
+                        else :
+                            moment = None 
+                        pass
+                        
+                        if not moment :
+                            moment = self.zernike_moment(img, n, m, k)
+                            moments[ key ] = moment 
+                        pass
+                        
+                        pixel += (n+1)/pi*moment*self.zernike_function(n, m, rx, ry)
+                    pass
+                pass
+            
+                img_recon[y, x] = pixel 
+            pass
+        pass
+    
+        elapsed = time() - then
+        
+        log.info( f"Elapsed time to reconstruct an image = {elapsed}" )
+        
+        return img_recon
+    pass # -- image_reconstruct    
 
 pass # -- class zernike moment
 
@@ -247,6 +324,7 @@ if __name__ == '__main__':
     
     from skimage import data
     from skimage import color
+    from skimage.transform import rescale 
     img = data.camera()
     
     import mahotas
@@ -254,23 +332,59 @@ if __name__ == '__main__':
     
     img = color.rgb2gray( img )
     
-    import matplotlib.pyplot as plt
-    
     log.info( f"image shape = {img.shape}" )
     
-    plt.imshow( img , cmap='gray')    
+    rescale_width = 50 
+    
+    if rescale_width :
+        img = rescale(img, rescale_width/img.shape[1], anti_aliasing=True)
+        
+        log.info( f"image shape = {img.shape}" )
+    pass
+    
+    import matplotlib.pyplot as plt
+    
+    fig, axes = plt.subplots(nrows=2, ncols=1)
+    axes = axes.ravel()
+    
+    ax_idx = 0     
+    ax = axes[ ax_idx ]
+    ax.imshow( img , cmap='gray')
+    ax.set_xlabel( 'original image')    
 
     zernike = Zernike()
     
-    Ts = [ 20, 40, 60, 80, 100, 120 ]
+    Ts = [ 10, 20, 40, 60, 80, 100, 120 ]
     Ks = [ 1, 3, 5, 7 ]
     
-    moment = zernike.zernike_moment(img, 10, 1, k=1)
+    t = Ts[0] 
+    k = Ks[0]
+    img_reconst = zernike.image_reconstruct(img, t=t, k=k)
     
-    log.info( f"zernike moment = {moment}" )
-
+    img_reconst = img_reconst.real
+    
+    ax_idx += 1     
+    ax = axes[ ax_idx ]
+    
+    img_diff = img - img_reconst
+    
+    gmax = np.max( img_reconst ) # 복원된 이미지의 회색조 최대값 
+    
+    mse = np.sum( np.square( img_diff ) )/(img_diff.shape[0]*img_diff.shape[1])
+    
+    psnr = 10*log10(gmax*gmax/mse)
+    
+    log.info( f"t={t}, k={k}, psnr = {psnr:.2f}" )
+    
+    title = f"t={t}, k={k}, psnr = {psnr:.2f}"
+    ax.imshow( img_reconst, cmap='gray' )
+    ax.set_xlabel( title )
+    
+    #moment = zernike.zernike_moment(img, 10, 10, k=4)
+    
     print_profile()
     
+    plt.tight_layout()    
     plt.show()
 
     log.info( "\nGood bye!" )
