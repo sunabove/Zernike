@@ -114,8 +114,16 @@ class Zernike :
             ).fetchall()
 
             cnt = len( rows )
-
-            if cnt < 1 :
+            
+            if cnt > 1 :
+                log.info( "Invalid polynomial count." )
+                import sys
+                sys.exit( 1 )
+            elif cnt == 1 :
+                for row in rows:
+                    R = row[ 0 ]
+                pass
+            elif cnt < 1 :
                 then = time()
                 R = self.calc_polynomial(n, m, rho)
                 now = time()
@@ -126,11 +134,7 @@ class Zernike :
                     INSERT INTO zernike_polynomial( n, m, rho, value, calc_time )
                     VALUES ( ?, ?, ?, ?, ? )
                     '''
-                cursor.execute(sql, [n, m, rho, R, calc_time])
-            else :
-                for row in rows:
-                    R = row[ 0 ]
-                pass
+                cursor.execute(sql, [n, m, rho, R, calc_time]) 
             pass
         pass
 
@@ -229,7 +233,7 @@ class Zernike :
         
         moments = np.zeros([h, w], dtype=np.complex) 
         
-        ds = 1/ns_count/ns_count
+        ds = 1/radius/radius
         
         for y0, row in enumerate(img) :
             for x0, pixel in enumerate( row ) :
@@ -249,12 +253,13 @@ class Zernike :
                         
                         a += zf
                     pass
-                pass
-            
-                a = pixel*zf*ds
-                moments[y0, x0] = a
+                pass 
+                
+                moments[y0, x0] = pixel*a/ns_count/ns_count
             pass
         pass
+    
+        moments = moments*ds
     
         moment = np.sum( moments ) 
         
