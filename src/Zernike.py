@@ -87,8 +87,6 @@ class Zernike :
         else :
             m = abs( m )
             for k in range( 0, n - m + 1 ) :
-                #R *= factorial(2*n + 1 - k)/factorial(k)/factorial(n + m + 1 - k)/factorial(n - m - k)
-                #R *= factorial(2*n + 1 - k) / factorial(k) / perm(n + m + 1 - k, n - m - k)
                 r = (-1) ** (k % 4)
                 r *= factorial(2*n + 1 - k) / factorial(k) / factorial(n + m + 1 - k) / factorial(n - m - k)
                 r *= rho**(n - k)
