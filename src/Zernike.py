@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import warnings
-from gevent.libev.corecext import NONE
+#from gevent.libev.corecext import NONE
+
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
@@ -82,21 +83,85 @@ class Zernike :
         # -------------------------------------------------------------------------
         R = 0
 
-        if rho == 0 :
-            R = 0
-        else :
-            m = abs( m )
-            for k in range( 0, n - m + 1 ) :
+        m = abs( m )
+            
+        for k in range( 0, n - m + 1 ) :
+            r = 1
+            
+            if n - k == 0 :
                 r = (-1) ** (k % 4)
-                r *= factorial(2*n + 1 - k) / factorial(k) / factorial(n + m + 1 - k) / factorial(n - m - k)
-                r *= rho**(n - k)
-
-                R += r
+                r *= factorial(2*n + 1 - k)/factorial(k)/factorial(n + m + 1 - k)/factorial(n - m - k)
+            elif n - k != 0 :
+                if rho == 0 :
+                    r = 0
+                elif rho != 0 :
+                    r = (-1) ** (k % 4)
+                    r *= rho**(n - k)
+                    r *= factorial(2*n + 1 - k)/factorial(k)/factorial(n + m + 1 - k)/factorial(n - m - k)
+                pass
             pass
+
+            R += r
+        pass
+            
         pass
 
         return R
     pass # -- polynomial
+
+    @profile
+    def np_numeric_polynomial(self, x, n, m ):
+        y = np.array( [ self.select_polynomial(n, m, rho) for rho in x ] )
+         
+        return y
+    pass
+
+    @profile
+    def np_analytic_polynomial(self, x, n, m ):
+        y = np.array( [ self.analytic_polynomial(n, m, rho) for rho in x ] )
+         
+        return y
+    pass
+
+    @profile
+    def analytic_polynomial(self, n, m, rho):
+        m = abs( m )
+        
+        R = 0 
+        r = rho
+        
+        if n == 0 :
+            if m == 0 :
+                R = 1
+            pass
+        elif n == 1 :
+            if m == 0 :
+                R = -2 + 3*r
+            elif m == 1 :
+                R = r
+            pass            
+        elif n == 2 :
+            if m == 0 :
+                R = 3 + 10*(r**2) - 12*r
+            elif m == 1 :
+                R = 5*(r**2) - 4*r
+            elif m == 2 :
+                R = r**2
+            pass
+        elif n == 3 :
+            if m == 0 :
+                R = -4 + 35*(r**3) - 60*(r**2) + 30*r
+            elif m == 1 :
+                R = 21*(r**3) - 30*(r**2) + 10*r
+            elif m == 2 :
+                R = 7*(r**3) -6*(r**2)
+            elif m == 3 :
+                R = r**3
+            pass
+        pass
+    
+        return R
+    pass
 
     @profile
     def select_polynomial(self, n, m, rho):
@@ -388,7 +453,7 @@ if __name__ == '__main__':
     
     print_profile()
     
-    plt.tight_layout()    
+    plt.tight_layout()
     plt.show()
 
     log.info( "\nGood bye!" )
