@@ -43,8 +43,8 @@ class Zernike :
 
         log.info( "Create tables ...\n " )
 
-        dropAnyway = "dropTable" in kwargs and kwargs["dropTable"] 
-        if dropAnyway :
+        dropTable = "dropTable" in kwargs and kwargs["dropTable"] 
+        if dropTable :
             tables = [ "zernike_function", "zernike_polynomial", ]
             for table in tables :
                 sql = f"DROP TABLE IF EXISTS {table}"
@@ -103,8 +103,6 @@ class Zernike :
 
             R += r
         pass
-            
-        pass
 
         return R
     pass # -- polynomial
@@ -158,6 +156,32 @@ class Zernike :
             elif m == 3 :
                 R = r**3
             pass
+        elif n == 4 :
+            if m == 0 :
+                R = 5 + 126*(r**4) - 280*(r**3) + 210*(r**2) - 60*r
+            elif m == 1 :
+                R = 84*(r**4) - 168*(r**3) + 105*(r**2) - 20*r
+            elif m == 2 :
+                R = 36*(r**4) - 56*(r**3) + 21*(r**2)
+            elif m == 3 :
+                R = 94*(r**4) - 8*(r**3)
+            elif m == 4 :
+                R = r**4
+            pass
+        elif n == 5 :
+            if m == 0 :
+                R = -6 + 462*(r**5) - 1260*(r**4) + 1260*(r**3) - 560*(r**2) + 105*r
+            elif m == 1 :
+                R = 330*(r**5) - 840*(r**4) + 756*(r**3) - 280*(r**2) + 35*r
+            elif m == 2 :
+                R = 165*(r**5) - 360*(r**4) + 252*(r**3) - 56*(r**2)
+            elif m == 3 :
+                R = 55*(r**5) - 90*(r**4) + 36*(r**3)
+            elif m == 4 :
+                R = 11*(r**5) - 10*(r**4)
+            elif m == 5 :
+                R = r**5
+            pass
         pass
     
         return R
@@ -165,42 +189,39 @@ class Zernike :
 
     @profile
     def select_polynomial(self, n, m, rho):
-        R = 1.0
+        
+        R = 0
+                 
+        cursor = self.cursor
 
-        if rho == 0 :
-            R = 0
-        else :
-            cursor = self.cursor
+        rows = cursor.execute(
+            "SELECT value FROM zernike_polynomial WHERE n = ? and m = ? and rho = ?",
+            [n, m, rho],
+        ).fetchall()
 
-            rows = cursor.execute(
-                "SELECT value FROM zernike_polynomial WHERE n = ? and m = ? and rho = ?",
-                [n, m, rho],
-            ).fetchall()
-
-            cnt = len( rows )
-            
-            if cnt > 1 :
-                log.info( "Invalid polynomial count." )
-                import sys
-                sys.exit( 1 )
-            elif cnt == 1 :
-                for row in rows:
-                    R = row[ 0 ]
-                pass
-            elif cnt < 1 :
-                then = time()
-                R = self.calc_polynomial(n, m, rho)
-                now = time()
-
-                calc_time = now - then
-
-                sql = '''
-                    INSERT INTO zernike_polynomial( n, m, rho, value, calc_time )
-                    VALUES ( ?, ?, ?, ?, ? )
-                    '''
-                cursor.execute(sql, [n, m, rho, R, calc_time]) 
+        cnt = len( rows )
+        
+        if cnt > 1 :
+            log.info( "Invalid polynomial count." )
+            import sys
+            sys.exit( 1 )
+        elif cnt == 1 :
+            for row in rows:
+                R = row[ 0 ]
             pass
-        pass
+        elif cnt < 1 :
+            then = time()
+            R = self.calc_polynomial(n, m, rho)
+            now = time()
+
+            calc_time = now - then
+
+            sql = '''
+                INSERT INTO zernike_polynomial( n, m, rho, value, calc_time )
+                VALUES ( ?, ?, ?, ?, ? )
+                '''
+            cursor.execute(sql, [n, m, rho, R, calc_time]) 
+        pass 
 
         return R
     pass # -- select

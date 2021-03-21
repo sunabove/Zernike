@@ -9,12 +9,12 @@ if __name__ == '__main__':
     
     zernike = Zernike()
     
-    n_max = 3
+    n_max = 4
     m_max = 0
     
     ncols = 4
     nrows = n_max + 1
-    nrows = nrows*(nrows+1)/2/ncols + 0.5
+    nrows = nrows*(nrows+1)/2/ncols + 1
     nrows = int( nrows )
     
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
@@ -44,8 +44,10 @@ if __name__ == '__main__':
             ax = axes[ ax_idx ]
             #ax.set_xlim([0, 1]) 
             
-            ax.plot(x, y_analytic,  '-', color='C1', label='Analytic', linewidth=2 )
-            ax.plot(x, y_numeric , '-', color='C2', label='Numeric' , linewidth=1 )
+            diff = y_analytic - y_numeric
+            
+            ax.plot(x, y_analytic,  '-', color='C2', label='Analytic', linewidth=1 )
+            ax.plot(x, diff , '-', color='C1', label='Diff' , linewidth=1 )
             
             ax.legend()            
             ax.set_xlabel( f"n = {n}, m = {m}" )
@@ -55,7 +57,7 @@ if __name__ == '__main__':
     print_profile()
     
     plt.tight_layout()
-    plt.get_current_fig_manager().canvas.set_window_title('Pseudo-Zernike Polynomial')
+    plt.get_current_fig_manager().canvas.set_window_title('Pseudo-Zernike Polynomial Validation')
     plt.show()
     
     log.info( "Good bye!" )
