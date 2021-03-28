@@ -16,8 +16,8 @@ if __name__ == '__main__':
             dx = 0.01
             dy= dx
             
-            for x in np.arange(-1, 1, dx ) :
-                for y in np.arange(-1, 1, dy ) :
+            for x in np.arange( -1, 1, dx ) :
+                for y in np.arange( -1, 1, dy ) :
                     if x*x + y*y <= 1 : 
                         p = zernike.function(n, m, x, y)
                         q = zernike.function(n, m, x, y)
