@@ -27,8 +27,8 @@ def test_zernike_image_restore() :
     
     zernike = Zernike()
     
-    Ts = [ 20, 40 ]
-    Ks = [ 1, 3 ]    
+    Ts = [ 20 ]
+    Ks = [ 1 ]    
     
     import matplotlib.pyplot as plt
     nrows = len(Ts)
@@ -36,7 +36,11 @@ def test_zernike_image_restore() :
     
     plt.rcParams['figure.figsize'] = [14, 14]
     fig, axes = plt.subplots( nrows=nrows, ncols=ncols)
-    axes = axes.ravel()    
+    
+    if nrows*ncols > 1 :
+        axes = axes.ravel()
+    pass
+
     ax_idx = -1
     
     for t in Ts :
