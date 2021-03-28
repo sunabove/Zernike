@@ -9,7 +9,7 @@ if __name__ == '__main__':
     
     dr = 0.0001 
     for n in range( 10 ) :
-        for m in range( 10 ) :
+        for m in range( n + 1 ) :
             sum = 0
             
             for rho in np.arange(0, 1 + dr, dr) :
@@ -21,11 +21,11 @@ if __name__ == '__main__':
         
             sum = 2*(n + 1)*sum
         
-            log.info( f"sum({n}, {m}) = {sum:.10f}" )
+            log.info( f"Rsum({n}, {m}) = {sum:.10f}" )
         pass
     pass     
     
     print_profile()
 
-    log.info( "\nGood bye!" )
+    log.info( "Good bye!" )
 pass

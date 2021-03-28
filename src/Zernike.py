@@ -48,7 +48,7 @@ class Zernike :
     def create_table(self, kwargs):
         cursor = self.cursor
 
-        log.info( "Create tables ...\n " )
+        log.info( "Checking tables ..." )
 
         dropTable = "dropTable" in kwargs and kwargs["dropTable"] 
         if dropTable :
@@ -78,6 +78,8 @@ class Zernike :
                )
                """
         cursor.execute(sql)
+        
+        log.info( "Done. checking tables ..." )
 
     pass # -- create_table
 
@@ -170,7 +172,7 @@ class Zernike :
     pass # -- select
 
     @profile
-    def zernike_function(self, n, m, x, y):
+    def function(self, n, m, x, y):
         debug = self.debug 
         
         rho = math.sqrt( x*x + y*y )
@@ -231,7 +233,7 @@ class Zernike :
         debug and log.info(f"V(n={n}, m={m}, rho={rho:.4f}, theta={theta:.4f}, x={x:.4f}, y={y:.4f}) = {v}, calc_time={calc_time}")
 
         return v
-    pass # -- zernike_function
+    pass # -- function
 
     @profile
     def zernike_moment(self, img, n, m, k=1 ):
@@ -271,7 +273,7 @@ class Zernike :
                         ry = (y - h/2)/radius
                         rx = (x - w/2)/radius
                         
-                        zf = self.zernike_function(n, m, rx, ry)
+                        zf = self.function(n, m, rx, ry)
                         zf = zf.conjugate()
                         
                         a += zf
@@ -330,7 +332,7 @@ class Zernike :
                             moments[ key ] = moment 
                         pass
                         
-                        pixel += (n+1)/pi*moment*self.zernike_function(n, m, rx, ry)
+                        pixel += (n+1)/pi*moment*self.function(n, m, rx, ry)
                     pass
                 pass
             

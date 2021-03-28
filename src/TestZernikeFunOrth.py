@@ -16,25 +16,25 @@ if __name__ == '__main__':
             dx = 0.01
             dy= dx
             
-            for x in np.arange(-1, 1 + dx, dx ) :
-                for y in np.arange(-1, 1 + dy, dy ) :
+            for x in np.arange(-1, 1, dx ) :
+                for y in np.arange(-1, 1, dy ) :
                     if x*x + y*y <= 1 : 
-                        p = zernike.zernike_function(n, m, x, y)
-                        q = zernike.zernike_function(n, m, x, y)
-                        ds = p.conjugate()*q
+                        p = zernike.function(n, m, x, y)
+                        q = zernike.function(n, m, x, y)
+                        ds = p.conjugate()*q*dx*dy
                         sum += ds
                     pass
                 pass
             pass
         
-            sum = sum*(dx*dy*(n + 1)/pi)
+            sum = sum*(n + 1)/pi
             sum = abs( sum ) 
         
-            log.info( f"sum({n}, {m}, {n}, {m}) = {sum:.10f}" )
+            log.info( f"Vsum({n}, {m}, {n}, {m}) = {sum:.10f}" )
         pass
     pass     
     
     print_profile()
 
-    log.info( "\nGood bye!" )
+    log.info( "Good bye!" )
 pass
