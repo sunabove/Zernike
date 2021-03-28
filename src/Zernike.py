@@ -6,8 +6,10 @@ import warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
+import sys
+
 import logging as log
-log.basicConfig( format='%(levelname)s %(filename)s:%(lineno)04d %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=log.INFO )
+log.basicConfig(stream=sys.stdout, format='%(levelname)s %(filename)s:%(lineno)04d %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=log.INFO )
 
 from os.path import join
 from glob import glob
@@ -339,79 +341,3 @@ class Zernike :
     pass # -- image_reconstruct    
 
 pass # -- class zernike moment
-
-if __name__ == '__main__':
-    log.info( "Hello ...\n" )
-    
-    from skimage import data
-    from skimage import color
-    from skimage.transform import rescale 
-    img = data.camera()
-    
-    import mahotas
-    img = mahotas.demos.load('lena')
-    
-    img = color.rgb2gray( img )
-    
-    log.info( f"image shape = {img.shape}" )
-    
-    rescale_width = 50 
-    
-    if rescale_width :
-        img = rescale(img, rescale_width/img.shape[1], anti_aliasing=True)
-        
-        log.info( f"image shape = {img.shape}" )
-    pass
-    
-    zernike = Zernike()
-    
-    Ts = [ 20, 40, 60, 80, 100, 120 ]
-    Ks = [ 1, 3, 5 ]    
-    
-    import matplotlib.pyplot as plt
-    nrows = len(Ts) + 1
-    ncols = len(Ks)
-    fig, axes = plt.subplots( nrows=nrows, ncols=ncols)
-    axes = axes.ravel()    
-    ax_idx = -1
-    
-    ax_idx += 1
-    ax = axes[ ax_idx ]
-    ax.imshow( img , cmap='gray')
-    ax.set_xlabel( 'original image')
-    
-    ax_idx = ncols - 1    
-
-    t = Ts[0] 
-    k = Ks[0]
-    img_reconst = zernike.image_reconstruct(img, t=t, k=k)
-    
-    img_reconst = img_reconst.real
-    
-    ax_idx += 1     
-    ax = axes[ ax_idx ]
-    
-    img_diff = img - img_reconst
-    
-    gmax = np.max( img_reconst ) # 복원된 이미지의 회색조 최대값 
-    
-    mse = np.sum( np.square( img_diff ) )/(img_diff.shape[0]*img_diff.shape[1])
-    
-    psnr = 10*log10(gmax*gmax/mse)
-    
-    log.info( f"t={t}, k={k}, psnr = {psnr:.2f}" )
-    
-    title = f"t={t}, k={k}, psnr = {psnr:.2f}"
-    ax.imshow( img_reconst, cmap='gray' )
-    ax.set_xlabel( title )
-    
-    #moment = zernike.zernike_moment(img, 10, 10, k=4)
-    
-    print_profile()
-    
-    plt.get_current_fig_manager().canvas.set_window_title('Pseudo-Zernike Moment Image Restoration')
-    plt.tight_layout()
-    plt.show()
-
-    log.info( "\nGood bye!" )
-pass

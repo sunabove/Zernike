@@ -1,42 +1,73 @@
 # -*- coding: utf-8 -*-
 
-import cv2
-import matplotlib.pylab as plt
 from Zernike import *
 
 if __name__ == '__main__':
-    n = 4
-    m = 2
-
-    print( '-' * 40 )
-    print( 'Calculating Zernike moments ..., n = %d, m = %d' % (n, m) )
-
-    fig, axes = plt.subplots(2, 3)
-
-    pathss = [['Oval_H.png', 'Oval_45.png', 'Oval_V.png'] ,
-              ['Shape_0.png', 'Shape_90.png', 'Rectangular_H.png'],
-              ]
-
-    zernike = Zernike();
-
-    for r, paths in enumerate(pathss) :
-        for c, path in enumerate(paths) :
-            img = cv2.imread(path, 0)
-
-            z, amp, phase = zernike.zernike(img, n, m)
-
-            axes[r, c].imshow(img, cmap="gray" )
-            axes[r, c].axis('off')
-
-            title = f"A = {amp:.4f}\nPhase = {phase:.2f}"
-
-            axes[r, c].set_title(title)
-        pass
+    log.info( "Hello ...\n" )
+    
+    from skimage import data
+    from skimage import color
+    from skimage.transform import rescale 
+    img = data.camera()
+    
+    import mahotas
+    img = mahotas.demos.load('lena')
+    
+    img = color.rgb2gray( img )
+    
+    log.info( f"image shape = {img.shape}" )
+    
+    rescale_width = 50 
+    
+    if rescale_width :
+        img = rescale(img, rescale_width/img.shape[1], anti_aliasing=True)
+        
+        log.info( f"image shape = {img.shape}" )
     pass
-
+    
+    zernike = Zernike()
+    
+    Ts = [ 10, 20, 40, 60 ]
+    Ks = [ 1, 3, 5 ]    
+    
+    import matplotlib.pyplot as plt
+    nrows = len(Ts) + 1
+    ncols = len(Ks)
+    
+    plt.rcParams['figure.figsize'] = [14, 14]
+    fig, axes = plt.subplots( nrows=nrows, ncols=ncols)
+    axes = axes.ravel()    
+    ax_idx = -1
+    
+    for t in Ts :
+        for k in Ks :
+            img_reconst = zernike.image_reconstruct(img, t=t, k=k)
+            
+            img_reconst = img_reconst.real
+            
+            ax_idx += 1     
+            ax = axes[ ax_idx ]
+            
+            img_diff = img - img_reconst
+            
+            gmax = np.max( img_reconst ) # 복원된 이미지의 회색조 최대값 
+            
+            mse = np.sum( np.square( img_diff ) )/(img_diff.shape[0]*img_diff.shape[1])
+            
+            psnr = 10*log10(gmax*gmax/mse)
+            
+            title = f"t={t}, k={k}, psnr = {psnr:.2f}"
+            
+            ax.imshow( img_reconst, cmap='gray' )
+            ax.set_title( title + "\n" )
+        pass
+    pass 
+    
+    plt.get_current_fig_manager().canvas.set_window_title('Pseudo-Zernike Moment Image Restoration')
+    plt.tight_layout()
     plt.show()
+    
+    print_profile()
 
-    print( 'Calculation is complete' )
-    print('-' * 40)
-
-pass # -- main
+    log.info( "\nGood bye!" )
+pass
