@@ -27,7 +27,12 @@ class Zernike :
     def __init__(self, **kwargs) :
         self.debug = False 
         
-        self.conn = sqlite3.connect("c:/temp/zernike.db")
+        self.two_pi = 2*pi
+        
+        db_name = 'file:cachedb?mode=memory&cache=shared'
+        db_name = 'c:/temp/zernike.db'        
+        
+        self.conn = sqlite3.connect(db_name)
         #self.conn.set_trace_callback(print)
         self.cursor = self.conn.cursor()
 
@@ -173,7 +178,8 @@ class Zernike :
         v = 1.0
         
         theta = atan2(y, x)
-        theta = (theta*m) % pi
+        theta = (theta*m) % self.two_pi
+        
         calc_time = -1        
 
         if rho == 0 : 
@@ -245,28 +251,22 @@ class Zernike :
             k = 1
         pass
     
-        ns = np.arange( 0, 1, 1/k)
-        ns_count = len( ns )
-        
         h = img.shape[0]
         w = img.shape[1]
         
         radius = max( h, w )/sqrt(2)
         debug and log.info( f"Radius = {radius}" )
         
+        dx = 1/k/radius
+        dy = dx
+            
         moments = np.zeros([h, w], dtype=np.complex) 
         
-        ds = 1/radius/radius
-        
-        for y0, row in enumerate(img) :
+        for y0, row in enumerate( img ) :
             for x0, pixel in enumerate( row ) :
                 a = 0
-                for dy in ns :
-                    y = y0 + dy
-                         
-                    for dx in ns :
-                        x = x0 + dx
-                        
+                for y in np.arange(y0, y0 + 1, 1/k) :
+                    for x in np.arange(x0, x0 + 1, 1/k) :                        
                         # convert coordinate into unit circle coordinate system
                         ry = (y - h/2)/radius
                         rx = (x - w/2)/radius
@@ -276,13 +276,13 @@ class Zernike :
                         
                         a += zf
                     pass
-                pass 
-                
-                moments[y0, x0] = pixel*a/ns_count/ns_count
+                pass
+            
+                a = a*dx*dy
+            
+                moments[y0, x0] = pixel*a
             pass
         pass
-    
-        moments = moments*ds
     
         moment = np.sum( moments ) 
         

@@ -2,7 +2,7 @@
 
 from Zernike import *
 
-if __name__ == '__main__':
+def test_zernike_image_restore() :
     log.info( "Hello ...\n" )
     
     from skimage import data
@@ -27,11 +27,11 @@ if __name__ == '__main__':
     
     zernike = Zernike()
     
-    Ts = [ 10, 20, 40, 60 ]
-    Ks = [ 1, 3, 5 ]    
+    Ts = [ 20, 40 ]
+    Ks = [ 1, 3 ]    
     
     import matplotlib.pyplot as plt
-    nrows = len(Ts) + 1
+    nrows = len(Ts)
     ncols = len(Ks)
     
     plt.rcParams['figure.figsize'] = [14, 14]
@@ -59,8 +59,8 @@ if __name__ == '__main__':
             title = f"t={t}, k={k}, psnr = {psnr:.2f}"
             
             ax.imshow( img_reconst, cmap='gray' )
-            ax.set_title( title + "\n" )
-        pass
+            ax.set_title( title + "\n" )            
+        pass        
     pass 
     
     plt.get_current_fig_manager().canvas.set_window_title('Pseudo-Zernike Moment Image Restoration')
@@ -70,4 +70,8 @@ if __name__ == '__main__':
     print_profile()
 
     log.info( "\nGood bye!" )
+pass # --test_zernike
+
+if __name__ == '__main__':
+    test_zernike_image_restore()    
 pass

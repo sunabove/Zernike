@@ -7,29 +7,30 @@ if __name__ == '__main__':
     
     zernike = Zernike() 
     
-    max_n = 4
-    max_m = max_n
+    max_n = 5
     
-    for n in range( max_n ) :
-        for m in range( max_m ) :
+    for n in range( max_n + 1 ) :
+        for m in range( 0, n + 1 ) :
             sum = 0
 
             dx = 0.01
             dy= dx
             
-            for x in np.arange(0, 1 + dx, dx ) :
-                for y in np.arange(0, 1 + dy, dy ) :
-                    p = zernike.zernike_function(n, m, x, y).conjugate()
-                    q = zernike.zernike_function(n, m, x, y)
-                    ds = p*q*dx*dy
-                    sum += ds
+            for x in np.arange(-1, 1 + dx, dx ) :
+                for y in np.arange(-1, 1 + dy, dy ) :
+                    if x*x + y*y <= 1 : 
+                        p = zernike.zernike_function(n, m, x, y)
+                        q = zernike.zernike_function(n, m, x, y)
+                        ds = p.conjugate()*q
+                        sum += ds
+                    pass
                 pass
             pass
         
-            sum = sum*(n + 1)/pi
+            sum = sum*(dx*dy*(n + 1)/pi)
             sum = abs( sum ) 
         
-            log.info( f"sum({n}, {m}) = {sum:.10f}" )
+            log.info( f"sum({n}, {m}, {n}, {m}) = {sum:.10f}" )
         pass
     pass     
     

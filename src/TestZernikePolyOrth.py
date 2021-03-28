@@ -7,7 +7,7 @@ if __name__ == '__main__':
     
     zernike = Zernike() 
     
-    dr = 0.00001 
+    dr = 0.0001 
     for n in range( 10 ) :
         for m in range( 10 ) :
             sum = 0
