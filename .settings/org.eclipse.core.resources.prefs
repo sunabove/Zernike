@@ -2,6 +2,6 @@ eclipse.preferences.version=1
 encoding//src/Profiler.py=utf-8
 encoding//src/TestMy.py=utf-8
 encoding//src/TestZernike.py=utf-8
-encoding//src/TestZernikeOrth.py=utf-8
+encoding//src/TestZernikeFunOrth.py=utf-8
 encoding//src/TestZernikePoly.py=utf-8
 encoding//src/Zernike.py=utf-8

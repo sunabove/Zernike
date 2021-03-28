@@ -116,6 +116,10 @@ class Zernike :
         return y
     pass
 
+    def polynomial(self, n, m, rho):
+        return self.select_polynomial(n, m, rho)
+    pass
+
     @profile
     def select_polynomial(self, n, m, rho):
         
@@ -135,6 +139,7 @@ class Zernike :
             
             if cnt > 1 :
                 log.info( "Invalid polynomial count." )
+                
                 import sys
                 sys.exit( 1 )
             elif cnt == 1 :
