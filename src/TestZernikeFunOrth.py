@@ -2,7 +2,7 @@
 
 from Zernike import *
 
-if __name__ == '__main__':
+def test_zenike_function_orth() :
     log.info( "Hello ..." ) 
     
     zernike = Zernike() 
@@ -37,7 +37,8 @@ if __name__ == '__main__':
                     sum = sum*(n + 1)/pi
                     sum = abs( sum ) 
                 
-                    log.info( f"Vsum({n}, {m}, {n2}, {m2}) = {sum:.10f}" )
+                    print( f"Vsum({n}, {m}, {n2}, {m2}) = {sum:.10f}" )
+                                        
                 pass
             pass
         pass
@@ -46,4 +47,8 @@ if __name__ == '__main__':
     print_profile()
 
     log.info( "Good bye!" )
+pass
+
+if __name__ == '__main__':
+    test_zenike_function_orth()
 pass

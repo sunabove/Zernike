@@ -2,30 +2,41 @@
 
 from Zernike import *
 
-if __name__ == '__main__':
+def test_zernike_polynomial_orth() :
     log.info( "Hello ..." ) 
     
     zernike = Zernike() 
     
-    dr = 0.0001 
+    dr = 0.0001
+    rhos = np.arange(0, 1 + dr, dr)
+             
     for n in range( 10 ) :
         for m in range( n + 1 ) :
             sum = 0
             
-            for rho in np.arange(0, 1 + dr, dr) :
+            ss = np.zeros( [ rhos.shape[0] ], dtype=np.float )
+            
+            idx = 0 
+            for rho in rhos :
                 p = zernike.polynomial(n, m, rho)
                 q = zernike.polynomial(m, n, rho)
                 ds = p*q*rho*dr
-                sum += ds
+                ss[ idx ] = ds
+                idx +=1 
             pass
         
+            sum = np.sum( ss )
             sum = 2*(n + 1)*sum
         
-            log.info( f"Rsum({n}, {m}) = {sum:.10f}" )
+            print( f"Rsum({n}, {m}) = {sum:.10f}" )
         pass
     pass     
     
     print_profile()
 
     log.info( "Good bye!" )
+pass
+
+if __name__ == '__main__':
+    test_zernike_polynomial_orth()
 pass
