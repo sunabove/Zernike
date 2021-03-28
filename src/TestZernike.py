@@ -3,7 +3,7 @@
 from Zernike import *
 
 def test_zernike_image_restore() :
-    log.info( "Hello ...\n" )
+    log.info( "Hello ..." )
     
     from skimage import data
     from skimage import color
@@ -69,7 +69,7 @@ def test_zernike_image_restore() :
     
     print_profile()
 
-    log.info( "\nGood bye!" )
+    log.info( "Good bye!" )
 pass # --test_zernike
 
 if __name__ == '__main__':

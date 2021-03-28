@@ -3,7 +3,7 @@
 from Zernike import *
 
 if __name__ == '__main__':
-    log.info( "Hello ...\n" ) 
+    log.info( "Hello ..." ) 
     
     zernike = Zernike() 
     
