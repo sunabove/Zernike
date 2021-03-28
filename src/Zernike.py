@@ -29,7 +29,7 @@ class Zernike :
         
         self.two_pi = 2*pi
         
-        db_name = 'file:cachedb?mode=memory&cache=shared'
+        db_name = ':memory:'
         db_name = 'c:/temp/zernike.db'        
         
         self.conn = sqlite3.connect(db_name)
