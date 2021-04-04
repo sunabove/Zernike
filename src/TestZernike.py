@@ -2,6 +2,40 @@
 
 from Zernike import *
 
+import os
+
+img_save_cnt = 0 
+
+def img_file_name(self, fileName):
+    # C:/temp 폴더에 결과 파일을 저정합니다.
+
+    directory = "C:/temp"
+
+    if os.path.exists(directory):
+        if not os.path.isdir(directory):
+            os.remove(directory)
+            os.mkdir(directory)
+        pass
+    else:
+        os.mkdir(directory)
+    pass
+
+    fileBase = os.path.basename(fileName)
+
+    fileHeader, ext = os.path.splitext( fileBase )
+    ext = ext.lower()
+
+    fn = os.path.join( directory, f"{fileHeader}_{img_save_cnt:02d}{ext}" )
+
+    fn = fn.replace("\\", "/")
+
+    log.info( f"fn={fn}")
+
+    img_save_cnt += 1
+
+    return fn
+pass  # -- img_file_name
+
 def test_zernike_image_restore() :
     print( "Hello ..." )
     
@@ -28,13 +62,16 @@ def test_zernike_image_restore() :
     zernike = Zernike()
     
     Ts = [ 10, 20, 30 ]
-    Ks = [ 1, 3, 5 ]    
+    Ks = [ 1, 3 ]    
     
     import matplotlib.pyplot as plt
     nrows = len(Ts)
     ncols = len(Ks)
     
     plt.rcParams['figure.figsize'] = [14, 14]
+    plt.get_current_fig_manager().canvas.set_window_title('Pseudo-Zernike Moment Image Restoration')
+    plt.tight_layout()
+            
     fig, axes = plt.subplots( nrows=nrows, ncols=ncols)
     
     if nrows*ncols > 1 :
@@ -64,12 +101,10 @@ def test_zernike_image_restore() :
             
             ax.imshow( img_reconst, cmap='gray' )
             ax.set_title( title + "\n" )            
+            
+            plt.show(block=0)            
         pass        
     pass 
-    
-    plt.get_current_fig_manager().canvas.set_window_title('Pseudo-Zernike Moment Image Restoration')
-    plt.tight_layout()
-    plt.show()
     
     print_profile()
 

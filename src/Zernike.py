@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import warnings
+from _ast import Pass
 #from gevent.libev.corecext import NONE
 
 warnings.filterwarnings('ignore', category=FutureWarning)
@@ -35,6 +36,8 @@ class Zernike :
         self.cursor = self.conn.cursor()
 
         self.create_table( kwargs )
+        
+        self.poly_factors = {}
     pass
 
     def __del__(self) :
@@ -81,6 +84,23 @@ class Zernike :
 
     pass # -- create_table
 
+    def poly_factor(self, n, m, k):
+        key = f"{2*n + 1 - k}:{k}:{n + m + 1 - k}:{n - m - k}"
+        
+        poly_factors = self.poly_factors
+        
+        factor = None 
+        
+        if key in poly_factors :
+            factor = poly_factors[ key ]
+        else :
+            factor = factorial(2*n + 1 - k)/factorial(k)/factorial(n + m + 1 - k)/factorial(n - m - k)
+            poly_factors[ key ] = factor
+        pass
+        
+        return factor
+    pass
+
     @profile
     def calc_polynomial(self, n, m, rho):        
         m = abs( m )
@@ -94,7 +114,7 @@ class Zernike :
                 r *= rho**(n - k)
             pass
         
-            r *= factorial(2*n + 1 - k)/factorial(k)/factorial(n + m + 1 - k)/factorial(n - m - k)
+            r *= self.poly_factor(n, m, k)
             
             rs[k] = r
         pass
@@ -286,7 +306,7 @@ class Zernike :
                         zf = self.function(n, m, rx, ry)
                         zf = zf.conjugate()
                         
-                        moments[ idx ] = pixel*zf
+                        moments[ idx ] = pixel*dx*dy*zf
                         
                         idx += 1
                     pass
@@ -295,7 +315,6 @@ class Zernike :
         pass
     
         moment = np.sum( moments ) 
-        moment = moment*dx*dy
         
         elapsed = time() - then
         
