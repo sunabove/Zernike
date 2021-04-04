@@ -70,8 +70,8 @@ def test_zernike_image_restore(is_jupyter = 1) :
     
     zernike = Zernike()
     
-    Ts = [ 10, 20, 30 ]
-    Ks = [ 1, 3 ]    
+    Ts = [ 10, 20, 40 ]
+    Ks = [ 1, 3, 5, 7 ]    
     
     for t in Ts :
         for k in Ks :
