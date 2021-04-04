@@ -260,7 +260,7 @@ class Zernike :
     def zernike_moment(self, img, n, m, k=1, T=-1 ):
         debug = self.debug 
         
-        log.info( f"T={T}, n={n}, m={m}, k={k}" )
+        debug and log.info( f"T={T}, n={n}, m={m}, k={k}" )
         
         if m < 0 :
             moment = self.zernike_moment(img, n, -m, k, T)
@@ -326,14 +326,16 @@ class Zernike :
         
         elapsed = time() - then
         
-        log.info( f"Elapsed time to calculate zernike moment = {elapsed}" )
-        log.info( f"Zernike moment = {moment}" )    
+        debug and log.info( f"Elapsed time to calculate zernike moment = {elapsed}" )
+        debug and log.info( f"Zernike moment = {moment}" )    
     
         return moment                
     pass # -- moment
 
     @profile
     def image_reconstruct(self, img, t = 20, k = 1 ):
+        log.info( f"t={t}, k={k}. Image reconstruccting ..." )
+        
         then = time()
         
         h = img.shape[0]
@@ -378,7 +380,7 @@ class Zernike :
     
         elapsed = time() - then
         
-        log.info( f"Elapsed time to reconstruct an image = {elapsed}" )
+        log.info( f"t={t}, k={k}. Elapsed time to reconstruct an image = {elapsed:.4f}" )
         
         return img_recon
     pass # -- image_reconstruct    
