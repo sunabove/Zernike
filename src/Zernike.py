@@ -38,7 +38,7 @@ class Zernike :
         self.create_table( kwargs )
         
         self.poly_factors = {}
-        self.moments = {}
+        self.momentsDict = {}
     pass
 
     def __del__(self) :
@@ -151,16 +151,13 @@ class Zernike :
     
             cnt = len( rows )
             
-            if cnt > 1 :
-                log.info( "Invalid polynomial count." )
-                
-                import sys
-                sys.exit( 1 )
-            elif cnt == 1 :
+            if cnt :
                 for row in rows:
                     R = row[ 0 ]
+                    
+                    break
                 pass
-            elif cnt < 1 :
+            else :
                 then = time()
                 R = self.calc_polynomial(n, m, rho)
                 now = time()
@@ -199,50 +196,44 @@ class Zernike :
         
         calc_time = -1        
 
-        if rho == 0 : 
-            v = 0 
-        elif rho != 0 :
-            cursor = self.cursor
+        cursor = self.cursor
             
-            rows = cursor.execute(
-                "SELECT vx, vy FROM zernike_function WHERE n = ? and m = ? and rho = ? and theta = ?",
-                [n, m, rho, theta],
-            ).fetchall()
+        rows = cursor.execute(
+            "SELECT vx, vy FROM zernike_function WHERE n = ? and m = ? and rho = ? and theta = ?",
+            [n, m, rho, theta],
+        ).fetchall()
 
-            cnt = len( rows )
+        cnt = len( rows )
+        
+        if cnt :
+            vx = 0
+            vy = 0 
             
-            if cnt > 1 : 
-                log.info( "Invalid count for zernike function")
+            for row in rows : 
+                vx = row[0]
+                vy = row[1]
                 
-                import sys
-                sys.exit(1)     
-            elif cnt == 1 :
-                vx = 0
-                vy = 0 
-                for row in rows : 
-                    vx = row[0]
-                    vy = row[1]
-                pass
-            
-                v = vx + 1j*vy
-            elif cnt < 1 :
-                then = time()
-                r = self.select_polynomial(n, m, rho)
-    
-                debug and log.info(f"R(n={n}, m={m}, rho={rho:.4f}, x={x:.4f}, y={y:.4f}) = {r}")
-                
-                e = cmath.exp( 1j*theta )
-            
-                v = r*e
-                
-                calc_time = time() - then
-                
-                sql = '''
-                    INSERT INTO zernike_function( n, m, rho, theta, vx, vy, calc_time )
-                    VALUES ( ?, ?, ?, ?, ?, ?, ? )
-                    '''
-                cursor.execute(sql, [n, m, rho, theta, v.real, v.imag, calc_time])
+                break
             pass
+        
+            v = vx + 1j*vy
+        else :
+            then = time()
+            r = self.select_polynomial(n, m, rho)
+
+            debug and log.info(f"R(n={n}, m={m}, rho={rho:.4f}, x={x:.4f}, y={y:.4f}) = {r}")
+            
+            e = cmath.exp( 1j*theta )
+        
+            v = r*e
+            
+            calc_time = time() - then
+            
+            sql = '''
+                INSERT INTO zernike_function( n, m, rho, theta, vx, vy, calc_time )
+                VALUES ( ?, ?, ?, ?, ?, ?, ? )
+                '''
+            cursor.execute(sql, [n, m, rho, theta, v.real, v.imag, calc_time])
         pass
     
         debug and log.info(f"V(n={n}, m={m}, rho={rho:.4f}, theta={theta:.4f}, x={x:.4f}, y={y:.4f}) = {v}, calc_time={calc_time}")
@@ -279,47 +270,59 @@ class Zernike :
         
         then = time()
         
+        momentsDict = self.momentsDict
+        
         if k < 1 :
             k = 1
         pass
     
-        h = img.shape[0]
-        w = img.shape[1]
+        key = f"{n}:{m}:{k}"
+        moment = None 
         
-        radius = self.img_radius(img)
-        
-        debug and log.info( f"Radius = {radius}" )
-        
-        dx = 1/k/radius
-        dy = dx
+        if key in momentsDict : 
+            moment = momentsDict[ key ] 
+        else :
+            h = img.shape[0]
+            w = img.shape[1]
             
-        moments = np.zeros([h*k*w*k], dtype=np.complex) 
-        
-        idx = 0 
-        for y0, row in enumerate( img ) :
-            for x0, pixel in enumerate( row ) :
-                for y in np.arange(y0, y0 + 1, 1/k) :
-                    # convert coordinate into unit circle coordinate system
-                    ry = (y - h/2)/radius
-                        
-                    for x in np.arange(x0, x0 + 1, 1/k) :                        
-                        # convert coordinate into unit circle coordinate system
-                        rx = (x - w/2)/radius
-                        
-                        zf = self.function(n, m, rx, ry)
-                        zf = zf.conjugate()
-                        
-                        moments[ idx ] = pixel*zf
-                        
-                        idx += 1
+            radius = self.img_radius(img)
+            
+            debug and log.info( f"Radius = {radius}" )
+            
+            dx = 1/k/radius
+            dy = dx
+                
+            moments = np.zeros([h*k*w*k], dtype=np.complex) 
+            
+            idx = 0 
+            for y0, row in enumerate( img ) :
+                for x0, pixel in enumerate( row ) :
+                    if pixel : 
+                        for y in np.arange(y0, y0 + 1, 1/k) :
+                            # convert coordinate into unit circle coordinate system
+                            ry = (y - h/2)/radius
+                                
+                            for x in np.arange(x0, x0 + 1, 1/k) :                        
+                                # convert coordinate into unit circle coordinate system
+                                rx = (x - w/2)/radius
+                                
+                                zf = self.function(n, m, rx, ry)
+                                zf = zf.conjugate()
+                                
+                                moments[ idx ] = pixel*zf
+                                
+                                idx += 1
+                            pass
+                        pass
                     pass
-                pass    
-            pass
-        pass    
-    
-        moment = np.sum( moments )
+                pass
+            pass    
         
-        moment = moment*dx*dy 
+            moment = np.sum( moments )            
+            moment = moment*dx*dy
+                            
+            momentsDict[ key ] = moment 
+        pass
         
         elapsed = time() - then
         
@@ -340,8 +343,6 @@ class Zernike :
         
         img_recon = np.zeros([h, w], dtype=np.complex)
         
-        moments = self.moments
-        
         for y in range(h) :
             ry = (y - h/2)/radius
                                         
@@ -354,28 +355,24 @@ class Zernike :
                     idx = 0 
                     
                     for m in range( - n, n + 1) :
-                        key = f"{n}:{m}:{k}"
-                        moment = None 
+                        v = 0 
+                        zf = self.zernike_function(n, m, rx, ry)
                         
-                        if key in moments : 
-                            moment = moments[ key ]
-                        else :
-                            moment = None 
-                        pass
-                        
-                        if not moment :
+                        if zf : 
                             moment = self.zernike_moment(img, n, m, k=k, T=t)
-                            moments[ key ] = moment 
+                            if moment : 
+                                v = moment*zf
+                            pass
                         pass
                         
-                        p[idx] = (n+1)/pi*(moment*self.zernike_function(n, m, rx, ry))
+                        p[idx] = v
                         idx += 1
                     pass
                 
-                    pixel += np.sum(p)
+                    pixel += (n+1)*np.sum(p)
                 pass
             
-                img_recon[y, x] = pixel 
+                img_recon[y, x] = pixel/pi 
             pass
         pass
     
@@ -387,3 +384,8 @@ class Zernike :
     pass # -- image_reconstruct    
 
 pass # -- class zernike moment
+
+if __name__ == '__main__':
+    import TestZernike
+    TestZernike.test_zernike_image_restore( is_jupyter = 0)    
+pass
