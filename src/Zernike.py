@@ -27,8 +27,6 @@ class Zernike :
     def __init__(self, **kwargs) :
         self.debug = False 
         
-        self.two_pi = 2*pi
-        
         db_name = 'c:/temp/zernike.db'
         db_name = ':memory:'
         
@@ -84,36 +82,24 @@ class Zernike :
     pass # -- create_table
 
     @profile
-    def calc_polynomial(self, n, m, rho):
-        # -------------------------------------------------------------------------
-        #   n = the order of Zernike polynomial
-        #   m = the repetition of Zernike moment
-        #   r = radius
-        # -------------------------------------------------------------------------
-        R = 0
-
+    def calc_polynomial(self, n, m, rho):        
         m = abs( m )
+        
+        rs = np.zeros([ n - m + 1 ], dtype=np.double )
             
-        for k in range( 0, n - m + 1 ) :
-            r = 1
+        for k in range( len( rs ) ) :            
+            r = (-1) ** (k % 4)
             
-            if n - k == 0 :
-                r = (-1) ** (k % 4)
-                r *= factorial(2*n + 1 - k)/factorial(k)/factorial(n + m + 1 - k)/factorial(n - m - k)
-            elif n - k != 0 :
-                if rho == 0 :
-                    r = 0
-                elif rho != 0 :
-                    r = (-1) ** (k % 4)
-                    r *= rho**(n - k)
-                    r *= factorial(2*n + 1 - k)/factorial(k)/factorial(n + m + 1 - k)/factorial(n - m - k)
-                pass
+            if n - k :
+                r *= rho**(n - k)
             pass
-
-            R += r
+        
+            r *= factorial(2*n + 1 - k)/factorial(k)/factorial(n + m + 1 - k)/factorial(n - m - k)
+            
+            rs[k] = r
         pass
 
-        return R
+        return np.sum( rs )
     pass # -- polynomial
 
     @profile
@@ -183,8 +169,7 @@ class Zernike :
 
         v = 1.0
         
-        theta = atan2(y, x)
-        theta = (theta*m) % self.two_pi
+        theta = m*atan2(y, x)        
         
         calc_time = -1        
 
@@ -248,6 +233,8 @@ class Zernike :
         w = img.shape[1]
         
         radius = max( h/2, w/2 )*sqrt(2)
+        
+        #radius = max( h, w )/sqrt(2)
         
         return radius
     pass # -- img_radius
@@ -339,7 +326,7 @@ class Zernike :
                 rx = (x - w/2)/radius
                                 
                 for n in range(t + 1):
-                    p = np.zeros([2*(n+1)], dtype=np.complex)                    
+                    p = np.zeros([2*n + 1], dtype=np.complex)                    
                     idx = 0 
                     
                     for m in range( - n, n + 1) :
