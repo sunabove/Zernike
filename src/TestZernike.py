@@ -3,7 +3,7 @@
 from Zernike import *
 
 def test_zernike_image_restore() :
-    log.info( "Hello ..." )
+    print( "Hello ..." )
     
     from skimage import data
     from skimage import color
@@ -27,8 +27,8 @@ def test_zernike_image_restore() :
     
     zernike = Zernike()
     
-    Ts = [ 20, 40 ]
-    Ks = [ 1, 3, 5, 7 ]    
+    Ts = [ 10, 20 ]
+    Ks = [ 1, 3 ]    
     
     import matplotlib.pyplot as plt
     nrows = len(Ts)
@@ -73,7 +73,7 @@ def test_zernike_image_restore() :
     
     print_profile()
 
-    log.info( "Good bye!" )
+    print( "Good bye!" )
 pass # --test_zernike
 
 if __name__ == '__main__':

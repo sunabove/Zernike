@@ -333,13 +333,15 @@ class Zernike :
         
         for y in range(h) :
             ry = (y - h/2)/radius
-                            
+                                        
             for x in range(w) :
-                pixel = 0
-                                
+                pixel = 0                                
                 rx = (x - w/2)/radius
                                 
-                for n in range(t + 1 ):
+                for n in range(t + 1):
+                    p = np.zeros([2*(n+1)], dtype=np.complex)                    
+                    idx = 0 
+                    
                     for m in range( - n, n + 1) :
                         key = f"{n}:{m}:{k}"
                         moment = None 
@@ -355,8 +357,11 @@ class Zernike :
                             moments[ key ] = moment 
                         pass
                         
-                        pixel += (n+1)/pi*moment*self.zernike_function(n, m, rx, ry)
+                        p[idx] = moment*self.zernike_function(n, m, rx, ry)
+                        idx += 1
                     pass
+                
+                    pixel += (n+1)/pi*np.sum(p)
                 pass
             
                 img_recon[y, x] = pixel 
