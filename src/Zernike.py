@@ -38,6 +38,7 @@ class Zernike :
         self.create_table( kwargs )
         
         self.poly_factors = {}
+        self.moments = {}
     pass
 
     def __del__(self) :
@@ -185,6 +186,11 @@ class Zernike :
     def zernike_function(self, n, m, x, y):
         debug = self.debug 
         
+        if m < 0 :
+            v = self.zernike_function(n, -m, x, y)
+            return v.conjugate()
+        pass
+        
         rho = math.sqrt( x*x + y*y )
 
         v = 1.0
@@ -260,10 +266,16 @@ class Zernike :
     pass # -- img_radius
 
     @profile
-    def zernike_moment(self, img, n, m, k=1 ):
+    def zernike_moment(self, img, n, m, k=1, T=-1 ):
         debug = self.debug 
         
-        log.info( f"n={n}, m={m}, k={k}" )
+        log.info( f"T={T}, n={n}, m={m}, k={k}" )
+        
+        if m < 0 :
+            moment = self.zernike_moment(img, n, -m, k, T)
+            
+            return moment.conjugate()
+        pass
         
         then = time()
         
@@ -294,27 +306,20 @@ class Zernike :
                         # convert coordinate into unit circle coordinate system
                         rx = (x - w/2)/radius
                         
-                        if 0 and ry > 1 or rx > 1 or ry*ry + rx*rx > 1 :
-                            log.info( f"rx = {rx}, ry = {ry}")                        
-                        
-                            log.info( "invalid coordinate conversion." )
-                            
-                            import sys
-                            sys.exit( -1 )
-                        pass
-                        
                         zf = self.function(n, m, rx, ry)
                         zf = zf.conjugate()
                         
-                        moments[ idx ] = pixel*dx*dy*zf
+                        moments[ idx ] = pixel*zf
                         
                         idx += 1
                     pass
                 pass    
             pass
-        pass
+        pass    
     
-        moment = np.sum( moments ) 
+        moment = np.sum( moments )
+        
+        moment = moment*dx*dy 
         
         elapsed = time() - then
         
@@ -335,7 +340,7 @@ class Zernike :
         
         img_recon = np.zeros([h, w], dtype=np.complex)
         
-        moments = {}
+        moments = self.moments
         
         for y in range(h) :
             ry = (y - h/2)/radius
@@ -359,15 +364,15 @@ class Zernike :
                         pass
                         
                         if not moment :
-                            moment = self.zernike_moment(img, n, m, k)
+                            moment = self.zernike_moment(img, n, m, k=k, T=t)
                             moments[ key ] = moment 
                         pass
                         
-                        p[idx] = moment*self.zernike_function(n, m, rx, ry)
+                        p[idx] = (n+1)/pi*(moment*self.zernike_function(n, m, rx, ry))
                         idx += 1
                     pass
                 
-                    pixel += (n+1)/pi*np.sum(p)
+                    pixel += np.sum(p)
                 pass
             
                 img_recon[y, x] = pixel 
