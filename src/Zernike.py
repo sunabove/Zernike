@@ -249,10 +249,9 @@ class Zernike :
         h = img.shape[0]
         w = img.shape[1]
         
-        radius = max( h/2, w/2 )*sqrt(2)
-        
-        #radius = max( h, w )/sqrt(2)
-        
+        #radius = max( h/2, w/2 )*sqrt(2)
+        radius = min( h/2, w/2 )
+         
         return radius
     pass # -- img_radius
 
@@ -292,7 +291,7 @@ class Zernike :
             dx = 1/k/radius
             dy = dx
                 
-            moments = np.zeros([h*k*w*k], dtype=np.complex) 
+            moments = np.zeros([np.count_nonzero(img)*k*k], dtype=np.complex) 
             
             idx = 0 
             for y0, row in enumerate( img ) :
@@ -306,12 +305,14 @@ class Zernike :
                                 # convert coordinate into unit circle coordinate system
                                 rx = (x - w/2)/radius
                                 
-                                zf = self.function(n, m, rx, ry)
-                                zf = zf.conjugate()
-                                
-                                moments[ idx ] = pixel*zf
-                                
-                                idx += 1
+                                if ry*ry + rx*rx <= 1 :                                
+                                    zf = self.function(n, m, rx, ry)
+                                    zf = zf.conjugate()
+                                    
+                                    moments[ idx ] = pixel*zf
+                                    
+                                    idx += 1
+                                pass
                             pass
                         pass
                     pass
@@ -347,40 +348,50 @@ class Zernike :
         
         for y in range(h) :
             ry = (y - h/2)/radius
-                                        
+            
+            entered = False 
+                               
             for x in range(w) :
                 pixel = 0                                
                 rx = (x - w/2)/radius
-                                
-                for n in range(t + 1):
-                    p = np.zeros([2*n + 1], dtype=np.complex)                    
-                    idx = 0 
-                    
-                    for m in range( - n, n + 1) :
-                        v = 0 
-                        zf = self.zernike_function(n, m, rx, ry)
+                
+                if ry*ry + rx*rx > 1 :
+                    if entered :
+                        break
+                    pass
+                else :
+                    entered = True 
+                              
+                    for n in range(t + 1):
+                        p = np.zeros([2*n + 1], dtype=np.complex)                    
+                        idx = 0 
                         
-                        if zf : 
-                            moment = self.zernike_moment(img, n, m, k=k, T=t)
-                            if moment : 
-                                v = moment*zf
+                        for m in range( - n, n + 1) :
+                            v = 0 
+                            zf = self.zernike_function(n, m, rx, ry)
+                            
+                            if zf : 
+                                moment = self.zernike_moment(img, n, m, k=k, T=t)
+                                if moment : 
+                                    v = moment*zf
+                                pass
                             pass
+                            
+                            p[idx] = v
+                            idx += 1
                         pass
-                        
-                        p[idx] = v
-                        idx += 1
+                    
+                        pixel += (n+1)*np.sum(p)
                     pass
                 
-                    pixel += (n+1)*np.sum(p)
-                pass
-            
-                img_recon[y, x] = pixel/pi 
+                    img_recon[y, x] = pixel/pi
+                pass 
             pass
         pass
     
         elapsed = time() - then
         
-        log.info( f"t={t}, k={k}. Elapsed time to reconstruct an image = {elapsed:.4f}" )
+        log.info( f"t={t}, k={k}. Elapsed time to reconstruct an image = {elapsed:.2f}" )
         
         return img_recon
     pass # -- image_reconstruct    

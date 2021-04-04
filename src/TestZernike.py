@@ -67,11 +67,29 @@ def test_zernike_image_restore(is_jupyter = 1) :
         
         log.info( f"image shape = {img.shape}" )
     pass
-    
+
     zernike = Zernike()
     
+    if True : 
+        h = img.shape[0]
+        w = img.shape[1]
+        radius = zernike.img_radius(img)
+        
+        for y, row in enumerate( img ) :
+            ry = (y - h/2)/radius
+            for x, pixel in enumerate( row ) :
+                rx = (x - h/2)/radius
+                if ry*ry + rx*rx > 1 :
+                    img[y, x] = 0
+                pass
+            pass
+        pass
+    
+        save_image(img, f"{img_name}_unit_circle.png")
+    pass
+    
     Ts = [ 10, 20, 40 ]
-    Ks = [ 1, 3, 5, 7 ]    
+    Ks = [ 1, 3, 5 ]    
     
     for t in Ts :
         for k in Ks :
