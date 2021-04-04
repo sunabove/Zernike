@@ -27,8 +27,8 @@ def test_zernike_image_restore() :
     
     zernike = Zernike()
     
-    Ts = [ 20 ]
-    Ks = [ 1 ]    
+    Ts = [ 20, 40 ]
+    Ks = [ 1, 3, 5, 7 ]    
     
     import matplotlib.pyplot as plt
     nrows = len(Ts)

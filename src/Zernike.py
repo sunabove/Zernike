@@ -171,8 +171,12 @@ class Zernike :
         return R
     pass # -- select
 
-    @profile
     def function(self, n, m, x, y):
+        return self.zernike_function(n, m, x, y)
+    pass
+
+    @profile
+    def zernike_function(self, n, m, x, y):
         debug = self.debug 
         
         rho = math.sqrt( x*x + y*y )
@@ -233,16 +237,23 @@ class Zernike :
         debug and log.info(f"V(n={n}, m={m}, rho={rho:.4f}, theta={theta:.4f}, x={x:.4f}, y={y:.4f}) = {v}, calc_time={calc_time}")
 
         return v
-    pass # -- function
+    pass # -- zernike_function
+
+    def moment(self, img, n, m, k=1 ):
+        return self.zernike_moment(img, n, m, k)
+    pass # -- moment
+
+    def img_radius(self, img):
+        h = img.shape[0]
+        w = img.shape[1]
+        
+        radius = max( h/2, w/2 )*sqrt(2)
+        
+        return radius
+    pass # -- img_radius
 
     @profile
     def zernike_moment(self, img, n, m, k=1 ):
-        '''
-        Parameters
-        ----------
-        T : 
-        k : numerical scheme        
-        '''
         debug = self.debug 
         
         log.info( f"n={n}, m={m}, k={k}" )
@@ -256,45 +267,55 @@ class Zernike :
         h = img.shape[0]
         w = img.shape[1]
         
-        radius = max( h, w )/sqrt(2)
+        radius = self.img_radius(img)
+        
         debug and log.info( f"Radius = {radius}" )
         
         dx = 1/k/radius
         dy = dx
             
-        moments = np.zeros([h, w], dtype=np.complex) 
+        moments = np.zeros([h*k*w*k], dtype=np.complex) 
         
+        idx = 0 
         for y0, row in enumerate( img ) :
             for x0, pixel in enumerate( row ) :
-                a = 0
                 for y in np.arange(y0, y0 + 1, 1/k) :
+                    # convert coordinate into unit circle coordinate system
+                    ry = (y - h/2)/radius
+                        
                     for x in np.arange(x0, x0 + 1, 1/k) :                        
                         # convert coordinate into unit circle coordinate system
-                        ry = (y - h/2)/radius
                         rx = (x - w/2)/radius
+                        
+                        if 0 and ry > 1 or rx > 1 or ry*ry + rx*rx > 1 :
+                            log.info( f"rx = {rx}, ry = {ry}")                        
+                        
+                            log.info( "invalid coordinate conversion." )
+                            
+                            import sys
+                            sys.exit( -1 )
+                        pass
                         
                         zf = self.function(n, m, rx, ry)
                         zf = zf.conjugate()
                         
-                        a += zf
+                        moments[ idx ] = pixel*zf
+                        
+                        idx += 1
                     pass
-                pass
-            
-                a = a*dx*dy
-            
-                moments[y0, x0] = pixel*a
+                pass    
             pass
         pass
     
         moment = np.sum( moments ) 
+        moment = moment*dx*dy
         
         elapsed = time() - then
         
         log.info( f"Elapsed time to calculate zernike moment = {elapsed}" )
-        log.info( f"zernike moment = {moment}" )    
+        log.info( f"Zernike moment = {moment}" )    
     
-        return moment
-                
+        return moment                
     pass # -- moment
 
     @profile
@@ -304,21 +325,23 @@ class Zernike :
         h = img.shape[0]
         w = img.shape[1]
         
-        radius = max( h, w )/sqrt(2)
+        radius = self.img_radius(img)
         
         img_recon = np.zeros([h, w], dtype=np.complex)
         
         moments = {}
         
         for y in range(h) :
+            ry = (y - h/2)/radius
+                            
             for x in range(w) :
                 pixel = 0
+                                
+                rx = (x - w/2)/radius
+                                
                 for n in range(t + 1 ):
-                    for m in range( - n, n+1) :
-                        ry = (y - h/2)/radius
-                        rx = (x - w/2)/radius
-                        
-                        key = f"{n}:{m}"
+                    for m in range( - n, n + 1) :
+                        key = f"{n}:{m}:{k}"
                         moment = None 
                         
                         if key in moments : 
@@ -332,7 +355,7 @@ class Zernike :
                             moments[ key ] = moment 
                         pass
                         
-                        pixel += (n+1)/pi*moment*self.function(n, m, rx, ry)
+                        pixel += (n+1)/pi*moment*self.zernike_function(n, m, rx, ry)
                     pass
                 pass
             
