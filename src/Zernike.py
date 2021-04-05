@@ -103,6 +103,10 @@ class Zernike :
 
     @profile
     def calc_polynomial(self, n, m, rho):        
+        debug = self.debug
+        
+        debug and log.info( f"n={n}, m={m}, n - m + 1 = {n - m + 1}" )
+        
         m = abs( m )
         
         rs = np.zeros([ n - m + 1 ], dtype=np.double )
