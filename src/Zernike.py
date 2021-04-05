@@ -7,9 +7,7 @@ from _ast import Pass
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
-import sys
-
-import logging as log
+import sys, logging as log
 log.basicConfig(stream=sys.stdout, format='%(levelname)s %(filename)s:%(lineno)04d %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=log.INFO )
 
 from os.path import join
