@@ -45,8 +45,7 @@ def polar(r, theta):
     return 1.*x+1.j*y
 pass # -- polar
 
-def _slow_zernike_poly(Y, X, n, l):
-    
+def _slow_zernike_poly(Y, X, n, l):    
     y, x = Y[0], X[0]
     vxy = np.zeros(Y.size, dtype=complex)
     

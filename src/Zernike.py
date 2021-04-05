@@ -26,6 +26,10 @@ class Zernike :
     def __init__(self, **kwargs) :
         self.debug = False 
         
+        self.poly_factors = {}
+        self.momentsDict = {}
+        self.two_pi = 2*pi
+        
         db_name = 'c:/temp/zernike.db'
         db_name = ':memory:'
         
@@ -34,9 +38,6 @@ class Zernike :
         self.cursor = self.conn.cursor()
 
         self.create_table( kwargs )
-        
-        self.poly_factors = {}
-        self.momentsDict = {}
     pass
 
     def __del__(self) :
@@ -190,7 +191,8 @@ class Zernike :
 
         v = 1.0
         
-        theta = m*atan2(y, x)        
+        theta = m*atan2(y, x)
+        theta = theta % self.two_pi
         
         calc_time = -1        
 
@@ -286,7 +288,7 @@ class Zernike :
             
             debug and log.info( f"Radius = {radius}" )
             
-            dx = 1/k/radius
+            dx = 1/(k*2*radius)
             dy = dx
                 
             moments = np.zeros([np.count_nonzero(img)*k*k], dtype=np.complex) 
