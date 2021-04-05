@@ -68,7 +68,7 @@ pass # -- _slow_zernike_poly
 def zernike_reconstruct(img, d):
     shape = img.shape
     
-    radius = max( img.shape[0]/2.0, img.shape[1]/2.0 )
+    radius = min( img.shape[0]/2, img.shape[1]/2 )
     
     row = shape[0]
     col = shape[1]
@@ -83,10 +83,10 @@ def zernike_reconstruct(img, d):
     y, x = np.where(idx > 0)
     p = img[y, x].ravel()
     
-    yn = ( (y -cofy)/radius ).ravel()
-    xn = ( (x -cofx)/radius ).ravel()
+    yn = ( (y - cofy)/radius ).ravel()
+    xn = ( (x - cofx)/radius ).ravel()
 
-    k = (np.sqrt(xn**2 + yn**2) <= 1.)
+    k = (np.sqrt(xn**2 + yn**2) <= 1)
     frac_center = np.array(p[k], np.double)
     
     yn = yn[k]
@@ -134,10 +134,11 @@ def test_zernike_numpy( is_jupyter = 1 ) :
     
     log.info( f"image shape = {img.shape}" )
     
-    rescale_width = 50 
+    rescale_width = 0 
     
-    if rescale_width :
-        scale = rescale_width/img.shape[1]
+    if 1 :
+        scale = rescale_width/img.shape[1] if rescale_width else 1
+         
         img = rescale(img, scale, anti_aliasing=True)
         save_image(img, f"{img_name}_size_{rescale_width}.png")
         
@@ -157,7 +158,7 @@ def test_zernike_numpy( is_jupyter = 1 ) :
     
     print( f"gmax = {gmax}" )
     
-    for idx, d in enumerate( [10, 20, 40 ] ) : 
+    for idx, d in enumerate( [20, 40, 60, 80  ] ) : 
         then = time()
         
         reconst = zernike_reconstruct(img, d)
@@ -180,7 +181,7 @@ def test_zernike_numpy( is_jupyter = 1 ) :
         
         psnr = 10*log10(gmax*gmax/mse)
         
-        title = f"ord = {d}, gmax = {gmax}, mse = {mse}, psnr = {psnr:.2f}"
+        title = f"ord = {d}, psnr = {psnr:.2f}"
         fileName = f"{title}.png"
         
         print( title )
