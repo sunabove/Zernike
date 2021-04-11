@@ -67,7 +67,7 @@ pass # -- _slow_zernike_poly
 def zernike_reconstruct(img, d):
     shape = img.shape
     
-    radius = min( img.shape[0]/2, img.shape[1]/2 )
+    radius = max( img.shape[0]/2, img.shape[1]/2 )
     
     row = shape[0]
     col = shape[1]

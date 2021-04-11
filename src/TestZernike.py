@@ -88,14 +88,16 @@ def test_zernike_image_restore(is_jupyter = 1) :
         save_image(img, f"{img_name}_unit_circle.png")
     pass
     
-    Ts = [ 10, 20, 40 ]
-    Ks = [ 1, 3, 5 ]    
+    Ts = np.arange( 10, 35, 5)
+    Ks = np.arange( 1, 7, 2 )    
     
     for t in Ts :
         for k in Ks :
             print(line)
             
-            img_reconst = zernike.image_reconstruct(img, t=t, k=k)
+            moments = zernike.moments_list(img, t, k )
+            
+            img_reconst = zernike.image_reconstruct(img, moments, t=t, k=k)
             
             img_reconst = img_reconst.real
             

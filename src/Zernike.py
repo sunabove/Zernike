@@ -253,8 +253,13 @@ class Zernike :
         h = img.shape[0]
         w = img.shape[1]
         
-        #radius = max( h/2, w/2 )*sqrt(2)
-        radius = min( h/2, w/2 )
+        radius = 0
+        include_all = 1
+        if include_all :
+            radius = max( h/2, w/2 )*sqrt(2)
+        else : 
+            radius = max( h/2, w/2 )
+        pass
          
         return radius
     pass # -- img_radius
@@ -279,7 +284,8 @@ class Zernike :
             k = 1
         pass
     
-        key = f"{n}:{m}:{k}"
+        key = self.moment_key(n, m, k)
+        
         moment = None 
         
         if key in momentsDict : 
@@ -294,6 +300,7 @@ class Zernike :
             
             dx = 1/(k*2*radius)
             dy = dx
+            ds = dx*dy
                 
             moments = np.zeros([np.count_nonzero(img)*k*k], dtype=np.complex) 
             
@@ -313,7 +320,7 @@ class Zernike :
                                     zf = self.function(n, m, rx, ry)
                                     zf = zf.conjugate()
                                     
-                                    moments[ idx ] = pixel*zf
+                                    moments[ idx ] = pixel*zf*ds
                                     
                                     idx += 1
                                 pass
@@ -324,7 +331,7 @@ class Zernike :
             pass    
         
             moment = np.sum( moments )            
-            moment = moment*dx*dy
+            moment = moment
                             
             momentsDict[ key ] = moment 
         pass
@@ -337,8 +344,53 @@ class Zernike :
         return moment                
     pass # -- moment
 
+    def moment_key(self, n, m, k):
+        key = f"{n:3d}:{m:3d}:{k}"
+        
+        return key
+    pass
+
     @profile
-    def image_reconstruct(self, img, t = 20, k = 1 ):
+    def moments_list(self, img, t, k=1):
+        funName = "Calculating moments ...."
+        log.info( funName )
+        
+        then = time()
+        
+        moments = {}
+        
+        for n in range( 0, t + 1 ) :
+            for m in range( -n, n + 1 ) :
+                key = self.moment_key(n, m, k)                
+                moment = self.zernike_moment(img, n, m, k=k, T=t)
+                
+                moments[ key ] = moment      
+            pass
+        pass
+    
+        elapsed = time() - then
+        
+        self.print_moments_list(moments)
+        
+        log.info( f"Elapsed time = {elapsed:.2f}" )
+        log.info( "Done." + funName )     
+        
+        return moments 
+    pass # -- moments list
+
+    def print_moments_list(self, moments):
+        keys = moments.keys()
+        keys = sorted( keys )
+        
+        print( "Moments")
+        for key in keys :
+            moment = moments[key]
+            print( f"{key} = {moment}" )
+        pass
+    pass
+
+    @profile
+    def image_reconstruct(self, img, moments, t = 20, k = 1 ):
         log.info( f"t={t}, k={k}. Image reconstruccting ..." )
         
         then = time()
@@ -375,20 +427,19 @@ class Zernike :
                             zf = self.zernike_function(n, m, rx, ry)
                             
                             if zf : 
-                                moment = self.zernike_moment(img, n, m, k=k, T=t)
-                                if moment : 
-                                    v = moment*zf
-                                pass
+                                key = self.moment_key(n, m, k)
+                                moment = moments[ key ]
+                                v = moment*zf
                             pass
                             
                             p[idx] = v
                             idx += 1
                         pass
                     
-                        pixel += (n+1)*np.sum(p)
+                        pixel += (n+1)/pi*np.sum(p)
                     pass
                 
-                    img_recon[y, x] = pixel/pi
+                    img_recon[y, x] = pixel
                 pass 
             pass
         pass
