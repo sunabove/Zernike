@@ -20,6 +20,8 @@ import math, cmath
 from math import factorial, perm, atan2, pi, sqrt, log10
 from time import time, sleep
 
+import xlsxwriter
+
 from Profiler import *
 
 class Zernike :
@@ -41,7 +43,7 @@ class Zernike :
     pass
 
     def __del__(self) :
-        self.conn.commit()
+        self.conn.commit() 
 
         log.info( "Commit" )
     pass
@@ -138,8 +140,7 @@ class Zernike :
     pass
 
     @profile
-    def select_polynomial(self, n, m, rho):
-        
+    def select_polynomial(self, n, m, rho):        
         R = 0
                  
         if rho == 1 :
@@ -370,7 +371,7 @@ class Zernike :
     
         elapsed = time() - then
         
-        self.print_moments_list(moments)
+        self.print_moments_list(moments, t, k)
         
         log.info( f"Elapsed time = {elapsed:.2f}" )
         log.info( "Done." + funName )     
@@ -378,15 +379,50 @@ class Zernike :
         return moments 
     pass # -- moments list
 
-    def print_moments_list(self, moments):
+    def print_moments_list(self, moments, t, k):
         keys = moments.keys()
         keys = sorted( keys )
         
-        print( "Moments")
-        for key in keys :
-            moment = moments[key]
-            print( f"{key} = {moment}" )
+        # 엑셀 파일(workbook)을 만들고, 엑셀 시트를 하나 추가함.
+        path = f'C:\\Temp\\zernike_{t:03d}_{k}.xlsx'
+        
+        workbook = xlsxwriter.Workbook( path )
+        worksheet = workbook.add_worksheet()
+        
+        row = 0
+        
+        if 1 :
+            col = 0
+                
+            worksheet.write(row, col, "k" ); col += 1
+            worksheet.write(row, col, "n" ); col += 1
+            worksheet.write(row, col, "m" ); col += 1
+            worksheet.write(row, col, "real" ); col += 1
+            worksheet.write(row, col, "imag" ); col += 1
+            
+            row += 1
         pass
+        
+        print( "Moments")
+        for n in range( t + 1 ) :
+            for m in range( -n, n + 1 ) :
+                key = self.moment_key(n, m, k)
+                moment = moments[key]
+                print( f"{key} = {moment}" )
+                
+                col = 0
+                
+                worksheet.write(row, col, k ); col += 1
+                worksheet.write(row, col, n ); col += 1
+                worksheet.write(row, col, m ); col += 1
+                worksheet.write(row, col, moment.real ); col += 1
+                worksheet.write(row, col, moment.imag ); col += 1
+                
+                row += 1
+            pass
+        pass
+    
+        workbook.close()
     pass
 
     @profile

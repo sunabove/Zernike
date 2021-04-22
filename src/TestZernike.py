@@ -37,15 +37,10 @@ def save_image(img, fileName):
     return fn
 pass  # -- img_file_name
 
-def test_zernike_image_restore(is_jupyter = 1) :
-    print( "Hello ..." )
-    
-    line = "*"*100
-    
+def load_image_by_skimage():
     from skimage import data
     from skimage import color
     from skimage.transform import rescale 
-    img = data.camera()
     
     import mahotas
     img_name = "lena"
@@ -68,6 +63,52 @@ def test_zernike_image_restore(is_jupyter = 1) :
         log.info( f"image shape = {img.shape}" )
     pass
 
+    return img, img_name
+pass
+
+def load_image():
+    from skimage import data
+    
+    import cv2, cv2 as cv 
+    
+    import mahotas
+    img_name = "lena"
+    img = mahotas.demos.load( img_name )
+    
+    save_image(img, f"{img_name}_org.png")
+    
+    img = img.astype(np.uint8)
+
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    log.info( f"image shape = {img.shape}" )
+    
+    rescale_width = img.shape[1]/4
+    
+    if rescale_width :
+        height = img.shape[0]
+        width = img.shape[1]
+        
+        scale = rescale_width/img.shape[1]
+        
+        dim = ( int( width*scale ), int( height*scale ) )
+        img = cv2.resize(img, dim, interpolation = cv2.INTER_LINEAR)
+        
+        save_image(img, f"{img_name}_size_{rescale_width}.png")
+        
+        log.info( f"image shape = {img.shape}" )
+    pass
+
+    return img, img_name
+pass
+
+def test_zernike_image_restore(is_jupyter = 1) :
+    print( "Hello ..." )
+    
+    line = "*"*100
+    
+    img, img_name = load_image()
+
     zernike = Zernike()
     
     if True : 
@@ -88,8 +129,8 @@ def test_zernike_image_restore(is_jupyter = 1) :
         save_image(img, f"{img_name}_unit_circle.png")
     pass
     
-    Ts = np.arange( 10, 35, 5)
-    Ks = np.arange( 1, 7, 2 )    
+    Ts = [ 10 ]
+    Ks = [ 1, 3 ]
     
     for t in Ts :
         for k in Ks :
@@ -97,17 +138,23 @@ def test_zernike_image_restore(is_jupyter = 1) :
             
             moments = zernike.moments_list(img, t, k )
             
-            img_reconst = zernike.image_reconstruct(img, moments, t=t, k=k)
+            img_zernike = zernike.image_reconstruct(img, moments, t=t, k=k)
             
-            img_reconst = img_reconst.real
+            img_reconst = np.absolute( img_zernike )
             
             img_diff = img - img_reconst
             
-            gmax = np.max( img_reconst ) # 복원된 이미지의 회색조 최대값 
+            omax = np.max( img )
+            gmax = np.max( img_diff ) # 복원된 이미지의 회색조 최대값 
             
-            mse = np.sum( np.square( img_diff ) )/(img_diff.shape[0]*img_diff.shape[1])
+            log.info( f"img shape = {img.shape}" )
+            log.info( f"img_diff shape = {img_diff.shape}, size = {img_diff.size}" )
+            
+            mse = np.sum( np.square( img_diff )/img_diff.size ) 
             
             psnr = 10*log10(gmax*gmax/mse)
+            
+            log.info( f"omax = {omax}, gmax = {gmax}, mse = {mse}, psnr = {psnr:.2f}") 
             
             title = f"t={t}, k={k}, psnr={psnr:.2f}"
             fileName = f"{title}.png"
