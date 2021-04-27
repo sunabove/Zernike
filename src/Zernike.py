@@ -8,7 +8,6 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 log.basicConfig(stream=sys.stdout, format='%(levelname)s %(filename)s:%(lineno)04d %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=log.INFO )
 
-
 from _ast import Pass
 from os.path import join
 from glob import glob
