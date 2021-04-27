@@ -13,10 +13,7 @@ log.basicConfig(stream=sys.stdout, format='%(levelname)s %(filename)s:%(lineno)0
 from os.path import join
 from glob import glob
 
-import sqlite3
-
-import numpy as np
-import math, cmath
+import sqlite3, numpy as np, math, cmath
 from math import factorial, perm, atan2, pi, sqrt, log10
 from time import time, sleep
 
