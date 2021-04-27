@@ -1,24 +1,20 @@
 # -*- coding: utf-8 -*-
 
-import warnings
-from _ast import Pass
-#from gevent.libev.corecext import NONE
+import warnings, sys, logging as log
+import sqlite3, numpy as np, math, cmath, xlsxwriter
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
-import sys, logging as log
 log.basicConfig(stream=sys.stdout, format='%(levelname)s %(filename)s:%(lineno)04d %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=log.INFO )
 
+
+from _ast import Pass
 from os.path import join
 from glob import glob
 
-import sqlite3, numpy as np, math, cmath
 from math import factorial, perm, atan2, pi, sqrt, log10
-from time import time, sleep
-
-import xlsxwriter
-
+from time import time, sleep 
 from Profiler import *
 
 class Zernike :
