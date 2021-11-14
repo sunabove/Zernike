@@ -32,7 +32,7 @@ pass # slow_zernike_poly
 def zernike_reconstruct(img, radius, D, cof):
     idx = np.ones(img.shape)
 
-    cofy,cofx = cof
+    cofy, cofx = cof
     cofy = float(cofy)
     cofx = float(cofx)
     radius = float(radius)
