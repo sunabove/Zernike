@@ -152,7 +152,7 @@ def test_zernike_image_restore(is_jupyter = 1) :
             
             mse = np.sum( np.square( img_diff )/img_diff.size ) 
             
-            psnr = 10*log10(gmax*gmax/mse)
+            psnr = 10*math.log10(gmax*gmax/mse)
             
             log.info( f"omax = {omax}, gmax = {gmax}, mse = {mse}, psnr = {psnr:.2f}") 
             
