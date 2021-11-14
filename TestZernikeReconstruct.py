@@ -76,6 +76,7 @@ if __name__ == '__main__':
     D = 12
 
     img = cv2.imread('./image/gl5un.png', 0)
+    #img = cv2.imread('./image/messi.png', 0)
 
     rows, cols = img.shape
     radius = cols//2 if rows > cols else rows//2
