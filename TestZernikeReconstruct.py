@@ -2,11 +2,12 @@ import numpy as np
 from math import atan2
 from numpy import cos, sin, conjugate, sqrt
 
-def _slow_zernike_poly(Y,X,n,l):
+def slow_zernike_poly(Y,X,n,l):
     def _polar(r,theta):
         x = r * cos(theta)
         y = r * sin(theta)
-        return 1.*x+1.j*y
+        return 1.*x + 1.j*y
+    pass
 
     def _factorial(n):
         if n == 0: return 1.
@@ -26,9 +27,9 @@ def _slow_zernike_poly(Y,X,n,l):
         index = index + 1
 
     return vxy
+pass # slow_zernike_poly
 
 def zernike_reconstruct(img, radius, D, cof):
-
     idx = np.ones(img.shape)
 
     cofy,cofx = cof
@@ -57,13 +58,14 @@ def zernike_reconstruct(img, radius, D, cof):
         for l in range(n+1):
             if (n-l)%2 == 0:
                 # get the zernike polynomial
-                vxy = _slow_zernike_poly(Yn, Xn, float(n), float(l))
+                vxy = slow_zernike_poly(Yn, Xn, float(n), float(l))
                 # project the image onto the polynomial and calculate the moment
                 a = sum(frac_center * conjugate(vxy)) * (n + 1)/npix
                 # reconstruct
                 accum += a * vxy
     reconstr[k] = accum
     return reconstr
+pass # zernike_reconstruct
 
 if __name__ == '__main__':
     print( "Hello..." )
