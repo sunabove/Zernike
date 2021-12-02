@@ -23,15 +23,13 @@ def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
     rho_hash = None
     rho_power = None
     
-    print( f"hash = {hash}")
-    
     if key in hash :
         rho_hash = hash[key]
         rho_power = rho_hash[ 1 ]
     else :
         rho_hash = {}
         rho_power = np.power( rho, p_2s )
-        rho_hash[ 1 : rho_power ]
+        rho_hash[ 1 ] = rho_power
         hash[key] = rho_hash
     pass
 
@@ -71,8 +69,6 @@ def Rpq(p, q, rho, hash={}, debug = 0 ) :
     R_ps = R_ps.astype( np.int_ )
 
     rho_power = []
-    
-    print( f"hash 1 = {hash}")
     
     for r_ps, p_2s in zip( R_ps, p - 2*s ) :
         rho_power.append( _rps( r_ps, rho, p_2s, hash, debug=debug ) )
