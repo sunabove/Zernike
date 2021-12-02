@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np, cv2 as cv, math
+from time import *
 from scipy.special import factorial
 from matplotlib import pyplot as plt
 from datetime import datetime
@@ -14,6 +15,7 @@ line3 = line2 + "\n"
 
 print( f"Hello... Good morning!" )
 print( f"Importing python packages was done." )
+print( f"time = {perf_counter_ns()}" )
 
 def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
     rho_id = id( rho )
