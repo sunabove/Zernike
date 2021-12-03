@@ -100,15 +100,13 @@ def Rpq(p, q, rho, hash={}, debug = 0 ) :
 pass
 
 @profile
-def Vpq( p, q, x, y, debug = 0 ) :
-    rho = np.sqrt( x**2 + y**2 )
-    
-    R_pq = Rpq( p, q, rho, debug = 0 )
+def Vpq( p, q, rho, theta, hash={}, debug = 0 ) :
+    R_pq = Rpq( p, q, rho, hash=hash, debug = 0 )
     
     V_pq = R_pq 
     
     if q : 
-        V_pq = R_pq*np.exp( 1j*q*np.arctan2( y, x ) );
+        V_pq = R_pq*np.exp( 1j*q*theta )
     pass    
     
     #print( "rho = ", rho )
