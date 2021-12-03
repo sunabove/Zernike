@@ -20,34 +20,39 @@ print( f"time = {perf_counter_ns()}" )
 def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
     rho_id = id( rho )
     
-    key = f"rho_id:{p_2s}"
+    key_all = f"{p_2s}:{r_ps}"
     
-    rho_hash = None
     rho_power = None
     
-    if key in hash :
-        rho_hash = hash[key]
-        rho_power = rho_hash[ 1 ]
-    else :
-        rho_hash = {}
-        rho_power = np.power( rho, p_2s )
-        rho_hash[ 1 ] = rho_power
-        hash[key] = rho_hash
+    if key_all in hash :
+        rho_power = hash[key_all] 
+        
+        return rho_power;
     pass
 
-    if r_ps in [ 1, 1.0 ] :
-        return rho_power
-    else :
-        key = f"rho_id:{p_2s}:{r_ps}"
-        
-        if key in rho_hash :
-            return rho_hash[ key ]
+    if p_2s in hash :
+        rho_power = hash[ p_2s ]
+    else : 
+        if p_2s in [ 0, 1, 2 ] :
+            rho_power = np.power( rho, p_2s )
         else :
-            a_rho_power = r_ps*rho_power
-            rho_hash[ key ] = a_rho_power
-            return a_rho_power
+            rho_power = _rps( 1, rho, p_2s//2, hash, debug = debug)
+            
+            if p_2s % 2 == 1 : 
+                rho_power = rho_power*rho_power*rho
+            else :
+                rho_power = rho_power*rho_power
+            pass
         pass
     pass
+
+    if r_ps not in [ 1, 1.0 ] :
+        rho_power = r_ps*rho_power
+    pass
+    
+    hash[ key_all ] = rho_power
+    
+    return rho_power
 pass
 
 @profile
@@ -117,11 +122,6 @@ def Vpq( p, q, rho, theta, hash={}, debug = 0 ) :
     return V_pq
 pass
 
-print( "Zernike functions are defined.")
-
-current_time = datetime.now().strftime("%H:%M:%S")
-print("Current Time =", current_time)
-
 @profile
 def rho_theta( img, debug = 0 ) :
     h = img.shape[0]
@@ -154,3 +154,11 @@ def rho_theta( img, debug = 0 ) :
     
     return rho, theta, x, y
 pass
+
+def print_curr_time() :
+    # 현재 시각 출력 
+    print("Current Time =", datetime.now().strftime("%H:%M:%S") )
+pass
+
+print( "Zernike functions are defined.")
+print_curr_time()
