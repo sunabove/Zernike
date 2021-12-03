@@ -122,3 +122,35 @@ print( "Zernike functions are defined.")
 current_time = datetime.now().strftime("%H:%M:%S")
 print("Current Time =", current_time)
 
+@profile
+def rho_theta( img, debug = 0 ) :
+    h = img.shape[0]
+    w = img.shape[1]
+    
+    mwh = max( h, w )
+    radius = math.sqrt( 2*mwh*mwh )
+    
+    debug and print( f"H = {h}, W = {w}, r = {radius}" )
+    
+    x, y = np.where( img >= 0 )
+
+    np.set_printoptions(suppress=1)
+
+    if debug : 
+        print( "x = ", x )
+        print( "y = ", y )
+    pass
+
+    x = x/(mwh/math.sqrt(2)) - 1.0/math.sqrt(2)
+    y = y/(mwh/math.sqrt(2)) - 1.0/math.sqrt(2)
+
+    if debug : 
+        print( "x = ", x )
+        print( "y = ", y )
+    pass
+
+    rho = np.sqrt( x**2 + y**2 )
+    theta = np.arctan2( y, x )
+    
+    return rho, theta, x, y
+pass
