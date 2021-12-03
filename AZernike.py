@@ -33,6 +33,8 @@ def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
     if p_2s in hash :
         rho_power = hash[ p_2s ]
     else : 
+        if p_2s < 0 : 
+            rho_power = np.power( rho, - p_2s )
         if p_2s in [ 0, 1, 2 ] :
             rho_power = np.power( rho, p_2s )
         else :
@@ -106,20 +108,20 @@ pass
 
 @profile
 def Vpq( p, q, rho, theta, hash={}, debug = 0 ) :
-    R_pq = Rpq( p, q, rho, hash=hash, debug = 0 )
+    r_pq = Rpq( p, q, rho, hash=hash, debug = 0 )
     
-    V_pq = R_pq 
+    v_pq = r_pq
     
     if q : 
-        V_pq = R_pq*np.exp( 1j*q*theta )
+        v_pq = v_pq*np.exp( 1j*q*theta )
     pass    
     
     #print( "rho = ", rho )
     if debug : 
-        print( f"V_pq({p}, {q}) = ", V_pq )
+        print( f"Vpq({p}, {q}) = ", v_pq )
     pass
 
-    return V_pq
+    return v_pq
 pass
 
 @profile
