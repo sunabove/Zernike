@@ -171,7 +171,7 @@ def rho_theta( img, debug = 0 ) :
     h = img.shape[0]
     w = img.shape[1]
     
-    mwh = max( h, w )
+    mwh = max( h - 1, w -1 )
     radius = math.sqrt( 2*mwh*mwh )
     
     debug and print( f"H = {h}, W = {w}, r = {radius}" )
@@ -202,7 +202,7 @@ def rho_theta( img, debug = 0 ) :
     
     rho_square = np.sqrt( x**2 + y**2 )
     
-    k = np.where( rho_square < 1.0 )
+    k = np.where( rho_square <= 1.0 )
     
     y = y[k]
     x = x[k]
