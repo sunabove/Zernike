@@ -53,12 +53,13 @@ def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
     if p_2s in hash :
         rho_power = hash[ p_2s ]
     else : 
-        if p_2s < 0 : 
-            rho_power = np.power( rho, - p_2s )
-        if p_2s in [ 0, 1, 2 ] :
+        if p_2s < 0 :
+            rho_power = _rps( 1, rho, - p_2s, hash=hash, debug=debug)
+            rho_power = np.power( rho_power, -1 )
+        elif p_2s in [ 0, 1, 2 ] :
             rho_power = np.power( rho, p_2s )
         else :
-            rho_power = _rps( 1, rho, p_2s//2, hash, debug = debug)
+            rho_power = _rps( 1, rho, p_2s//2, hash=hash, debug = debug)
             
             if p_2s % 2 == 1 : 
                 rho_power = rho_power*rho_power*rho
