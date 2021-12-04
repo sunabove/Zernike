@@ -1,6 +1,21 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np, cv2 as cv, math
+print( f"Hello... Good morning!" )
+
+use_gpu = 0
+print( f"use_gpu = {use_gpu}" )
+
+if use_gpu :
+    print( f"import cupy as np" )
+
+    import cupy as np
+else :
+    print( f"import numpy as np" )
+    
+    import numpy as np 
+pass
+
+import cv2 as cv, math
 from time import *
 from scipy.special import factorial
 from matplotlib import pyplot as plt
@@ -9,11 +24,12 @@ from tqdm.notebook import tqdm
 from IPython.display import clear_output
 from Profiler import *
 
+complex_type = np.cdouble
+
 line = line1 = "*"*60 
 line2 = "\n" + line + ""
 line3 = line2 + "\n"
 
-print( f"Hello... Good morning!" )
 print( f"Importing python packages was done." )
 print( f"time = {perf_counter_ns()}" )
 
@@ -79,7 +95,7 @@ def Rpq(p, q, rho, hash={}, debug = 0 ) :
     s = np.arange( 0, t + 1 )
     
     R_ps = np.power( -1, s )*factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
-    R_ps = R_ps.astype( np.int_ )
+    #R_ps = R_ps.astype( np.int_ )
 
     rho_power = []
     
@@ -129,7 +145,24 @@ def Vpq( p, q, rho, theta, hash={}, debug = 0 ) :
     else :
         r_pq = Rpq( p, q, rho, hash=hash, debug = 0 )
     
-        v_pq = r_pq*np.exp( 1j*q*theta )
+        #v_pq = r_pq*np.exp( 1j*q*theta )
+        
+        v_pq = r_pq
+    
+        if q : 
+            q_theta_key = f"theta:{q}"
+            q_theta = None
+            
+            if q_theta_key in hash :
+                q_theta = hash[ q_theta_key ]
+            else :
+                theta = ((q/2)*theta)%(np.pi)
+                q_theta = np.exp( 1j*theta ).astype( complex_type )
+                hash[ q_theta_key ] = q_theta
+            pass
+        
+            v_pq = v_pq.astype( complex_type )*q_theta
+        pass
     pass
 
     hash[ key ] = v_pq
@@ -153,15 +186,19 @@ def rho_theta( img, debug = 0 ) :
     
     x, y = np.where( img >= 0 )
 
-    np.set_printoptions(suppress=1)
+    if not use_gpu: 
+        np.set_printoptions(suppress=1)
 
     if debug : 
         print( "x = ", x )
         print( "y = ", y )
     pass
 
-    x = x/(mwh/math.sqrt(2)) - 1.0/math.sqrt(2)
-    y = y/(mwh/math.sqrt(2)) - 1.0/math.sqrt(2)
+    x = x/mwh*math.sqrt(2) - 1.0/math.sqrt(2)
+    y = y/mwh*math.sqrt(2) - 1.0/math.sqrt(2)
+    
+    dx = math.sqrt(2)/mwh
+    dy = dx
 
     if debug : 
         print( "x = ", x )
@@ -171,7 +208,7 @@ def rho_theta( img, debug = 0 ) :
     rho = np.sqrt( x**2 + y**2 )
     theta = np.arctan2( y, x )
     
-    return rho, theta, x, y
+    return rho, theta, x, y, dx, dy
 pass
 
 def print_curr_time() :
