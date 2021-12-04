@@ -20,12 +20,14 @@ print( f"time = {perf_counter_ns()}" )
 def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
     rho_id = id( rho )
     
-    key_all = f"{p_2s}:{r_ps}"
+    p_2s = int( p_2s )
+    
+    key_all = f"r:{p_2s}:{r_ps}"
     
     rho_power = None
     
     if key_all in hash :
-        rho_power = hash[key_all] 
+        rho_power = hash[ key_all ] 
         
         return rho_power;
     pass
@@ -46,6 +48,8 @@ def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
                 rho_power = rho_power*rho_power
             pass
         pass
+    
+        hash[ p_2s ] = rho_power
     pass
 
     if r_ps not in [ 1, 1.0 ] :
@@ -108,15 +112,31 @@ pass
 
 @profile
 def Vpq( p, q, rho, theta, hash={}, debug = 0 ) :
-    r_pq = Rpq( p, q, rho, hash=hash, debug = 0 )
     
-    v_pq = r_pq
+    key = f"v:{p}:{q}"
     
-    if q : 
-        v_pq = v_pq*np.exp( 1j*q*theta )
-    pass    
+    if key in hash :
+        return hash[ key ]
+    pass
     
-    #print( "rho = ", rho )
+    v_pq = None 
+    
+    if q < 0 :
+        v_pq = Vpq( p, -q, rho, theta, hash=hash, debug=debug)
+        
+        v_pq = v_pq.real - 1j*v_pq.imag
+    else :
+        r_pq = Rpq( p, q, rho, hash=hash, debug = 0 )
+    
+        v_pq = r_pq
+    
+        if q : 
+            v_pq = v_pq*np.exp( 1j*q*theta )
+        pass
+    pass
+
+    hash[ key ] = v_pq
+    
     if debug : 
         print( f"Vpq({p}, {q}) = ", v_pq )
     pass
