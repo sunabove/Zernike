@@ -24,8 +24,8 @@ from tqdm.notebook import tqdm
 from IPython.display import clear_output
 from Profiler import *
 
-complex_type = np.clongdouble
 complex_type = np.cdouble
+complex_type = np.clongdouble
 pi = np.pi
 
 line = line1 = "*"*60 
