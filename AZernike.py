@@ -26,6 +26,7 @@ from Profiler import *
 
 complex_type = np.clongdouble
 complex_type = np.cdouble
+pi = np.pi
 
 line = line1 = "*"*60 
 line2 = "\n" + line + ""
@@ -180,12 +181,12 @@ def rho_theta( img, debug = 0 ) :
     h = img.shape[0]
     w = img.shape[1]
     
-    mwh = max( h, w )
+    mwh = max( (h-1)/2, (w-1)/2 )
     radius = math.sqrt( 2*mwh*mwh )
     
     debug and print( f"H = {h}, W = {w}, r = {radius}" )
     
-    x, y = np.where( img >= 0 )
+    y, x = np.where( img >= 0 )
 
     if not use_gpu: 
         np.set_printoptions(suppress=1)
@@ -195,18 +196,31 @@ def rho_theta( img, debug = 0 ) :
         print( "y = ", y )
     pass
 
-    x = x/mwh*math.sqrt(2) - 1.0/math.sqrt(2)
-    y = y/mwh*math.sqrt(2) - 1.0/math.sqrt(2)
+    y = (y/mwh - 1.0).flatten()
+    x = (x/mwh - 1.0).flatten()
     
-    dx = math.sqrt(2)/mwh
-    dy = dx
-
     if debug : 
         print( "x = ", x )
         print( "y = ", y )
     pass
+    
+    rho_square = np.sqrt( x**2 + y**2 )
+    
+    k = np.where( rho_square <= 1.0 )
+    
+    y = y[k]
+    x = x[k]
+    rho_square = rho_square[k]
+    
+    dx = 2.0/max(h, w)
+    dy = dx
 
-    rho = np.sqrt( x**2 + y**2 )
+    if debug : 
+        print( "x[k] = ", x )
+        print( "y[k] = ", y )
+    pass
+
+    rho = np.sqrt( rho_square )
     theta = np.arctan2( y, x )
     
     return rho, theta, x, y, dx, dy
