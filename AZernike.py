@@ -40,7 +40,7 @@ def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
     
     p_2s = int( p_2s )
     
-    key_all = f"r:{p_2s}:{r_ps}"
+    key_all = f"rps:{p_2s}:{r_ps}"
     
     rho_power = None
     
@@ -79,6 +79,8 @@ pass
 
 @profile
 def Rpq(p, q, rho, hash={}, debug = 0 ) :
+    q = abs( q )
+    
     if abs(q) > p : 
         print( f"Invalid argument, abs(q = {q}) < p(={p}) is not satisfied")
         return 
@@ -89,25 +91,39 @@ def Rpq(p, q, rho, hash={}, debug = 0 ) :
         return 
     pass
 
-    q = abs( q )
-
-    t = max( (p - q)/2, 0 )
-    s = np.arange( 0, t + 1 )
+    key = f"rpq:{p}:{q}"
     
-    R_ps = np.power( -1, s )*factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
-    #R_ps = R_ps.astype( np.int_ )
-
-    rho_power = []
-    
-    for r_ps, p_2s in zip( R_ps, p - 2*s ) :
-        rho_power.append( _rps( r_ps, rho, p_2s, hash, debug=debug ) )
+    if key in hash :
+        return hash[ key ] 
     pass
 
-    rho_power = np.array( rho_power )
+    r_pq_rho = None 
     
-    R_pq_rho = np.sum( rho_power, axis=0 )
+    if p == 0 and q == 0 :
+        r_pq_rho = np.ones_like( rho )
+    elif p == 1 and q == 1 :
+        r_pq_rho = rho
+    elif p == 2 and q == 2 :
+        r_pq_rho = rho*rho
+    else :
+        t = max( (p - q)/2, 0 )
+        s = np.arange( 0, t + 1 )
+
+        R_ps = np.power( -1, s )*factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
+        #R_ps = R_ps.astype( np.int_ )
+
+        rho_power = []
+
+        for r_ps, p_2s in zip( R_ps, p - 2*s ) :
+            rho_power.append( _rps( r_ps, rho, p_2s, hash, debug=debug ) )
+        pass
+
+        rho_power = np.array( rho_power )
+
+        r_pq_rho = np.sum( rho_power, axis=0 )
+    pass
     
-    #R_sum = np.sum( R_pq_rho )
+    hash[ key ] = r_pq_rho
         
     if debug : 
         print( line2 )
@@ -118,12 +134,12 @@ def Rpq(p, q, rho, hash={}, debug = 0 ) :
         print( "rho_power.T shape = ", rho_power.T.shape )
         print( "rho_power = ", rho_power )
         print( "rho_power.T = ", rho_power.T )
-        print( "R_pq_rho = ", R_pq_rho )    
+        print( "R_pq_rho = ", r_pq_rho )    
         #print( "R_sum = ", R_sum )
         print( line2 )
     pass
     
-    return R_pq_rho
+    return r_pq_rho
 pass
 
 @profile
