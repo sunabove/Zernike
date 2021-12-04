@@ -192,7 +192,7 @@ def rho_theta( img, debug = 0 ) :
     
     debug and print( f"H = {h}, W = {w}, r = {radius}" )
     
-    y, x = np.indices( img.shape )
+    y, x = np.where( img >= 0 ) 
 
     if not use_gpu: 
         np.set_printoptions(suppress=1)
