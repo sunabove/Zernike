@@ -24,8 +24,8 @@ from tqdm.notebook import tqdm
 from IPython.display import clear_output
 from Profiler import *
 
-complex_type = np.cdouble
 complex_type = np.clongdouble
+complex_type = np.cdouble
 pi = np.pi
 
 line = line1 = "*"*60 
@@ -53,10 +53,7 @@ def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
     if p_2s in hash :
         rho_power = hash[ p_2s ]
     else : 
-        if p_2s < 0 :
-            rho_power = _rps( 1, rho, - p_2s, hash=hash, debug=debug)
-            rho_power = np.power( rho_power, -1 )
-        elif p_2s in [ 0, 1, 2 ] :
+        if p_2s in [ -2, -1, 0, 1, 2 ] :
             rho_power = np.power( rho, p_2s )
         else :
             rho_power = _rps( 1, rho, p_2s//2, hash=hash, debug = debug)
@@ -156,15 +153,16 @@ def Vpq( p, q, rho, theta, hash={}, debug = 0 ) :
             q_theta_key = f"theta:{q}"
             q_theta = None
             
-            if q_theta_key in hash :
+            if 1 :
+                q_theta = np.exp( (1j*q)*theta )
+            elif q_theta_key in hash :
                 q_theta = hash[ q_theta_key ]
             else :
-                theta = ((q/2)*theta)%(np.pi)
-                q_theta = np.exp( 1j*theta ).astype( complex_type )
+                q_theta = np.exp( (1j*q)*theta )
                 hash[ q_theta_key ] = q_theta
             pass
         
-            v_pq = v_pq.astype( complex_type )*q_theta
+            v_pq = v_pq*q_theta
         pass
     pass
 
@@ -187,7 +185,7 @@ def rho_theta( img, debug = 0 ) :
     
     debug and print( f"H = {h}, W = {w}, r = {radius}" )
     
-    y, x = np.where( img >= 0 )
+    y, x = np.indices( img.shape )
 
     if not use_gpu: 
         np.set_printoptions(suppress=1)
