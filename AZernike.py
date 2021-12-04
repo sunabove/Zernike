@@ -2,7 +2,10 @@
 
 print( f"Hello... Good morning!" )
 
-use_gpu = 0
+use_gpu = 1
+use_numpy = not use_gpu
+use_cupy = use_gpu
+
 print( f"use_gpu = {use_gpu}" )
 
 if use_gpu :
@@ -16,6 +19,7 @@ else :
 pass
 
 import numpy
+import cupy
 
 import cv2 as cv, math
 from time import *
@@ -26,8 +30,11 @@ from tqdm.notebook import tqdm
 from IPython.display import clear_output
 from Profiler import *
 
-complex_type = np.clongdouble
-complex_type = np.cdouble
+if use_numpy :
+    complex_type = np.clongdouble
+    complex_type = np.cdouble
+pass
+
 pi = np.pi
 
 line = line1 = "*"*60 
@@ -82,10 +89,10 @@ pass
 @profile
 def _pqs_facotrial(p, q, s):
     if use_gpu:
-        p = numpy.array( p )
-        s = numpy.array( s )
+        p = cupy.asnumpy( p )
+        s = cupy.asnumpy( s )
         
-        R_ps = np.power( -1, s )*np.array( factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s ) )
+        R_ps = np.power( -1, np.array(s) )*np.array( factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s ) )
         
         return R_ps
     else :
