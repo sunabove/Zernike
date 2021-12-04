@@ -15,6 +15,8 @@ else :
     import numpy as np 
 pass
 
+import numpy
+
 import cv2 as cv, math
 from time import *
 from scipy.special import factorial
@@ -78,6 +80,22 @@ def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
 pass
 
 @profile
+def _pqs_facotrial(p, q, s):
+    if use_gpu:
+        p = numpy.array( p )
+        s = numpy.array( s )
+        
+        R_ps = np.power( -1, s )*np.array( factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s ) )
+        
+        return R_ps
+    else :
+        R_ps = np.power( -1, s )*factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
+        
+        return R_ps
+    pass
+pass
+
+@profile
 def Rpq(p, q, rho, hash={}, debug = 0 ) :
     q = abs( q )
     
@@ -109,8 +127,7 @@ def Rpq(p, q, rho, hash={}, debug = 0 ) :
         t = max( (p - q)/2, 0 )
         s = np.arange( 0, t + 1 )
 
-        R_ps = np.power( -1, s )*factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
-        #R_ps = R_ps.astype( np.int_ )
+        R_ps = _pqs_facotrial( p, q, s )
 
         rho_power = []
 
