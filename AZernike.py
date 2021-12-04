@@ -130,9 +130,11 @@ pass
 def Vpq( p, q, rho, theta, hash={}, debug = 0 ) :    
     q = int(q)
     
+    use_hash = False
+    
     key = f"v:{p}:{q}"
     
-    if key in hash :
+    if use_hash and key in hash :
         return hash[ key ]
     pass
     
@@ -150,23 +152,12 @@ def Vpq( p, q, rho, theta, hash={}, debug = 0 ) :
         v_pq = r_pq
     
         if q : 
-            q_theta_key = f"theta:{q}"
-            q_theta = None
-            
-            if 1 :
-                q_theta = np.exp( (1j*q)*theta )
-            elif q_theta_key in hash :
-                q_theta = hash[ q_theta_key ]
-            else :
-                q_theta = np.exp( (1j*q)*theta )
-                hash[ q_theta_key ] = q_theta
-            pass
-        
-            v_pq = v_pq*q_theta
+            v_pq = v_pq*np.exp( (1j*q)*theta )
         pass
     pass
 
-    hash[ key ] = v_pq
+    if use_hash :
+        hash[ key ] = v_pq
     
     if debug : 
         print( f"Vpq({p}, {q}) = ", v_pq )
@@ -180,7 +171,7 @@ def rho_theta( img, debug = 0 ) :
     h = img.shape[0]
     w = img.shape[1]
     
-    mwh = max( (h-1)/2, (w-1)/2 )
+    mwh = max( h, w )
     radius = math.sqrt( 2*mwh*mwh )
     
     debug and print( f"H = {h}, W = {w}, r = {radius}" )
@@ -195,8 +186,14 @@ def rho_theta( img, debug = 0 ) :
         print( "y = ", y )
     pass
 
-    y = (y/mwh - 1.0).flatten()
-    x = (x/mwh - 1.0).flatten()
+    y = (y/mwh*2 - 1.0).flatten()
+    x = (x/mwh*2 - 1.0).flatten()
+    
+    dx = 2.0/max(h, w)
+    dy = dx
+    
+    #y = y*(1 - dy/2.0)
+    #x = x*(1 - dx/2.0)
     
     if debug : 
         print( "x = ", x )
@@ -205,15 +202,13 @@ def rho_theta( img, debug = 0 ) :
     
     rho_square = np.sqrt( x**2 + y**2 )
     
-    k = np.where( rho_square <= 1.0 )
+    k = np.where( rho_square < 1.0 )
     
     y = y[k]
     x = x[k]
+    
     rho_square = rho_square[k]
     
-    dx = 2.0/max(h, w)
-    dy = dx
-
     if debug : 
         print( "x[k] = ", x )
         print( "y[k] = ", y )
