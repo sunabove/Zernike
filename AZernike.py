@@ -103,7 +103,7 @@ def _pqs_facotrial(p, q, s):
 pass
 
 @profile
-def Rpq(p, q, rho, hash={}, debug = 0 ) :
+def Rpq(p, q, rho, hash={}, use_hash=1, debug = 0 ) :
     q = abs( q )
     
     if abs(q) > p : 
@@ -118,7 +118,7 @@ def Rpq(p, q, rho, hash={}, debug = 0 ) :
 
     key = f"rpq:{p}:{q}"
     
-    if key in hash :
+    if use_hash and key in hash :
         return hash[ key ] 
     pass
 
@@ -147,7 +147,9 @@ def Rpq(p, q, rho, hash={}, debug = 0 ) :
         r_pq_rho = np.sum( rho_power, axis=0 )
     pass
     
-    hash[ key ] = r_pq_rho
+    if use_hash : 
+        hash[ key ] = r_pq_rho
+    pass
         
     if debug : 
         print( line2 )
