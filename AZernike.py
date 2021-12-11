@@ -277,5 +277,19 @@ def print_curr_time() :
     print("Current Time =", datetime.now().strftime("%H:%M:%S") )
 pass
 
+def print_system_info() :
+    import platform, psutil
+
+    print(f"Processor type: {platform.processor()}")
+    #Operating system release
+    print(f"Operating system release: {platform.release()}")
+    #Operating system version
+    print(f"Operating system version: {platform.version()}")
+    #Physical cores
+    print(f"Number of physical cores: {psutil.cpu_count(logical=False)}")
+    #Logical cores
+    print(f"Number of logical cores: {psutil.cpu_count(logical=True)}")
+pass
+
 print( "Zernike functions are defined.")
 print_curr_time()
