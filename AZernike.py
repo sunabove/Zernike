@@ -277,19 +277,69 @@ def print_curr_time() :
     print("Current Time =", datetime.now().strftime("%H:%M:%S") )
 pass
 
-def print_system_info() :
+def print_cpu_info() :
     import platform, psutil
+    
+    print("="*40, "CPU Details", "="*40)
 
     print(f"Processor type: {platform.processor()}")
     #Operating system release
     print(f"Operating system release: {platform.release()}")
     #Operating system version
     print(f"Operating system version: {platform.version()}")
+
+    print()
     #Physical cores
     print(f"Number of physical cores: {psutil.cpu_count(logical=False)}")
     #Logical cores
     print(f"Number of logical cores: {psutil.cpu_count(logical=True)}")
-pass
+    #Current frequency
+    print(f"Current CPU frequency: {psutil.cpu_freq().current/1000:.2f} GHz")
+    #Min frequency
+    print(f"Min CPU frequency: {psutil.cpu_freq().min/1000} GHz")
+    #Max frequency
+    print(f"Max CPU frequency: {psutil.cpu_freq().max/1000} GHz")
+
+    print()
+    print("="*40, "Memory Details", "="*40)
+    #Total RAM
+    print(f"Total RAM installed: {round(psutil.virtual_memory().total/10**9, 2)} GB")
+    #Available RAM
+    print(f"Available RAM: {round(psutil.virtual_memory().available/10**9, 2)} GB")
+    #Used RAM
+    print(f"Used RAM: {round(psutil.virtual_memory().used/10**9, 2)} GB")
+    #RAM usage
+    print(f"RAM usage: {psutil.virtual_memory().percent}%")
+pass # -- print_cpu_info
+
+def print_gpu_info() :
+    import GPUtil
+    from tabulate import tabulate
+    print("="*40, "GPU Details", "="*40)
+    gpus = GPUtil.getGPUs()
+    list_gpus = []
+    for gpu in gpus:
+        # get the GPU id
+        gpu_id = gpu.id
+        # name of GPU
+        gpu_name = gpu.name
+        # get % percentage of GPU usage of that GPU
+        gpu_load = f"{gpu.load*100}%"
+        # get free memory in MB format
+        gpu_free_memory = f"{gpu.memoryFree}MB"
+        # get used memory
+        gpu_used_memory = f"{gpu.memoryUsed}MB"
+        # get total memory
+        gpu_total_memory = f"{gpu.memoryTotal}MB"
+        # get GPU temperature in Celsius
+        gpu_temperature = f"{gpu.temperature} °C"
+        gpu_uuid = gpu.uuid
+        list_gpus.append((
+            gpu_id, gpu_name, gpu_load, gpu_free_memory, gpu_used_memory,
+            gpu_total_memory, gpu_temperature, gpu_uuid
+        ))
+    print(tabulate(list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature", "uuid")))
+pass # -- print_gpu_info 
 
 print( "Zernike functions are defined.")
 print_curr_time()
