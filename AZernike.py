@@ -167,10 +167,8 @@ def Rpq(p, q, rho, hash={}, debug = 0 ) :
 pass
 
 @profile
-def Vpq( p, q, rho, theta, hash={}, debug = 0 ) :    
+def Vpq( p, q, rho, theta, hash={}, use_hash=0, debug = 0 ) :    
     q = int(q)
-    
-    use_hash = False
     
     key = f"v:{p}:{q}"
     
@@ -192,7 +190,21 @@ def Vpq( p, q, rho, theta, hash={}, debug = 0 ) :
         v_pq = r_pq
     
         if q : 
-            v_pq = v_pq*np.exp( (1j*q)*theta )
+            q_theta = None
+            if not use_hash :
+                q_theta = np.exp( (1j*q)*theta )
+            else :
+                q_theta_key = f"theta:{q}"
+                
+                if q_theta_key in hash :
+                    q_theta = hash[ q_theta_key ]
+                else :
+                    q_theta = np.exp( (1j*q)*theta )
+                    hash[ q_theta_key ] = q_theta
+                pass
+            pass
+                
+            v_pq = v_pq*q_theta
         pass
     pass
 
