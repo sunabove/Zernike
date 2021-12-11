@@ -14,7 +14,7 @@ if use_gpu :
     import cupy as np
 else :
     print( f"import numpy as np" )
-    
+
     import numpy as np 
 pass
 
@@ -35,7 +35,7 @@ if use_numpy :
     complex_type = np.cdouble
 pass
 
-pi = np.pi
+pi = numpy.pi
 
 line = line1 = "*"*60 
 line2 = "\n" + line + ""
@@ -88,7 +88,7 @@ pass
 
 @profile
 def _pqs_facotrial(p, q, s):
-    if use_gpu:
+    if use_gpu :
         p = cupy.asnumpy( p )
         s = cupy.asnumpy( s )
         
@@ -328,19 +328,19 @@ def print_gpu_info() :
         # get % percentage of GPU usage of that GPU
         gpu_load = f"{gpu.load*100}%"
         # get free memory in MB format
-        gpu_free_memory = f"{gpu.memoryFree}MB"
+        gpu_free_memory = f"{gpu.memoryFree/1_000:_} GB"
         # get used memory
-        gpu_used_memory = f"{gpu.memoryUsed}MB"
+        gpu_used_memory = f"{gpu.memoryUsed/1_000:_} GB"
         # get total memory
-        gpu_total_memory = f"{gpu.memoryTotal}MB"
+        gpu_total_memory = f"{gpu.memoryTotal/1_000:_} GB"
         # get GPU temperature in Celsius
         gpu_temperature = f"{gpu.temperature} °C"
         gpu_uuid = gpu.uuid
         list_gpus.append((
             gpu_id, gpu_name, gpu_load, gpu_free_memory, gpu_used_memory,
-            gpu_total_memory, gpu_temperature, gpu_uuid
+            gpu_total_memory, gpu_temperature 
         ))
-    print(tabulate(list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature", "uuid")))
+    print(tabulate(list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature" )))
 pass # -- print_gpu_info 
 
 print( "Zernike functions are defined.")
