@@ -4,5 +4,12 @@ scikit-image
 shapely
 imutils
 numpy
-opencv-python
+opencv-contrib-python
+cupy-cuda113
 scipy
+tqdm
+psutil
+gputil
+tabulate
+ipywidgets
+
