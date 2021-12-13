@@ -10,6 +10,7 @@ scipy
 tqdm
 psutil
 gputil
+igpu
 tabulate
 ipywidgets
 
