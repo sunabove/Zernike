@@ -131,4 +131,5 @@ dmypy.json
 
 temp/
 
+output*
 data/
