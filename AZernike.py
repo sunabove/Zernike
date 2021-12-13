@@ -18,8 +18,7 @@ else :
     import numpy as np 
 pass
 
-import numpy
-import cupy
+import numpy, cupy, igpu
 
 import cv2 as cv, math
 from time import *
