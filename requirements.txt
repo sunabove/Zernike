@@ -13,4 +13,4 @@ gputil
 igpu
 tabulate
 ipywidgets
-
+humanize
