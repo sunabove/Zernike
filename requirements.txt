@@ -3,6 +3,7 @@ cupy-cuda113
 ray
 dask
 dask_cuda
+pandas
 tensorflow
 matplotlib
 scikit-image
