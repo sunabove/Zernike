@@ -179,7 +179,7 @@ def Vpq( p, q, rho, theta, hash={}, use_hash=0, debug = 0 ) :
     
     v_pq = None 
     
-    if q < 0 :
+    if use_hash and q < 0 :
         v_pq = Vpq( p, -q, rho, theta, hash=hash, debug=debug)
         
         v_pq = v_pq.real - 1j*v_pq.imag
