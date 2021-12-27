@@ -1,5 +1,6 @@
 numpy==1.20
 cupy-cuda113
+ray
 dask
 dask_cuda
 tensorflow
