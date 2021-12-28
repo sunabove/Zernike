@@ -43,7 +43,7 @@ line3 = line2 + "\n"
 print( f"Importing python packages was done." )
 print( f"time = {perf_counter_ns()}" )
 
-def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
+def _rps( r_ps, rho, p_2s, hash, use_hash = 0, debug = 0 ) :
     rho_id = id( rho )
     
     p_2s = int( p_2s )
@@ -73,14 +73,18 @@ def _rps( r_ps, rho, p_2s, hash, debug = 0 ) :
             pass
         pass
     
-        hash[ p_2s ] = rho_power
+        if use_hash : 
+            hash[ p_2s ] = rho_power
+        pass
     pass
 
     if r_ps not in [ 1, 1.0 ] :
         rho_power = r_ps*rho_power
     pass
     
-    hash[ key_all ] = rho_power
+    if use_hash : 
+        hash[ key_all ] = rho_power
+    pass
     
     return rho_power
 pass
@@ -188,21 +192,8 @@ def Vpq( p, q, rho, theta, hash={}, use_hash=0, debug = 0 ) :
 
         v_pq = r_pq
     
-        if q : 
-            q_theta = None
-
-            if not use_hash :
-                q_theta = np.exp( (1j*q)*theta )
-            else :
-                q_theta_key = f"theta:{q}"
-                
-                if q_theta_key in hash :
-                    q_theta = hash[ q_theta_key ]
-                else :
-                    q_theta = np.exp( (1j*q)*theta )
-                    hash[ q_theta_key ] = q_theta
-                pass
-            pass
+        if q :
+            q_theta = np.exp( (1j*q)*theta )
             
             v_pq = v_pq*q_theta
 
