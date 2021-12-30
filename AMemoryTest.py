@@ -141,3 +141,7 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     print( "Done." )
 pass # -- test_array_memory
 
+if __name__ == "__main__":
+   test_array_memory( use_gpu=0, operation="x", debug=1, verbose=0 )
+pass
+
