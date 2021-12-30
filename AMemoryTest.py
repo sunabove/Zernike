@@ -111,7 +111,7 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     
     ymax = ( max( numpy.max( y1 ), numpy.max( y2 ), numpy.max( y3 ) ) )
     
-    ymax = int( ymax + 1.5 )
+    ymax = int( ymax +  1.5 + 10**int( math.log10(ymax/10) ) )
         
     row_cnt = 1; col_cnt = 1
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 6*row_cnt) )
