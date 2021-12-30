@@ -19,11 +19,13 @@ def test_memory_multiply_performance( devices ) :
         for device in devices : 
             device = device.lower()
         
-            if use_dask : 
-                all_devices.append( f"{device} DSK" )
-            else : 
-                all_devices.append( device )
+            device_info = device.replace( "multi", "m").upper()
+            
+            if use_dask :                 
+                device_info = f"{device_info} DSK"
             pass
+                
+            all_devices.append( device_info )
         
             rs = None
 
