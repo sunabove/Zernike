@@ -1,6 +1,6 @@
 import numpy 
 import cupy
-import math
+import math, psutil
 from time import *
 from time import perf_counter
 from matplotlib import pyplot as plt
@@ -9,9 +9,18 @@ print( "Hello...\n" )
 
 def test_array_memory( use_gpu , operation="", debug=0, verbose=0) : 
     
+    max_grid_count = int( math.sqrt( psutil.virtual_memory().available*0.08 ) )
+
+    if len( operation ) < 1 : 
+        max_grid_count = int( math.sqrt( psutil.virtual_memory().available ) )
+    pass
+
     if debug : 
+        print( f"max_grid_count = {max_grid_count:_}" )
+        print()
         print( f"use_gpu = {use_gpu}, operation = {operation}" )
         print( flush=1 )
+    pass
 
     np = cupy if use_gpu else numpy
 
@@ -19,7 +28,7 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     #data_types = [ np.int_, ][::-1]
     
     dx = 0
-    
+
     types = [ ]
     memories = [ ]
     grid_counts = [ ]
@@ -50,7 +59,7 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
             arrays = [ ]
             try : 
                 if grid_count_max is None : 
-                    grid_count = grid_count_succ*2
+                    grid_count = min( grid_count_succ*2, max_grid_count )
                 else :
                     grid_count = (grid_count_max + grid_count_succ)//2
                 pass
@@ -80,9 +89,9 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
                 
                 grid_count_succ = grid_count 
                 
-                if verbose : print( f"Elapsed = {elapsed}" )
+                if verbose : print( f"Elapsed = {elapsed}, grid_count = {grid_count:_}" )
             except Exception as e:
-                grid_count_max = grid_count
+                grid_count_max = min( grid_count, max_grid_count )
                 error = e 
             finally :
                 for array in arrays :
@@ -142,6 +151,6 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
 pass # -- test_array_memory
 
 if __name__ == "__main__":
-   test_array_memory( use_gpu=0, operation="x", debug=1, verbose=0 )
+   test_array_memory( use_gpu=0, operation="x", debug=1, verbose=1 )
 pass
 
