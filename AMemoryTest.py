@@ -110,6 +110,10 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
         if verbose : print()
             
         if debug:
+            if error is not None :
+                print( error )
+            pass
+                    
             if error : print( error, flush=1 )
             print( f"grid_count = {grid_count:_}, size = {memory_size/1e9:_.1f} Gb, run-time = {elapsed:.2f} (sec.)", flush=1 )
     
