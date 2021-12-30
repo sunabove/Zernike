@@ -135,7 +135,7 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     chart.legend(loc="lower center", bbox_to_anchor=(0.5, -0.26), ncol=3 ) 
     
     plt.tight_layout();
-    plt.savefig( f"./result/memory_allocation_{use_gpu}_{operation}.png" )
+    plt.savefig( f"./result/memory_allocation_{use_gpu}_{len(operation)}.png" )
     plt.show(); 
 
     print( "Done." )
