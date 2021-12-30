@@ -20,6 +20,8 @@ line = line1 = "*"*60
 line2 = "\n" + line + ""
 line3 = line2 + "\n"
 
+numpy.set_printoptions(suppress=1)
+
 print( f"Importing python packages was done." )
 print( f"time = {perf_counter_ns()}" )
 
@@ -174,7 +176,9 @@ def Vpq( p, q, rho, theta, use_gpu, hash={}, use_hash=0, debug = 0 ) :
     key = f"v:{p}:{q}"
     
     if use_hash and key in hash :
-        return hash[ key ]
+        v_pq = hash[ key ]
+        
+        return cupy.asarray( v_pq ) if use_gpu else v_pq  
     pass
     
     v_pq = None 
@@ -215,7 +219,8 @@ def Vpq( p, q, rho, theta, use_gpu, hash={}, use_hash=0, debug = 0 ) :
     pass
 
     if use_hash :
-        hash[ key ] = v_pq
+        hash[ key ] = cupy.asnumpy( v_pq ) if use_gpu else v_pq 
+    pass
     
     if debug :
         print( f"Vpq({p}, {q}) = ", v_pq )
