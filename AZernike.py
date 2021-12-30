@@ -322,7 +322,7 @@ pass # -- print_cpu_info
 
 def print_gpu_info() :
     import GPUtil
-    from tabulate import tabulate
+    
     print("="*40, "GPU Details", "="*40)
     gpus = GPUtil.getGPUs()
     list_gpus = []
@@ -342,10 +342,15 @@ def print_gpu_info() :
         # get GPU temperature in Celsius
         gpu_temperature = f"{gpu.temperature} °C"
         gpu_uuid = gpu.uuid
+        
         list_gpus.append((
             gpu_id, gpu_name, gpu_load, gpu_free_memory, gpu_used_memory,
             gpu_total_memory, gpu_temperature 
         ))
+    pass
+    
+    from tabulate import tabulate
+    
     print(tabulate(list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature" )))
 pass # -- print_gpu_info 
 
