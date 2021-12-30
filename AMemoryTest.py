@@ -1,5 +1,6 @@
 import numpy 
 import cupy
+import math
 from time import *
 from time import perf_counter
 from matplotlib import pyplot as plt
@@ -64,12 +65,11 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
                     arrays.append( a )
                 else :
                     a = np.zeros( (grid_count, grid_count), data_type )
+                    arrays.append( a )
                     
                     memory_size = a.nbytes
                     
-                    arrays.append( a )
                     b = np.zeros( (grid_count, grid_count), data_type )
-                    
                     arrays.append( b )
                     
                     c= a*b
@@ -109,13 +109,10 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     y2 = numpy.array( memories )/1e9    
     y3 = numpy.array( elapsed_times )
     
-    ymax = ( max( numpy.max( y1 ), numpy.max( y2 ), numpy.max( y3 ) )//5 )
-    if ymax < 2 :
-        ymax = ymax*5
-    else :
-        ymax = (ymax + 1)*5
-    pass     
+    ymax = ( max( numpy.max( y1 ), numpy.max( y2 ), numpy.max( y3 ) ) )
     
+    ymax = int( ymax + 1.5 )
+        
     row_cnt = 1; col_cnt = 1
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 6*row_cnt) )
     charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
