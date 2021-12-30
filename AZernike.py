@@ -2,10 +2,6 @@
 
 print( f"Hello... Good morning!" )
 
-use_gpu = 1
-
-print( f"use_gpu = {use_gpu}" )
-
 import numpy, cupy
 #import numpy as np, cupy as cp
 import igpu, math, cv2 as cv 
@@ -93,13 +89,15 @@ def _rps( r_ps, rho, p_2s, hash, use_gpu, use_hash = 0, debug = 0 ) :
     if use_hash : 
         hash[ key_all ] = cupy.asnumpy( rho_power ) if use_gpu else rho_power 
     pass
+
+    #print( f"rho_power type = {rho_power.dtype} " )
     
     return rho_power
 pass # _rps
 
 #@profile
 # radial function
-def Rpq(p, q, rho, hash={}, use_gpu=0, use_hash=1, debug = 0 ) :
+def Rpq(p, q, rho, use_gpu, hash={}, use_hash=1, debug = 0 ) :
     q = abs( q )
     
     if abs(q) > p : 
@@ -143,7 +141,7 @@ def Rpq(p, q, rho, hash={}, use_gpu=0, use_hash=1, debug = 0 ) :
             rho_power.append( _rps( r_ps, rho, p_2s, hash, use_gpu, use_hash=use_hash, debug=debug ) )
         pass
 
-        rho_power = np.array( rho_power )
+        rho_power = np.array( rho_power ) 
 
         r_pq_rho = np.sum( rho_power, axis=0 )
     pass
