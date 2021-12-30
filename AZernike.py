@@ -3,24 +3,13 @@
 print( f"Hello... Good morning!" )
 
 use_gpu = 1
-use_numpy = not use_gpu
-use_cupy = use_gpu
 
 print( f"use_gpu = {use_gpu}" )
 
-if use_gpu :
-    print( f"import cupy as np" )
+import numpy, cupy
+#import numpy as np, cupy as cp
+import igpu, math, cv2 as cv 
 
-    import cupy as np
-else :
-    print( f"import numpy as np" )
-
-    import numpy as np 
-pass
-
-import numpy, cupy, igpu
-
-import cv2 as cv, math
 from time import *
 from scipy.special import factorial
 from matplotlib import pyplot as plt
@@ -28,11 +17,6 @@ from datetime import datetime
 from tqdm.notebook import tqdm
 from IPython.display import clear_output
 from Profiler import *
-
-if use_numpy :
-    complex_type = np.clongdouble
-    complex_type = np.cdouble
-pass
 
 pi = numpy.pi
 
@@ -43,7 +27,21 @@ line3 = line2 + "\n"
 print( f"Importing python packages was done." )
 print( f"time = {perf_counter_ns()}" )
 
-def _rps( r_ps, rho, p_2s, hash, use_hash = 0, debug = 0 ) :
+#@profile
+def _pqs_facotrial( p, q, t, use_gpu ) :
+    s = numpy.arange( 0, t + 1 ) 
+    
+    R_ps = numpy.power( -1, s )*factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
+    
+    if use_gpu :
+        s = cupy.asarray( s )
+        R_ps = cupy.asarray( R_ps )
+    pass
+
+    return R_ps, s 
+pass # _pqs_facotrial
+
+def _rps( r_ps, rho, p_2s, hash, use_gpu, use_hash = 0, debug = 0 ) :
     rho_id = id( rho )
     
     p_2s = int( p_2s )
@@ -55,16 +53,26 @@ def _rps( r_ps, rho, p_2s, hash, use_hash = 0, debug = 0 ) :
     if key_all in hash :
         rho_power = hash[ key_all ] 
         
+        if use_gpu :
+            rho_power = cupy.asarray( rho_power )
+        pass
+        
         return rho_power;
     pass
 
     if p_2s in hash :
         rho_power = hash[ p_2s ]
+        
+        if use_gpu :
+            rho_power = cupy.asarray( rho_power )
+        pass
     else : 
+        np = cupy if use_gpu else numpy 
+        
         if p_2s in [ -2, -1, 0, 1, 2 ] :
             rho_power = np.power( rho, p_2s )
         else :
-            rho_power = _rps( 1, rho, p_2s//2, hash=hash, debug = debug)
+            rho_power = _rps( 1, rho, p_2s//2, hash, use_gpu, use_hash=use_hash, debug = debug)
             
             if p_2s % 2 == 1 : 
                 rho_power = rho_power*rho_power*rho
@@ -74,7 +82,7 @@ def _rps( r_ps, rho, p_2s, hash, use_hash = 0, debug = 0 ) :
         pass
     
         if use_hash : 
-            hash[ p_2s ] = rho_power
+            hash[ p_2s ] = cupy.asnumpy( rho_power ) if use_gpu else rho_power
         pass
     pass
 
@@ -83,30 +91,15 @@ def _rps( r_ps, rho, p_2s, hash, use_hash = 0, debug = 0 ) :
     pass
     
     if use_hash : 
-        hash[ key_all ] = rho_power
+        hash[ key_all ] = cupy.asnumpy( rho_power ) if use_gpu else rho_power 
     pass
     
     return rho_power
-pass
+pass # _rps
 
-@profile
-def _pqs_facotrial(p, q, s):
-    if use_gpu :
-        p = cupy.asnumpy( p )
-        s = cupy.asnumpy( s )
-        
-        R_ps = np.power( -1, np.array(s) )*np.array( factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s ) )
-        
-        return R_ps
-    else :
-        R_ps = np.power( -1, s )*factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
-        
-        return R_ps
-    pass
-pass
-
-@profile
-def Rpq(p, q, rho, hash={}, use_hash=1, debug = 0 ) :
+#@profile
+# radial function
+def Rpq(p, q, rho, hash={}, use_gpu=0, use_hash=1, debug = 0 ) :
     q = abs( q )
     
     if abs(q) > p : 
@@ -121,28 +114,33 @@ def Rpq(p, q, rho, hash={}, use_hash=1, debug = 0 ) :
 
     key = f"rpq:{p}:{q}"
     
-    if use_hash and key in hash :
-        return hash[ key ] 
-    pass
-
     r_pq_rho = None 
     
-    if p == 0 and q == 0 :
-        r_pq_rho = np.ones_like( rho )
-    elif p == 1 and q == 1 :
+    if use_hash and key in hash :
+        r_pq_rho = hash[ key ]
+        
+        if use_gpu :
+            r_pq_rho = cupy.asarray( r_pq_rho )
+        pass 
+    
+        return r_pq_rho 
+    pass
+
+    np = cupy if use_gpu else numpy 
+    
+    if p == 1 and q == 1 :
         r_pq_rho = rho
     elif p == 2 and q == 2 :
         r_pq_rho = rho*rho
     else :
-        t = max( (p - q)/2, 0 )
-        s = np.arange( 0, t + 1 )
+        t = max( (p - q)/2, 0 ) 
 
-        R_ps = _pqs_facotrial( p, q, s )
+        R_ps, s = _pqs_facotrial( p, q, t, use_gpu )
 
         rho_power = []
 
         for r_ps, p_2s in zip( R_ps, p - 2*s ) :
-            rho_power.append( _rps( r_ps, rho, p_2s, hash, debug=debug ) )
+            rho_power.append( _rps( r_ps, rho, p_2s, hash, use_gpu, use_hash=use_hash, debug=debug ) )
         pass
 
         rho_power = np.array( rho_power )
@@ -151,7 +149,7 @@ def Rpq(p, q, rho, hash={}, use_hash=1, debug = 0 ) :
     pass
     
     if use_hash : 
-        hash[ key ] = r_pq_rho
+        hash[ key ] = cupy.asnumpy( r_pq_rho ) if use_gpu else r_pq_rho 
     pass
         
     if debug : 
@@ -169,9 +167,9 @@ def Rpq(p, q, rho, hash={}, use_hash=1, debug = 0 ) :
     pass
     
     return r_pq_rho
-pass
+pass # radial function
 
-@profile
+#@profile
 def Vpq( p, q, rho, theta, hash={}, use_hash=0, debug = 0 ) :    
     q = int(q)
     
@@ -226,7 +224,7 @@ def Vpq( p, q, rho, theta, hash={}, use_hash=0, debug = 0 ) :
     return v_pq
 pass
 
-@profile
+#@profile
 def rho_theta( img, debug = 0 ) :
     h = img.shape[0]
     w = img.shape[1]
