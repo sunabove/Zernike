@@ -168,7 +168,7 @@ def Rpq(p, q, rho, use_gpu, hash={}, use_hash=1, debug = 0 ) :
 pass # radial function
 
 #@profile
-def Vpq( p, q, rho, theta, hash={}, use_hash=0, debug = 0 ) :    
+def Vpq( p, q, rho, theta, use_gpu, hash={}, use_hash=0, debug = 0 ) :    
     q = int(q)
     
     key = f"v:{p}:{q}"
@@ -180,16 +180,18 @@ def Vpq( p, q, rho, theta, hash={}, use_hash=0, debug = 0 ) :
     v_pq = None 
     
     if use_hash and q < 0 :
-        v_pq = Vpq( p, -q, rho, theta, hash=hash, debug=debug)
+        v_pq = Vpq( p, -q, rho, theta, use_gpu, hash=hash, debug=debug)
         
         v_pq = v_pq.real - 1j*v_pq.imag
     else :
-        r_pq = Rpq( p, q, rho, hash=hash, debug = 0 )
+        r_pq = Rpq( p, q, rho, use_gpu, hash=hash, debug = 0)
 
         v_pq = r_pq
     
         if q : 
             q_theta = None
+            
+            np = cupy if use_gpu else numpy
 
             if not use_hash :
                 q_theta = np.exp( (1j*q)*theta )
@@ -223,7 +225,7 @@ def Vpq( p, q, rho, theta, hash={}, use_hash=0, debug = 0 ) :
 pass
 
 #@profile
-def rho_theta( img, debug = 0 ) :
+def rho_theta( img, use_gpu, debug = 0 ) :
     h = img.shape[0]
     w = img.shape[1]
     
@@ -231,6 +233,8 @@ def rho_theta( img, debug = 0 ) :
     radius = math.sqrt( 2*mwh*mwh )
     
     debug and print( f"H = {h}, W = {w}, r = {radius}" )
+    
+    np = cupy if use_gpu else numpy
     
     y, x = np.where( img >= 0 ) 
 
