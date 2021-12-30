@@ -243,9 +243,6 @@ def rho_theta( img, use_gpu, debug = 0 ) :
     
     y, x = np.where( img >= 0 ) 
 
-    if not use_gpu: 
-        np.set_printoptions(suppress=1)
-
     if debug : 
         print( "x = ", x )
         print( "y = ", y )
@@ -282,7 +279,7 @@ def rho_theta( img, use_gpu, debug = 0 ) :
     rho = np.sqrt( rho_square )
     theta = np.arctan2( y, x )
     
-    return rho, theta, x, y, dx, dy
+    return rho, theta, x, y, dx, dy, k
 pass
 
 def print_curr_time() :
