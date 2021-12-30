@@ -262,7 +262,7 @@ def rho_theta( img, use_gpu, debug = 0 ) :
         print( "y = ", y )
     pass
     
-    rho_square = np.sqrt( x**2 + y**2 )
+    rho_square = x**2 + y**2
     
     k = np.where( rho_square <= 1.0 )
     
