@@ -192,8 +192,21 @@ def Vpq( p, q, rho, theta, hash={}, use_hash=0, debug = 0 ) :
 
         v_pq = r_pq
     
-        if q :
-            q_theta = np.exp( (1j*q)*theta )
+        if q : 
+            q_theta = None
+
+            if not use_hash :
+                q_theta = np.exp( (1j*q)*theta )
+            else :
+                q_theta_key = f"theta:{q}"
+                
+                if q_theta_key in hash :
+                    q_theta = hash[ q_theta_key ]
+                else :
+                    q_theta = np.exp( (1j*q)*theta )
+                    hash[ q_theta_key ] = q_theta
+                pass
+            pass
             
             v_pq = v_pq*q_theta
 
