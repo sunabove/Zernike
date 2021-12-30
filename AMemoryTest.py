@@ -93,9 +93,8 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
                 if verbose : print( f"Elapsed = {elapsed}, grid_count = {grid_count:_}" )
 
             except Exception as e:
-                error = e  
-                grid_count_max = min( grid_count, max_grid_count )
-                
+                error = e                  
+                grid_count_max = min( grid_count, max_grid_count )                
             finally :
                 for array in arrays :
                     del array
@@ -109,12 +108,11 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     
         if verbose : print()
             
-        if debug:
-            if error is not None :
-                print( error )
+        if debug:   
+            if error  : 
+                print( error, flush=1 )
             pass
-                    
-            if error : print( error, flush=1 )
+
             print( f"grid_count = {grid_count:_}, size = {memory_size/1e9:_.1f} Gb, run-time = {elapsed:.2f} (sec.)", flush=1 )
     
         grid_counts.append( grid_count ) 
@@ -125,7 +123,7 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     pass
 
     x = types 
-    y1 = numpy.array( grid_counts )/1e4
+    y1 = numpy.array( grid_counts )/1e3
     y2 = numpy.array( memories )/1e9    
     y3 = numpy.array( elapsed_times )
     
@@ -140,7 +138,7 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     chart = charts[ chart_idx ]
     chart_idx +=1 
     
-    chart.plot( x, y1, marker="s", label="Axial Grid count(10 K)" ) 
+    chart.plot( x, y1, marker="s", label="Axial Grid count(K)" ) 
     chart.plot( x, y2, marker="D", label="Memory(Gb)" ) 
     chart.plot( x, y3, marker="*", label="Rum-time (sec.)" ) 
 
