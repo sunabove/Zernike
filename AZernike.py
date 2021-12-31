@@ -306,7 +306,7 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, us
             
                 v_pl = Vpq( p, q, rho, theta, use_gpu, hash=hash, use_hash=use_hash, debug=0)
                 
-                z_img = None 
+                z_img = None # zernike image
                 
                 if "im" in img_type : 
                     z_img = v_pl.imag
