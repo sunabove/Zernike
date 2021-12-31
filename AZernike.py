@@ -219,14 +219,23 @@ def rho_theta( img, circle_type, use_gpu, debug = 0 ) :
         print( "y = ", y )
     pass
 
+    dx = 2.0/max(h, w)
+    dy = dx
+    
     if "inner" in circle_type : 
         y = (y/mwh*2 - 1.0).flatten()
         x = (x/mwh*2 - 1.0).flatten()
+        
+        dx = 2.0/max(h, w)
+        dy = dx
     else :
         sqrt_2 = math.sqrt(2)
         
         y = (y/mwh*sqrt_2 - (1.0/sqrt_2) ).flatten()
-        x = (x/mwh**sqrt_2 - (1.0/sqrt_2) ).flatten()
+        x = (x/mwh*sqrt_2 - (1.0/sqrt_2) ).flatten()
+        
+        dx = sqrt_2/max(h, w)
+        dy = dx
     pass
     
     dx = 2.0/max(h, w)
