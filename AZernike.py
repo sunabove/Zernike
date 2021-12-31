@@ -264,7 +264,103 @@ def rho_theta( img, circle_type, use_gpu, debug = 0 ) :
     theta = np.arctan2( y, x )
     
     return rho, theta, x, y, dx, dy, k
-pass
+pass # rho_theta
+
+# 저니크 피라미드 생성 
+def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_hash=0, debug = 0 ) : 
+    print( f"use_gpu = {use_gpu}, use_hash = {use_hash}" )
+    print_curr_time()
+
+    print( "\nZernike Pyramid Creation Validation" )
+    
+    K = 2
+    h = 1_000*K
+    w = h 
+    img = numpy.ones( (h, w), numpy.uint8 )
+    
+    if use_gpu :
+        img = cupy.asarray( img )
+    pass
+    
+    rho, theta, x, y, dx, dy, k = rho_theta( img, circle_type, use_gpu=use_gpu, debug=debug )
+    
+    hash = {}
+    
+    np = cupy if use_gpu else numpy
+    
+    imgs = []
+    titles = []
+    
+    row_cnt -= 1
+    total_cnt = row_cnt*col_cnt
+    
+    p = 0 
+    idx = 0 
+
+    while idx < total_cnt : 
+        q = - p 
+        while idx < total_cnt and q <= p : 
+            if (p - q)%2 ==  0 :         
+                title = f"\nZ({p}, {q})"
+                titles.append( title )
+            
+                v_pl = Vpq( p, q, rho, theta, use_gpu, hash=hash, use_hash=use_hash, debug=0)
+                
+                z_img = None 
+                
+                if "im" in img_type : 
+                    z_img = v_pl.imag
+                elif "abs" in img_type : 
+                    z_img = np.absolute( v_pl )
+                else :
+                    z_img = v_pl.real
+                pass 
+                
+                img = np.zeros( (h, w), numpy.float_ )
+                
+                img = img.flatten()
+                
+                img[k] = z_img
+                
+                img = img.reshape( h, w ) 
+                
+                imgs.append( img )
+                
+                idx += 1
+            pass
+        
+            q += 1  
+        pass
+    
+        p += 1
+    pass
+
+    n = len( imgs ) 
+    
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 3*col_cnt, 3*row_cnt) )
+    charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
+    chart_idx = 0
+    
+    for idx, img in enumerate( imgs ) : 
+        chart = charts[ idx ]
+                
+        if use_gpu :
+            img = cupy.asnumpy( img )
+        pass
+
+        pos = chart.imshow( img, cmap="Spectral" )
+        if idx % col_cnt == col_cnt - 1  : 
+            fig.colorbar(pos, ax=chart)
+        pass
+        
+        chart.set_xlabel( f"{titles[idx]}\n" ) 
+    pass
+
+    plt.tight_layout();
+    plt.savefig( f"./pyramid/zernike_pyramid.png" )
+    plt.show()
+    
+pass #create_zernike_pyramid
 
 def print_curr_time() :
     # 현재 시각 출력 
