@@ -173,7 +173,7 @@ pass # radial function
 def Vpq( p, q, rho, theta, use_gpu, hash={}, use_hash=0, debug = 0 ) :    
     q = int(q)
     
-    key = f"v:{p}:{q}"
+    key = f"v:{p}:{q}" 
     
     if use_hash and key in hash :
         v_pq = hash[ key ]
@@ -181,42 +181,13 @@ def Vpq( p, q, rho, theta, use_gpu, hash={}, use_hash=0, debug = 0 ) :
         return cupy.asarray( v_pq ) if use_gpu else v_pq  
     pass
     
+    np = cupy if use_gpu else numpy
+    
     v_pq = None 
     
-    if use_hash and q < 0 :
-        v_pq = Vpq( p, -q, rho, theta, use_gpu, hash=hash, debug=debug)
-        
-        v_pq = v_pq.real - 1j*v_pq.imag
-    else :
-        r_pq = Rpq( p, q, rho, use_gpu, hash=hash, debug = 0)
+    r_pq = Rpq( p, q, rho, use_gpu, hash=hash, debug = 0)
 
-        v_pq = r_pq
-    
-        if q : 
-            q_theta = None
-            
-            np = cupy if use_gpu else numpy
-
-            if not use_hash :
-                q_theta = np.exp( (1j*q)*theta )
-            else :
-                q_theta_key = f"theta:{q}"
-                
-                if q_theta_key in hash :
-                    q_theta = hash[ q_theta_key ]
-                else :
-                    q_theta = np.exp( (1j*q)*theta )
-                    hash[ q_theta_key ] = q_theta
-                pass
-            pass
-            
-            v_pq = v_pq*q_theta
-
-            if not use_hash :
-                del q_theta 
-            pass
-        pass
-    pass
+    v_pq = r_pq*np.exp( (1j*q)*theta ) 
 
     if use_hash :
         hash[ key ] = cupy.asnumpy( v_pq ) if use_gpu else v_pq 
