@@ -228,7 +228,7 @@ def rho_theta( img, circle_type, use_gpu, debug = 0 ) :
         
         dx = 2.0/max(h, w)
         dy = dx
-    else :
+    else : # outer cirlce
         sqrt_2 = math.sqrt(2)
         
         y = (y/mwh*sqrt_2 - (1.0/sqrt_2) ).flatten()
@@ -236,10 +236,7 @@ def rho_theta( img, circle_type, use_gpu, debug = 0 ) :
         
         dx = sqrt_2/max(h, w)
         dy = dx
-    pass
-    
-    dx = 2.0/max(h, w)
-    dy = dx
+    pass 
     
     if debug : 
         print( "x = ", x )
@@ -248,11 +245,17 @@ def rho_theta( img, circle_type, use_gpu, debug = 0 ) :
     
     rho_square = x**2 + y**2
     
-    k = np.where( rho_square <= 1.0 )
+    k = None
+    
+    if "inner" in circle_type : 
+        k = np.where( rho_square <= 1.0 )
+    else :
+        # all index of outer circle
+        k = np.where( rho_square <= 2.0 )
+    pass
     
     y = y[k]
-    x = x[k]
-    
+    x = x[k]    
     rho_square = rho_square[k]
     
     if debug : 
@@ -318,11 +321,11 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, us
                 
                 img = np.zeros( (h, w), numpy.float_ )
                 
-                img = img.flatten()
+                img_rav = img.ravel()
                 
-                img[k] = z_img
+                img_rav[k] = z_img
                 
-                img = img.reshape( h, w ) 
+                #img = img.reshape( h, w ) 
                 
                 imgs.append( img )
                 
@@ -338,7 +341,7 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, us
     n = len( imgs ) 
     
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 3*col_cnt, 3*row_cnt) )
-    charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
+    charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0
     
     for idx, img in enumerate( imgs ) : 
