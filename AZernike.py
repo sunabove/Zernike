@@ -201,7 +201,7 @@ def Vpq( p, q, rho, theta, use_gpu, hash={}, use_hash=0, debug = 0 ) :
 pass
 
 #@profile
-def rho_theta( img, use_gpu, debug = 0 ) :
+def rho_theta( img, inner_circle, use_gpu, debug = 0 ) :
     h = img.shape[0]
     w = img.shape[1]
     
@@ -219,14 +219,21 @@ def rho_theta( img, use_gpu, debug = 0 ) :
         print( "y = ", y )
     pass
 
-    y = (y/mwh*2 - 1.0).flatten()
-    x = (x/mwh*2 - 1.0).flatten()
+    y = None
+    x = None
+    
+    if inner_circle : 
+        y = (y/mwh*2 - 1.0).flatten()
+        x = (x/mwh*2 - 1.0).flatten()
+    else :
+        sqrt_2 = math.sqrt(2)
+        
+        y = (y/mwh*sqrt_2 - (1.0/sqrt_2) ).flatten()
+        x = (x/mwh**sqrt_2 - (1.0/sqrt_2) ).flatten()
+    pass
     
     dx = 2.0/max(h, w)
     dy = dx
-    
-    #y = y*(1 - dy/2.0)
-    #x = x*(1 - dx/2.0)
     
     if debug : 
         print( "x = ", x )
