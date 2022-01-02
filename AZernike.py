@@ -158,7 +158,6 @@ def Rpq(p, q, rho, **options ) :
             if r_pq_rho is None :
                 r_pq_rho = rps
             else :
-                #r_pq_rho = np.sum( [r_pq_rho, rps], axis=0 )
                 r_pq_rho = r_pq_rho + rps
             pass
         pass 
