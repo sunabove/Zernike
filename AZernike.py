@@ -3,7 +3,8 @@
 print( f"Hello... Good morning!" )
 
 import numpy, cupy
-import igpu, math, logging as log, cv2 as cv 
+import math, logging as log, cv2 as cv
+import psutil , igpu , GPUtil
 
 from time import *
 from scipy.special import factorial
@@ -481,8 +482,6 @@ def max_gpu_memory() :
 pass # -- max_gpu_memory 
 
 def print_gpu_info() :
-    import GPUtil
-    
     print("="*40, "GPU Details", "="*40)
     gpus = GPUtil.getGPUs()
     list_gpus = []
