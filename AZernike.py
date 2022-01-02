@@ -236,7 +236,7 @@ def rho_theta( img, circle_type, ** options ) :
     debug    = options[ "debug" ] if "debug" in options else False  
     use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
     
-    print( f"use_gpu ={use_gpu}" )
+    # log.info( f"use_gpu ={use_gpu}" )
     
     h = img.shape[0]
     w = img.shape[1]
@@ -476,7 +476,7 @@ def max_gpu_memory() :
         pass
     pass
 
-    log.info(f"CPU Available RAM: { max_memory } GB")
+    log.info(f"GPU Available RAM: { max_memory } GB")
     
     return max_memory
 pass # -- max_gpu_memory 
