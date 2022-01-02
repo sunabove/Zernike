@@ -3,8 +3,7 @@
 print( f"Hello... Good morning!" )
 
 import numpy, cupy
-#import numpy as np, cupy as cp
-import igpu, math, cv2 as cv 
+import igpu, math, logging as log, cv2 as cv 
 
 from time import *
 from scipy.special import factorial
@@ -13,6 +12,8 @@ from datetime import datetime
 from tqdm.notebook import tqdm
 from IPython.display import clear_output
 from Profiler import *
+
+log.basicConfig(level=log.DEBUG) 
 
 pi = numpy.pi
 
@@ -26,7 +27,9 @@ print( f"Importing python packages was done." )
 print( f"time = {perf_counter_ns()}" )
 
 #@profile
-def _pqs_facotrial( p, q, t, use_gpu ) :
+def _pqs_facotrial( p, q, t, **options ) :
+    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
+        
     s = numpy.arange( 0, t + 1 ) 
     
     R_ps = numpy.power( -1, s )*factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
@@ -39,17 +42,22 @@ def _pqs_facotrial( p, q, t, use_gpu ) :
     return R_ps, s 
 pass # _pqs_facotrial
 
-def _rps( r_ps, rho, p_2s, hash, use_gpu, use_hash = 0, debug = 0 ) :
-    rho_id = id( rho )
+def _rps( r_ps, rho, p_2s, ** options ) :
+    debug    = options[ "debug" ] if "debug" in options else False  
+    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
+    hash     = options[ "hash" ] if "hash" in options else None
+    use_hash = options[ "use_hash" ] if "use_hash" in options else False 
+    
+    #log.info( f"use_gpu = {use_gpu}" )
     
     p_2s = int( p_2s )
     
-    key_all = f"rps:{p_2s}:{r_ps}"
+    key = f"rps:{p_2s}:{r_ps}"
     
     rho_power = None
     
-    if key_all in hash :
-        rho_power = hash[ key_all ] 
+    if key in hash :
+        rho_power = hash[ key ] 
         
         if use_gpu :
             rho_power = cupy.asarray( rho_power )
@@ -70,7 +78,7 @@ def _rps( r_ps, rho, p_2s, hash, use_gpu, use_hash = 0, debug = 0 ) :
         if p_2s in [ -2, -1, 0, 1, 2 ] :
             rho_power = np.power( rho, p_2s )
         else :
-            rho_power = _rps( 1, rho, p_2s//2, hash, use_gpu, use_hash=use_hash, debug = debug)
+            rho_power = _rps( 1, rho, p_2s//2, ** options )
             
             if p_2s % 2 == 1 : 
                 rho_power = rho_power*rho_power*rho
@@ -89,7 +97,7 @@ def _rps( r_ps, rho, p_2s, hash, use_gpu, use_hash = 0, debug = 0 ) :
     pass
     
     if use_hash : 
-        hash[ key_all ] = cupy.asnumpy( rho_power ) if use_gpu else rho_power 
+        hash[ key ] = cupy.asnumpy( rho_power ) if use_gpu else rho_power 
     pass
 
     #print( f"rho_power type = {rho_power.dtype} " )
@@ -99,16 +107,23 @@ pass # _rps
 
 #@profile
 # radial function
-def Rpq(p, q, rho, use_gpu, hash={}, use_hash=1, debug = 0 ) :
+def Rpq(p, q, rho, **options ) :
+    debug    = options[ "debug" ] if "debug" in options else 0  
+    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else 0
+    hash     = options[ "hash" ] if "hash" in options else None
+    use_hash = options[ "use_hash" ] if "use_hash" in options else 0 
+    
+    #log.info( f"rps use_gpu = {use_gpu}" )
+    
     q = abs( q )
     
     if abs(q) > p : 
-        print( f"Invalid argument, abs(q = {q}) < p(={p}) is not satisfied")
+        log.info( f"Invalid argument, abs(q = {q}) < p(={p}) is not satisfied")
         return 
     pass
 
     if int(p - abs(q))%2 == 1 : 
-        print( f"Invalid argument, p({p}) - q({q}) should be an even number.")
+        log.info( f"Invalid argument, p({p}) - q({q}) should be an even number.")
         return 
     pass
 
@@ -126,7 +141,7 @@ def Rpq(p, q, rho, use_gpu, hash={}, use_hash=1, debug = 0 ) :
         return r_pq_rho 
     pass
 
-    np = cupy if use_gpu else numpy 
+    np = cupy if use_gpu else numpy
     
     if p == 1 and q == 1 :
         r_pq_rho = rho
@@ -135,17 +150,18 @@ def Rpq(p, q, rho, use_gpu, hash={}, use_hash=1, debug = 0 ) :
     else :
         t = max( (p - q)/2, 0 ) 
 
-        R_ps, s = _pqs_facotrial( p, q, t, use_gpu )
-
-        rho_power = []
+        R_ps, s = _pqs_facotrial( p, q, t, ** options )
 
         for r_ps, p_2s in zip( R_ps, p - 2*s ) :
-            rho_power.append( _rps( r_ps, rho, p_2s, hash, use_gpu, use_hash=use_hash, debug=debug ) )
-        pass
-
-        rho_power = np.array( rho_power ) 
-
-        r_pq_rho = np.sum( rho_power, axis=0 )
+            rps = _rps( r_ps, rho, p_2s, ** options ) 
+            
+            if r_pq_rho is None :
+                r_pq_rho = rps
+            else :
+                #r_pq_rho = np.sum( [r_pq_rho, rps], axis=0 )
+                r_pq_rho = r_pq_rho + rps
+            pass
+        pass 
     pass
     
     if use_hash : 
@@ -156,11 +172,7 @@ def Rpq(p, q, rho, use_gpu, hash={}, use_hash=1, debug = 0 ) :
         print( line2 )
         print( f"p = {p}, q={q}, (p - |q|)/2 = {t}" )
         print( "s = ", s )
-        print( "R_ps = ", R_ps )
-        print( "rho_power shape = ", rho_power.shape )
-        print( "rho_power.T shape = ", rho_power.T.shape )
-        print( "rho_power = ", rho_power )
-        print( "rho_power.T = ", rho_power.T )
+        print( "R_ps = ", R_ps ) 
         print( "R_pq_rho = ", r_pq_rho )    
         #print( "R_sum = ", R_sum )
         print( line2 )
@@ -169,11 +181,20 @@ def Rpq(p, q, rho, use_gpu, hash={}, use_hash=1, debug = 0 ) :
     return r_pq_rho
 pass # radial function
 
+def vpq_key( p, q ) :
+    return f"v:{p}:{q}"
+pass
+
 #@profile
-def Vpq( p, q, rho, theta, use_gpu, hash={}, use_hash=0, debug = 0 ) :    
+def Vpq( p, q, rho, theta, **options) :    
     q = int(q)
     
-    key = f"v:{p}:{q}" 
+    key = vpq_key( p, q )
+    
+    debug    = options[ "debug" ] if "debug" in options else False  
+    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
+    hash     = options[ "hash" ] if "hash" in options else None
+    use_hash = options[ "use_hash" ] if "use_hash" in options else False 
     
     if use_hash and key in hash :
         v_pq = hash[ key ]
@@ -185,11 +206,21 @@ def Vpq( p, q, rho, theta, use_gpu, hash={}, use_hash=0, debug = 0 ) :
     
     v_pq = None 
     
-    r_pq = Rpq( p, q, rho, use_gpu, hash=hash, debug = 0)
+    if q < 0 : 
+        v_pq = Vpq( p, abs(q), rho, theta, ** options )
+        
+        v_pq = v_pq.real - 1j*v_pq.imag
+    else : 
+        r_pq = Rpq( p, q, rho, ** options )
 
-    v_pq = r_pq*np.exp( (1j*q)*theta ) 
+        if q :
+            v_pq = r_pq*np.exp( (1j*q)*theta )
+        else :
+            v_pq = r_pq
+        pass
+    pass
 
-    if use_hash :
+    if hash :
         hash[ key ] = cupy.asnumpy( v_pq ) if use_gpu else v_pq 
     pass
     
@@ -201,7 +232,12 @@ def Vpq( p, q, rho, theta, use_gpu, hash={}, use_hash=0, debug = 0 ) :
 pass
 
 #@profile
-def rho_theta( img, circle_type, use_gpu, debug = 0 ) :
+def rho_theta( img, circle_type, ** options ) :
+    debug    = options[ "debug" ] if "debug" in options else False  
+    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
+    
+    print( f"use_gpu ={use_gpu}" )
+    
     h = img.shape[0]
     w = img.shape[1]
     
@@ -270,7 +306,12 @@ def rho_theta( img, circle_type, use_gpu, debug = 0 ) :
 pass # rho_theta
 
 # 저니크 피라미드 생성 
-def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_hash=0, debug = 0 ) : 
+def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options ) : 
+    debug    = options[ "debug" ] if "debug" in options else False  
+    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
+    hash     = options[ "hash" ] if "hash" in options else None
+    use_hash = options[ "use_hash" ] if "use_hash" in options else False 
+    
     print( f"use_gpu = {use_gpu}, use_hash = {use_hash}" )
     print_curr_time()
 
@@ -285,7 +326,7 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, us
         img = cupy.asarray( img )
     pass
     
-    rho, theta, x, y, dx, dy, k = rho_theta( img, circle_type, use_gpu=use_gpu, debug=debug )
+    rho, theta, x, y, dx, dy, k = rho_theta( img, circle_type, **options )
     
     hash = {}
     
@@ -307,7 +348,7 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, us
                 title = f"\nZ({p}, {q})"
                 titles.append( title )
             
-                v_pl = Vpq( p, q, rho, theta, use_gpu, hash=hash, use_hash=use_hash, debug=0)
+                v_pl = Vpq( p, q, rho, theta, **options )
                 
                 z_img = None # zernike image
                 
@@ -403,7 +444,42 @@ def print_cpu_info() :
     print(f"Used RAM: {round(psutil.virtual_memory().used/10**9, 2)} GB")
     #RAM usage
     print(f"RAM usage: {psutil.virtual_memory().percent}%")
+    
+    max_memory = psutil.virtual_memory().total/10**9 # GB
+    
+    return max_memory
 pass # -- print_cpu_info
+
+def max_cpu_memory() :
+    import platform, psutil 
+            
+    max_memory = psutil.virtual_memory().available/10**9 # GB
+    
+    log.info(f"CPU Available RAM: { max_memory } GB")
+    
+    return max_memory
+pass # -- max_cpu_memory
+
+def max_gpu_memory() :
+    import GPUtil
+    
+    max_memory = 0 
+    
+    gpus = GPUtil.getGPUs()
+    
+    for gpu in gpus:
+        # get the GPU id
+        gpu_free_memory = gpu.memoryFree/1_000  
+        
+        if gpu_free_memory > max_memory : 
+            max_memory = gpu_free_memory
+        pass
+    pass
+
+    log.info(f"CPU Available RAM: { max_memory } GB")
+    
+    return max_memory
+pass # -- max_gpu_memory 
 
 def print_gpu_info() :
     import GPUtil
