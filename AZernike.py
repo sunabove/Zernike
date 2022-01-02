@@ -239,7 +239,7 @@ def rho_theta( resolution, circle_type, ** options ) :
     
     np = cupy if use_gpu else numpy 
     
-    img = np.ones( (resolution, resolution), np.float_ )
+    img = np.ones( ( int(resolution), int( resolution) ), np.float_ ) 
     
     h = img.shape[0]
     w = img.shape[1]
@@ -319,17 +319,11 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options )
     print( "\nZernike Pyramid Creation Validation" )
     
     K = 2
-    h = 1_000*K
-    w = h 
-    img = numpy.ones( (h, w), numpy.uint8 )
+    resolution = 1_000*K
+    h = resolution
+    w = h  
     
-    if use_gpu :
-        img = cupy.asarray( img )
-    pass
-    
-    rho, theta, x, y, dx, dy, k = rho_theta( img, circle_type, **options )
-    
-    hash = {}
+    rho, theta, x, y, dx, dy, k = rho_theta( resolution, circle_type, **options )
     
     np = cupy if use_gpu else numpy
     
