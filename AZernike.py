@@ -378,7 +378,7 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options )
     
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 3*col_cnt, 3*row_cnt) )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
-    chart_idx = 0
+    chart_idx = 0 
     
     for idx, img in enumerate( imgs ) : 
         chart = charts[ idx ]
