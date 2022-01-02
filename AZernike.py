@@ -232,11 +232,15 @@ def Vpq( p, q, rho, theta, **options) :
 pass
 
 #@profile
-def rho_theta( img, circle_type, ** options ) :
+def rho_theta( resolution, circle_type, ** options ) :
     debug    = options[ "debug" ] if "debug" in options else False  
     use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
     
     # log.info( f"use_gpu ={use_gpu}" )
+    
+    np = cupy if use_gpu else numpy 
+    
+    img = np.ones( (resolution, resolution), np.float_ )
     
     h = img.shape[0]
     w = img.shape[1]
@@ -245,8 +249,6 @@ def rho_theta( img, circle_type, ** options ) :
     radius = math.sqrt( 2*mwh*mwh )
     
     debug and print( f"H = {h}, W = {w}, r = {radius}" )
-    
-    np = cupy if use_gpu else numpy
     
     y, x = np.where( img >= 0 ) 
 
