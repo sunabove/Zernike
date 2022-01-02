@@ -6,6 +6,10 @@ import numpy, cupy
 import math, logging as log, cv2 as cv
 import psutil , igpu , GPUtil
 
+from skimage import data
+from skimage.color import rgb2gray
+from skimage import io
+
 from time import *
 from scipy.special import factorial
 from matplotlib import pyplot as plt
