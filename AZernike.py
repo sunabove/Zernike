@@ -25,7 +25,6 @@ line3 = line2 + "\n"
 numpy.set_printoptions(suppress=1)
 
 print( f"Importing python packages was done." )
-print( f"time = {perf_counter_ns()}" )
 
 #@profile
 def _pqs_facotrial( p, q, t, **options ) :
