@@ -480,6 +480,11 @@ def max_gpu_memory() :
     return max_memory
 pass # -- max_gpu_memory 
 
+# 배열 여부 체크 
+def is_array( data ) :
+    return isinstance( data, (list, tuple, numpy.ndarray, cupy.ndarray) )
+pass # is_array
+
 def print_gpu_info() :
     print("="*40, "GPU Details", "="*40)
     gpus = GPUtil.getGPUs()
