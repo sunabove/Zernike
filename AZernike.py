@@ -454,7 +454,7 @@ def max_cpu_memory() :
             
     max_memory = psutil.virtual_memory().available/10**9 # GB
     
-    log.info(f"CPU Available RAM: { max_memory } GB")
+    #log.info(f"CPU Available RAM: { max_memory } GB")
     
     return max_memory
 pass # -- max_cpu_memory
@@ -511,6 +511,170 @@ def print_gpu_info() :
     
     print(tabulate(list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature" )))
 pass # -- print_gpu_info 
+
+def pq_list( T ) :
+    pqs = []
+
+    for p in range( 0, T + 1 ) : 
+        for q in range( -p, p + 1, 2 ) :
+            pqs.append( [p, q] )        
+        pass
+    pass
+
+    return pqs
+pass # pq_list
+
+def get_option( key, default = 0 , ** options ) : 
+    if key in options :
+        return options[ key]
+    else :
+        return default 
+    pass
+pass # get_option
+
+def get_core_count(**options) : 
+    use_thread = get_option( "use_thread", **options )
+    use_gpu = get_option( "use_gpu", **options ) 
+    
+    core_count = 0 
+    
+    if not use_thread :
+        core_count =  0 
+    else :
+        if use_gpu :
+            core_count = len( GPUtil.getGPUs() )
+        else :
+            core_count = psutil.cpu_count(logical=True)
+        pass
+    pass
+
+    log.info( f"core_count = {core_count}, gpu = {use_gpu}, thread = {use_thread}")
+
+    return core_count
+pass
+    
+# 모멘트 계산 
+def calc_moments( T, img, rho, theta, dx, dy , **options ) : 
+    then = perf_counter()
+        
+    use_thread = get_option( "use_thread", **options )
+    use_gpu = get_option( "use_gpu", **options ) 
+    
+    s = T 
+    np = cupy if use_gpu else numpy
+    
+    moments = np.zeros( (s + 1, 2*s + 1), np.complex_ )
+
+    img_flat = img.flatten()
+
+    pqs = pq_list( T )
+    
+    for p, q in pqs :
+        v_pq = Vpq( p, q, rho, theta, **options )
+        v_pq = np.conjugate( v_pq )
+        
+        #print( f"v_pq size = {v_pq.size}" )
+        #print( f"img_flat size = {img_flat.size}" )
+        
+        moment = np.dot( v_pq, img_flat )*dx*dy
+        
+        moments[ p, q ] = moment
+        
+        #print( f"moment({p:2d}, {q:3d}) = ", moment )
+    pass
+
+    if 0 :
+        print( "Moments = ", moments )
+    pass
+
+    run_time = perf_counter() - then
+
+    return moments, run_time
+pass # calc_moments
+
+def restore_image(moments, rho, theta, **options) : 
+    use_thread = get_option( "use_thread", **options )
+    use_gpu = get_option( "use_gpu", **options )
+    np = cupy if use_gpu else numpy
+    
+    
+    then = perf_counter()
+    
+    s = T = moments.shape[0] - 1 
+    
+    img = np.zeros_like( rho, np.complex_ )
+    
+    pqs = pq_list( T )
+    
+    area = 2 # outer type image area in unit_circle
+    if "circle_type" in options and "inner" in options["circle_type"] :
+        area = pi
+    pass        
+    
+    for p, q in pqs :
+        v_pq = Vpq( p, q, rho, theta, ** options )
+        img += ((p+1)/area)*moments[p, q]*v_pq
+    pass 
+
+    s = int( math.sqrt( len( img ) ) )
+    
+    img = img.reshape( s, s )
+    
+    run_time = perf_counter() - then
+    
+    return img , run_time
+pass ## restore_image
+
+def calc_psnr(img_org, img_restored, **options ) : 
+    use_thread = get_option( "use_thread", **options )
+    use_gpu = get_option( "use_gpu", **options )
+    
+    print( f"calc_psnr use_gpu = {use_gpu}" )
+        
+    np = cupy if use_gpu else numpy
+    
+    img_diff = img_org - img_restored
+
+    #gmax = np.max( img_restored ) # 복원된 이미지의 회색조 최대값 
+    gmax = 255
+    
+    mse = np.sum( np.square( img_diff ) )/(img_diff.shape[0]*img_diff.shape[1])
+
+    psnr = 10*math.log10(gmax*gmax/mse)
+    
+    return psnr
+pass # calc_psnr
+
+def get_moments_disp(moments, **options ) :
+    use_thread = get_option( "use_thread", **options )
+    use_gpu = get_option( "use_gpu", **options )
+    
+    np = cupy if use_gpu else numpy
+    
+    T = moments.shape[0] - 1
+    s = T + 1 
+    
+    moments_disp = np.zeros( (s, s), np.complex_ )
+    
+    for p in range( 0, T + 1 ) :
+        r = p
+        c = 0 
+        for q in range( -p, p + 1, 2 ) :
+            #print( f"p = {p}, q = {q}, r = {r}, c = {c}" )
+            
+            moments_disp[ r, c ] = moments[ p, q ]
+            
+            r = r - 1
+            c = c + 1            
+        pass
+    
+        #print()
+    pass
+
+    #moments_disp = moments_disp*127.5 + 127.5
+    
+    return moments_disp    
+pass # get_moments_disp
 
 print( "Zernike functions are defined.")
 print_curr_time()
