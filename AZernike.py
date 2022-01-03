@@ -603,40 +603,51 @@ def calc_moments( T, img, rho, theta, dx, dy , **options ) :
     
     moments = np.zeros( (s + 1, 2*s + 1), np.complex_ )
 
-    img_flat = img.flatten()
+    img_flat = img.ravel()
 
     pqs = pq_list( T )
     
-    def _moment(p, q, dx, dy, use_gpu, idx ):
+    def _moment(p, q, rho, theta, dx, dy, use_gpu, idx ):
         moment = None
-        if use_gpu : 
+        if use_gpu and idx > -1 : 
+            dev_id = 0 
             dev_cnt = cupy.cuda.runtime.getDeviceCount()
-            with cupy.cuda.Device( idx % dev_cnt ):
-                moment = _moment_impl(p, q, dx, dy )
+
+            if dev_cnt > 1 :
+                dev_id = idx % ( dev_cnt - 1 ) 
+                dev_id += 1
+            pass
+
+            v_pq = Vpq( p, q, rho, theta, **options )
+            
+            with cupy.cuda.Device( dev_id ):
+                v_pq = cupy.array( v_pq )
+                img_flat = cupy.array( img )
+                img_flat = img_flat.ravel()
+                
+                moment = np.dot( v_pq, img_flat )*dx*dy 
+
+                moment = np.conjugate( moment )
             pass
         else :
-            moment = _moment_impl(p, q, dx, dy )
+            moment = _moment_impl(p, q, rho, theta, dx, dy )
         pass
 
         moments[ p, q ] = moment
     pass
     
-    def _moment_impl(p, q, dx, dy ):
-        v_pq = Vpq( p, q, rho, theta, **options )
-        v_pq = np.conjugate( v_pq )
-        
-        #print( f"v_pq size = {v_pq.size}" )
-        #print( f"img_flat size = {img_flat.size}" )
+    def _moment_impl(p, q, rho, theta, dx, dy):
+        v_pq = Vpq( p, q, rho, theta, **options ) 
         
         moment = np.dot( v_pq, img_flat )*dx*dy
-        
-        #print( f"moment({p:2d}, {q:3d}) = ", moment )
+
+        moment = np.conjugate( moment )
         
         return moment
     pass # _moment 
 
     if use_thread :
-        threads = [ threading.Thread(target=_moment, args=(p, q, dx, dy, use_gpu, idx) ) for idx, [p, q] in enumerate( pqs ) ]
+        threads = [ threading.Thread(target=_moment, args=(p, q, rho, theta, dx, dy, use_gpu, idx) ) for idx, [p, q] in enumerate( pqs ) ]
         
         for thread in threads :
             thread.start()
@@ -646,7 +657,7 @@ def calc_moments( T, img, rho, theta, dx, dy , **options ) :
             thread.join()
         pass        
     else :
-        futures = [ _moment( p, q, dx, dy, use_gpu, idx ) for idx, [p, q] in enumerate( pqs ) ]
+        futures = [ _moment( p, q, rho, theta, dx, dy, use_gpu, -1 ) for idx, [p, q] in enumerate( pqs ) ]
     pass 
 
     if 0 :
