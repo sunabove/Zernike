@@ -485,6 +485,11 @@ def is_array( data ) :
     return isinstance( data, (list, tuple, numpy.ndarray, cupy.ndarray) )
 pass # is_array
 
+# 스칼라 여부 체크 
+def is_scalar( data ) :
+    return not is_array( data, )
+pass # is_scalar
+
 def print_gpu_info() :
     print("="*40, "GPU Details", "="*40)
     gpus = GPUtil.getGPUs()
@@ -682,4 +687,4 @@ def get_moments_disp(moments, **options ) :
 pass # get_moments_disp
 
 print( "Zernike functions are defined.")
-print_curr_time()
+print()
