@@ -5,6 +5,7 @@ print( f"Hello... Good morning!" )
 import numpy, cupy
 import math, logging as log, cv2 as cv
 import psutil , igpu , GPUtil
+import threading, ray # ray for parallel computing
 
 from skimage import data
 from skimage.color import rgb2gray
@@ -29,6 +30,27 @@ line3 = line2 + "\n"
 numpy.set_printoptions(suppress=1)
 
 print( f"Importing python packages was done." )
+
+ray_inited = False 
+
+def ray_init() :
+    
+    global ray_inited 
+
+    if not ray_inited : 
+        ray_inited = True 
+        then = perf_counter()
+        
+        print( "Initializaing ray ..." )
+        
+        ray.init()
+        
+        elapsed = perf_counter() - then
+        
+        print( f"Initializing ray done. Elapsed time = {elapsed:.3f} (sec.)")
+    pass
+
+pass # ray_init
 
 #@profile
 def _pqs_facotrial( p, q, t, **options ) :
@@ -263,12 +285,16 @@ def rho_theta( resolution, circle_type, ** options ) :
     dx = 2.0/max(h, w)
     dy = dx
     
+    area = pi
+    
     if "inner" in circle_type : 
         y = (y/mwh*2 - 1.0).flatten()
         x = (x/mwh*2 - 1.0).flatten()
         
         dx = 2.0/max(h, w)
         dy = dx
+        
+        area = pi # area of the whole circle
     else : # outer cirlce
         sqrt_2 = math.sqrt(2)
         
@@ -277,6 +303,8 @@ def rho_theta( resolution, circle_type, ** options ) :
         
         dx = sqrt_2/max(h, w)
         dy = dx
+        
+        area = 2  # area of the rectangle inside
     pass 
     
     if debug : 
@@ -307,7 +335,7 @@ def rho_theta( resolution, circle_type, ** options ) :
     rho = np.sqrt( rho_square )
     theta = np.arctan2( y, x )
     
-    return rho, theta, x, y, dx, dy, k
+    return rho, theta, x, y, dx, dy, k, area
 pass # rho_theta
 
 # 저니크 피라미드 생성 
@@ -327,7 +355,7 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options )
     h = resolution
     w = h  
     
-    rho, theta, x, y, dx, dy, k = rho_theta( resolution, circle_type, **options )
+    rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type, **options )
     
     np = cupy if use_gpu else numpy
     
@@ -567,9 +595,9 @@ pass
 def calc_moments( T, img, rho, theta, dx, dy , **options ) : 
     then = perf_counter()
         
+    use_gpu = get_option( "use_gpu", **options )
     use_thread = get_option( "use_thread", **options )
-    use_gpu = get_option( "use_gpu", **options ) 
-    
+        
     s = T 
     np = cupy if use_gpu else numpy
     
@@ -579,7 +607,7 @@ def calc_moments( T, img, rho, theta, dx, dy , **options ) :
 
     pqs = pq_list( T )
     
-    for p, q in pqs :
+    def _moment(p, q, dx, dy, use_gpu, idx ):
         v_pq = Vpq( p, q, rho, theta, **options )
         v_pq = np.conjugate( v_pq )
         
@@ -591,7 +619,23 @@ def calc_moments( T, img, rho, theta, dx, dy , **options ) :
         moments[ p, q ] = moment
         
         #print( f"moment({p:2d}, {q:3d}) = ", moment )
-    pass
+        
+        return "success"
+    pass # _moment 
+
+    if use_thread :
+        threads = [ threading.Thread(target=_moment, args=(p, q, dx, dy, use_gpu, idx) ) for idx, [p, q] in enumerate( pqs ) ]
+        
+        for thread in threads :
+            thread.start()
+        pass
+    
+        for thread in threads :
+            thread.join()
+        pass        
+    else :
+        futures = [ _moment( p, q, dx, dy, use_gpu, idx ) for idx, [p, q] in enumerate( pqs ) ]
+    pass 
 
     if 0 :
         print( "Moments = ", moments )
