@@ -608,14 +608,17 @@ def calc_moments( T, img, rho, theta, dx, dy , **options ) :
     pqs = pq_list( T )
     
     def _moment(p, q, dx, dy, use_gpu, idx ):
+        moment = None
         if use_gpu : 
             dev_cnt = cupy.cuda.runtime.getDeviceCount()
             with cupy.cuda.Device( idx % dev_cnt ):
-                _moment_impl(p, q, dx, dy )
+                moment = _moment_impl(p, q, dx, dy )
             pass
         else :
-            _moment_impl(p, q, dx, dy )
+            moment = _moment_impl(p, q, dx, dy )
         pass
+
+        moments[ p, q ] = moment
     pass
     
     def _moment_impl(p, q, dx, dy ):
@@ -627,11 +630,9 @@ def calc_moments( T, img, rho, theta, dx, dy , **options ) :
         
         moment = np.dot( v_pq, img_flat )*dx*dy
         
-        moments[ p, q ] = moment
-        
         #print( f"moment({p:2d}, {q:3d}) = ", moment )
         
-        return "success"
+        return moment
     pass # _moment 
 
     if use_thread :
