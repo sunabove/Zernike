@@ -707,7 +707,7 @@ def calc_psnr(img_org, img_restored, **options ) :
     use_thread = get_option( "use_thread", **options )
     use_gpu = get_option( "use_gpu", **options )
     
-    print( f"calc_psnr use_gpu = {use_gpu}" )
+    #print( f"calc_psnr use_gpu = {use_gpu}" )
         
     np = cupy if use_gpu else numpy
     
@@ -1163,10 +1163,11 @@ def plot_moment_features( feature_info, img_name, **options ) :
     
     if True : # 모멘트 엑셀 저장 및 화면 출력 
         ## convert your array into a dataframe
-        df = pd.DataFrame( cupy.asnumpy( moments ) if use_gpu else moments )
+        data = moments.T
+        df = pd.DataFrame( cupy.asnumpy( data ) if use_gpu else data )
         filepath = f'result/moment_{img_name}_{K}_{T}.xlsx'
         df.to_excel(filepath, index=False)
-        print( df )
+        #print( df )
     pass
     
     if False :
