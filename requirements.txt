@@ -18,3 +18,4 @@ igpu
 tabulate
 ipywidgets
 humanize
+openpyxl
