@@ -713,10 +713,11 @@ def calc_psnr(img_org, img_restored, **options ) :
     
     img_diff = img_org - img_restored
 
-    #gmax = np.max( img_restored ) # 복원된 이미지의 회색조 최대값 
+    #gmax = np.max( img_org ) # 최대값 
     gmax = 255
     
-    mse = np.sum( np.square( img_diff ) )/(img_diff.shape[0]*img_diff.shape[1])
+    mse = np.sum( np.square( img_diff ) )
+    mse = mse / (img_diff.shape[0]*img_diff.shape[1])
 
     psnr = 10*math.log10(gmax*gmax/mse)
     
