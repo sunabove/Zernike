@@ -722,6 +722,22 @@ def calc_psnr(img_org, img_restored, **options ) :
     return psnr
 pass # calc_psnr
 
+# Mean of Absolute Differnce
+def calc_mad(img_org, img_restored, **options ) : 
+    use_thread = get_option( "use_thread", **options )
+    use_gpu = get_option( "use_gpu", **options )
+    
+    #print( f"calc_psnr use_gpu = {use_gpu}" )
+        
+    np = cupy if use_gpu else numpy
+    
+    img_diff = img_org - img_restored
+
+    mad = np.sum( np.absolute( img_diff ) ) / img_diff.size 
+    
+    return mad
+pass # calc_mad
+
 def get_moments_disp(moments, **options ) :
     use_thread = get_option( "use_thread", **options )
     use_gpu = get_option( "use_gpu", **options )
