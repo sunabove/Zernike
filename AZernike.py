@@ -735,6 +735,10 @@ def calc_mad(img_org, img_restored, **options ) :
 
     mad = np.sum( np.absolute( img_diff ) ) / img_diff.size 
     
+    if use_gpu : 
+        mad = cupy.asnumpy( mad )
+    pass
+    
     return mad
 pass # calc_mad
 
