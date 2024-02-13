@@ -3,11 +3,30 @@ from time import *
 from time import perf_counter
 from matplotlib import pyplot as plt
 
-import numpy 
-#import cupy
 import torch
 
 print( "Hello...\n" )
+
+def get_free_mem( use_gpu, device = 0, verbose = 0 ) :
+    if use_gpu : 
+        import torch
+        free_mem, total_mem = torch.cuda.mem_get_info( device )
+        used_mem = total_mem - free_mem
+
+        verbose and print( f"GPU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )
+
+        return free_mem
+    else :
+        import psutil
+        ps_mem = psutil.virtual_memory() ; 
+        total_mem, free_mem = ps_mem[0], ps_mem[1]
+        used_me= total_mem - free_mem
+
+        verbose and print( "PSU = ", psutil.virtual_memory())
+        verbose and print( f"PSU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )
+        return free_mem
+    pass
+pass
 
 def test_array_memory( use_gpu , operation="", debug=0, verbose=0) : 
     
@@ -25,14 +44,9 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
         print( flush=1 )
     pass
 
-    #np = cupy if use_gpu else numpy
-    np = torch
+    device_name = "cuda" if use_gpu else "cpu"
 
-    if use_gpu :
-        torch.set_default_device('cuda')
-    else :
-        torch.set_default_device('cpu')
-    pass
+    device = torch.device( device_name) 
 
     #data_types = [ np.int_, np.double, np.csingle, np.cdouble ]
     data_types = [ torch.int, torch.double, torch.cfloat, torch.cdouble ]
@@ -45,27 +59,30 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     elapsed_times = []
     
     for idx, data_type in enumerate( data_types ):
-        array = np.ones( 1, data_type )
+        array = torch.zeros( [1], dtype=data_type, device=device )
         data_type_size = array.nbytes
         
         type_str = f"{data_type}".split( " " )[-1].split(".")[-1].split( "'")[0]
         
         types.append( type_str )
         
-        #type_str = [ "numpy ", "cupy "][use_gpu] + type_str
-        type_str = f"{type_str } ({data_type_size} bytes)"
+        type_str = device_name + " " + type_str + f"({data_type_size} bytes)"  
         
         debug and print( type_str, flush=1 )
-                
+        
+        
         grid_count_succ = 2**8
         grid_count = 2**9
         grid_count_max = None
+
+        print( f"grid_count_max = {grid_count_max}" )
         
         memory_size = 0 
         elapsed = 0 
         error = None
         
         while grid_count_max is None or abs( grid_count_max - grid_count_succ ) > 1 :
+            
             arrays = [ ]
             try : 
                 if grid_count_max is None : 
@@ -74,21 +91,22 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
                     grid_count = (grid_count_max + grid_count_succ)//2
                 pass
             
-                #if verbose : print( grid_count , end=", ", flush=1 )
+                verbose and print( f"grid count = {grid_count:_}, " , end="", flush=1 )
             
                 then = perf_counter()
+
                 if len( operation ) < 1 : 
-                    a = np.zeros( (grid_count, grid_count), data_type )
+                    a = torch.zeros( (grid_count, grid_count), dtype=data_type, device=device )
                     
                     memory_size = a.nbytes
                     arrays.append( a )
                 else :
-                    a = np.zeros( (grid_count, grid_count), data_type )
+                    a = torch.zeros( (grid_count, grid_count), dtype=data_type, device=device )
                     arrays.append( a )
                     
                     memory_size = a.nbytes
                     
-                    b = np.zeros( (grid_count, grid_count), data_type )
+                    b = torch.zeros( (grid_count, grid_count), dtype=data_type, device=device )
                     arrays.append( b )
                     
                     c= a*b
@@ -102,11 +120,22 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
                 if verbose : print( f"Elapsed = {elapsed}, grid_count = {grid_count:_}" )
 
             except Exception as e:
-                error = e                  
-                grid_count_max = min( grid_count, max_grid_count )                
+                error = e
+                grid_count_max = min( grid_count, max_grid_count )
             finally :
                 for array in arrays :
+                    import gc
+
+                    array.cpu()
                     del array
+                    
+                    gc.collect()
+                    
+                    use_gpu and torch.cuda.empty_cache()
+                pass
+
+                if use_gpu :
+                    torch.cuda.empty_cache()
                 pass
 
                 if grid_count_succ > max_grid_count*0.9 :
@@ -132,11 +161,16 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     pass
 
     x = types 
-    y1 = numpy.array( grid_counts )/1e3
-    y2 = numpy.array( memories )/1e9    
-    y3 = numpy.array( elapsed_times )
     
-    ymax = ( max( numpy.max( y1 ), numpy.max( y2 ), numpy.max( y3 ) ) )
+    y1 = grid_counts / 1e3
+    y2 = memories / 1e9    
+    y3 = elapsed_times
+    
+    #y1 = numpy.array( grid_counts )/1e3
+    #y2 = numpy.array( memories )/1e9    
+    #y3 = numpy.array( elapsed_times )
+    
+    ymax = ( max( torch.max( y1 ), torch.max( y2 ), torch.max( y3 ) ) )
     
     ymax = int( ymax +  1.5 + 10**int( math.log10(ymax/10) ) )
         
