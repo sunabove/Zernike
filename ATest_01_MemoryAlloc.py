@@ -1,9 +1,11 @@
-import numpy 
-import cupy
 import math, psutil
 from time import *
 from time import perf_counter
 from matplotlib import pyplot as plt
+
+import numpy 
+#import cupy
+import torch
 
 print( "Hello...\n" )
 
@@ -23,10 +25,17 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
         print( flush=1 )
     pass
 
-    np = cupy if use_gpu else numpy
+    #np = cupy if use_gpu else numpy
+    np = torch
 
-    data_types = [ np.int_, np.double, np.csingle, np.cdouble ]
-    #data_types = [ np.int_, ][::-1]
+    if use_gpu :
+        torch.set_default_device('cuda')
+    else :
+        torch.set_default_device('cpu')
+    pass
+
+    #data_types = [ np.int_, np.double, np.csingle, np.cdouble ]
+    data_types = [ torch.int, torch.double, torch.cfloat, torch.cdouble ]
     
     dx = 0
 
@@ -36,14 +45,14 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     elapsed_times = []
     
     for idx, data_type in enumerate( data_types ):
-        array = np.array( 1, data_type )
+        array = np.ones( 1, data_type )
         data_type_size = array.nbytes
         
         type_str = f"{data_type}".split( " " )[-1].split(".")[-1].split( "'")[0]
         
         types.append( type_str )
         
-        type_str = [ "numpy ", "cupy "][use_gpu] + type_str
+        #type_str = [ "numpy ", "cupy "][use_gpu] + type_str
         type_str = f"{type_str } ({data_type_size} bytes)"
         
         debug and print( type_str, flush=1 )
@@ -150,9 +159,10 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     chart.set_title( f"\n{device} Array Memory Allocation Maximum Size {op_title}\n" )
     chart.set_xlabel( f"\n{xlabel} Data Type" ) 
     chart.set_ylim( 0, ymax )
-    chart.legend(loc="lower center", bbox_to_anchor=(0.5, -0.26), ncol=3 ) 
+    # chart.legend(loc="lower center", bbox_to_anchor=(0.5, -0.26), ncol=3 ) 
+    chart.legend()
     
-    plt.tight_layout();
+    plt.tight_layout()
     plt.savefig( f"./result/memory_allocation_{use_gpu}_{len(operation)}.png" )
     plt.show(); 
 
