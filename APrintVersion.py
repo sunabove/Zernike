@@ -1,14 +1,10 @@
-import platform
-import sys
+import platform, sys
 
 import numpy
-import torch
-#import cupy
-#import dask 
+import torch 
 
 print( "OS: ", platform.system(), platform.release() )
 print( "Python version: ", sys.version.replace( "\n", "" ))
 print( "Numpy version: ", numpy.__version__ )
-#print( "Cupy version: ", cupy.__version__ )
-#print( "Torch version: ", torch.__version__ )
-#print( "Dask version: ", dask.__version__ ) 
+print( "Torch version: ", torch.__version__ )
+
