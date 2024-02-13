@@ -28,15 +28,16 @@ def get_free_mem_bytes( use_gpu, device = 0, verbose = 0 ) :
     pass
 pass
 
-def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
+def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
     
     if len( operation ) < 1 : 
-        max_grid_count = int( math.sqrt( psutil.virtual_memory().available ) )
+        max_tick_count = int( math.sqrt( psutil.virtual_memory().available ) )
     pass
 
     if debug : 
         print()
-        print( f"use_gpu = {use_gpu}, operation = {operation}", flush=1 ) 
+        print( f"use_gpu = {use_gpu}, operation = {operation}", flush=1 )
+        print()
     pass
 
     device_name = "cuda" if use_gpu else "cpu"
@@ -44,33 +45,33 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     device = torch.device( device_name) 
 
     #data_types = [ np.int_, np.double, np.csingle, np.cdouble ]
-    data_types = [ torch.int, torch.double, torch.cfloat, torch.cdouble ]
+    data_types = [ torch.int, torch.int, torch.double, torch.double, torch.cfloat, torch.cfloat, torch.cdouble, torch.cdouble ]
     
     dx = 0
 
     types = [ ]
     memories = [ ]
-    grid_counts = [ ]
+    tick_counts = [ ]
     elapsed_times = []
     
     for idx, data_type in enumerate( data_types ):
+        print( f"idx = [{idx}]", flush=1 )
+
         array = torch.zeros( [1], dtype=data_type, device=device )
         data_type_size = array.nbytes
         
         type_str = f"{data_type}".split( " " )[-1].split(".")[-1].split( "'")[0]
         
-        types.append( type_str )
+        type_detail_str = device_name + " " + type_str + f"({data_type_size} bytes)"  
         
-        type_str = device_name + " " + type_str + f"({data_type_size} bytes)"  
-        
-        debug and print( type_str, flush=1 )
+        debug and print( type_detail_str, flush=1 )
 
         free_mem_bytes = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
         free_mem_bytes_prev = free_mem_bytes
         print( f"free_mem_bytes = {free_mem_bytes:_}" )
 
-        grid_count = math.sqrt( free_mem_bytes/data_type_size*0.9 )
-        grid_count = int( grid_count )
+        tick_count = math.sqrt( free_mem_bytes/data_type_size*0.9 )
+        tick_count = int( tick_count )
         
         memory_size = 0 
         elapsed = 0 
@@ -78,22 +79,22 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
         
         arrays = [ ]
         try : 
-            verbose and print( f"grid count = {grid_count:_}, " , end="", flush=1 )
+            verbose and print( f"grid count = {tick_count:_}, " , end="", flush=1 )
         
             then = perf_counter()
 
             if len( operation ) < 1 : 
-                a = torch.zeros( (grid_count, grid_count), dtype=data_type, device=device )
+                a = torch.zeros( (tick_count, tick_count), dtype=data_type, device=device )
                 
                 memory_size = a.nbytes
                 arrays.append( a )
             else :
-                a = torch.zeros( (grid_count, grid_count), dtype=data_type, device=device )
+                a = torch.zeros( (tick_count, tick_count), dtype=data_type, device=device )
                 arrays.append( a )
                 
                 memory_size = a.nbytes
                 
-                b = torch.zeros( (grid_count, grid_count), dtype=data_type, device=device )
+                b = torch.zeros( (tick_count, tick_count), dtype=data_type, device=device )
                 arrays.append( b )
                 
                 c= a*b
@@ -102,7 +103,7 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
         
             elapsed = perf_counter() - then 
             
-            if verbose : print( f"Elapsed = {elapsed}, grid_count = {grid_count:_}" )
+            if verbose : print( f"Elapsed = {elapsed}, tick_count = {tick_count:_}" )
 
         except Exception as e:
             error = e 
@@ -130,12 +131,15 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
         if debug:   
             error and print( error, flush=1 )
 
-            print( f"grid_count = {grid_count:_}, size = {memory_size/1e9:_.1f} Gb, run-time = {elapsed:.2f} (sec.)", flush=1 )
+            print( f"tick_count = {tick_count:_}, size = {memory_size/1e9:_.1f} Gb, run-time = {elapsed:.2f} (sec.)", flush=1 )
         pass
-    
-        grid_counts.append( grid_count ) 
-        memories.append( memory_size )
-        elapsed_times.append( elapsed )
+        
+        if idx%2 == 0 : 
+            types.append( type_str )
+            tick_counts.append( tick_count ) 
+            memories.append( memory_size )
+            elapsed_times.append( elapsed )
+        pass
 
         if False : 
             duration = 20
@@ -148,17 +152,17 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
 
     x = types 
     
-    y1 = torch.tensor( grid_counts ) / 1e3
-    y2 = torch.tensor( memories ) / 1e9    
-    y3 = torch.tensor( elapsed_times )
+    y1 = torch.tensor( tick_counts ) / 1_000
+    y2 = torch.tensor( memories ) / 1e9
+    y3 = torch.tensor( elapsed_times ) * 10
     
-    #y1 = numpy.array( grid_counts )/1e3
+    #y1 = numpy.array( tick_counts )/1e3
     #y2 = numpy.array( memories )/1e9    
     #y3 = numpy.array( elapsed_times )
     
     ymax = ( max( torch.max( y1 ), torch.max( y2 ), torch.max( y3 ) ) )
     
-    ymax = int( ymax +  1.5 + 10**int( math.log10(ymax/10) ) )
+    ymax = int( ymax*1.1 )
         
     row_cnt = 1; col_cnt = 1
     
@@ -169,20 +173,20 @@ def test_array_memory( use_gpu , operation="", debug=0, verbose=0) :
     chart = charts[ chart_idx ]
     chart_idx +=1 
     
-    chart.plot( x, y1, marker="s", label="Axial Grid count(K)" ) 
+    chart.plot( x, y1, marker="s", label="Tick count(K)" ) 
     chart.plot( x, y2, marker="D", label="Memory(Gb)" ) 
-    chart.plot( x, y3, marker="*", label="Rum-time (sec.)" ) 
+    chart.plot( x, y3, marker="*", label="Rum-time(centi sec.)" ) 
 
-    device = [ "CPU", "GPU" ][ use_gpu ]
-    xlabel = [ "NumPy", "Cupy" ][ use_gpu ]
+    xlabel = device_name.upper()
     
     op_title = "for Multiplication" if operation else ""
+
     chart.set_xticks( x )
-    chart.set_title( f"\n{device} Array Memory Allocation Maximum Size {op_title}\n" )
+    chart.set_title( f"\n{device_name.upper()} Array Memory Allocation Max. Size {op_title}\n" )
     chart.set_xlabel( f"\n{xlabel} Data Type" ) 
     chart.set_ylim( 0, ymax )
-    # chart.legend(loc="lower center", bbox_to_anchor=(0.5, -0.26), ncol=3 ) 
     chart.legend()
+    #chart.legend(loc="lower center", bbox_to_anchor=(0.5, -0.26), ncol=3 )
     
     plt.tight_layout()
     plt.savefig( f"./result/memory_allocation_{use_gpu}_{len(operation)}.png" )
