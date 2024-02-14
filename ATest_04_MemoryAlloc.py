@@ -72,11 +72,16 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         free_mem_bytes_prev = free_mem_bytes
         print( f"free_mem_bytes = {free_mem_bytes:_} bytes {free_ratio:.0f}%", flush=1 )
 
-        tick_count = math.sqrt( free_mem_bytes/data_type_size*0.9 )
+        tick_count = math.sqrt( free_mem_bytes/data_type_size*0.95 )
         tick_count = int( tick_count )
+
+        if operation : 
+            tick_count = math.sqrt( free_mem_bytes/3/data_type_size*0.95 )
+            tick_count = int( tick_count )
+        pass
         
         memory_size = 0 
-        elapsed = 0 
+        elapsed = 0
         error = None
         
         arrays = [ ]
@@ -190,9 +195,10 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
     op_title = "for Multiplication" if operation else ""
 
     chart.set_xticks( x )
-    chart.set_title( f"{device_name.upper()} Array Memory Allocation Max. Size {op_title}" )
+    chart.set_title( f"{device_name.upper()} Array Memory Max. Size {op_title}" )
     chart.set_xlabel( f"{xlabel} Data Type" ) 
     chart.set_ylim( 0, ymax )
+    chart.grid( axis='y', linestyle="dotted" )
     #chart.legend()
     chart.legend(loc="upper center", ncol=3, fontsize=13 )
     
