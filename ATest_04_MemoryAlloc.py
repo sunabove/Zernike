@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 
 import torch
 
-print( "Hello...\n" )
+print( "Hello..." )
 
 def get_free_mem_bytes( use_gpu, device = 0, verbose = 0 ) :
     if use_gpu : 
@@ -15,7 +15,7 @@ def get_free_mem_bytes( use_gpu, device = 0, verbose = 0 ) :
 
         verbose and print( f"GPU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )
 
-        return free_mem
+        return free_mem, total_mem
     else :
         import psutil
         ps_mem = psutil.virtual_memory() ; 
@@ -24,7 +24,7 @@ def get_free_mem_bytes( use_gpu, device = 0, verbose = 0 ) :
 
         verbose and print( "PSU = ", psutil.virtual_memory())
         verbose and print( f"PSU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )
-        return free_mem
+        return free_mem, total_mem
     pass
 pass
 
@@ -66,9 +66,11 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         
         debug and print( type_detail_str, flush=1 )
 
-        free_mem_bytes = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
+        free_mem_bytes, total_mem_bytes = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
+        free_ratio = free_mem_bytes / total_mem_bytes * 100
+
         free_mem_bytes_prev = free_mem_bytes
-        print( f"free_mem_bytes = {free_mem_bytes:_}" )
+        print( f"free_mem_bytes = {free_mem_bytes:_} bytes {free_ratio:.0f}%", flush=1 )
 
         tick_count = math.sqrt( free_mem_bytes/data_type_size*0.9 )
         tick_count = int( tick_count )
@@ -103,7 +105,7 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         
             elapsed = perf_counter() - then 
             
-            if verbose : print( f"Elapsed = {elapsed}, tick_count = {tick_count:_}" )
+            if verbose : print( f"Elapsed = {elapsed}, tick_count = {tick_count:_}", flush=1 )
 
         except Exception as e:
             error = e 
@@ -125,8 +127,9 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
             test = torch.zeros( [1000], dtype=data_type, device=device )
         pass
 
-        free_mem_bytes = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
-        print( f"free_mem_bytes after del = {free_mem_bytes:_}", flush=True ) 
+        free_mem_bytes, total_mem_bytes = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
+        free_ratio = free_mem_bytes / total_mem_bytes * 100
+        print( f"free_mem_bytes after gc= {free_mem_bytes:_} bytes {free_ratio:.0f}%" , flush=1)
     
         if debug:   
             error and print( error, flush=1 )
@@ -160,21 +163,26 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
     #y2 = numpy.array( memories )/1e9    
     #y3 = numpy.array( elapsed_times )
     
-    ymax = ( max( torch.max( y1 ), torch.max( y2 ), torch.max( y3 ) ) )
+    ymax = max( torch.max( y1 ), torch.max( y2 ), torch.max( y3 ) )
     
-    ymax = int( ymax*1.1 )
+    if True : 
+        log10 = int( math.log10( ymax ) )
+        yunit = pow( 10, log10 )
+
+        ymax = yunit*( int( ymax/yunit + 1 ) + 0.2)
+    pass
         
     row_cnt = 1; col_cnt = 1
     
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 4.5*row_cnt) )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 6*row_cnt) )
     
     charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0
     chart = charts[ chart_idx ]
     chart_idx +=1 
     
-    chart.plot( x, y1, marker="s", label="Tick count(K)" ) 
     chart.plot( x, y2, marker="D", label="Memory(Gb)" ) 
+    chart.plot( x, y1, marker="s", label="Tick count(K)" ) 
     chart.plot( x, y3, marker="*", label="Rum-time(centi sec.)" ) 
 
     xlabel = device_name.upper()
@@ -182,11 +190,11 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
     op_title = "for Multiplication" if operation else ""
 
     chart.set_xticks( x )
-    chart.set_title( f"\n{device_name.upper()} Array Memory Allocation Max. Size {op_title}\n" )
-    chart.set_xlabel( f"\n{xlabel} Data Type" ) 
+    chart.set_title( f"{device_name.upper()} Array Memory Allocation Max. Size {op_title}" )
+    chart.set_xlabel( f"{xlabel} Data Type" ) 
     chart.set_ylim( 0, ymax )
-    chart.legend()
-    #chart.legend(loc="lower center", bbox_to_anchor=(0.5, -0.26), ncol=3 )
+    #chart.legend()
+    chart.legend(loc="upper center", ncol=3, fontsize=13 )
     
     plt.tight_layout()
     plt.savefig( f"./result/memory_allocation_{use_gpu}_{len(operation)}.png" )
@@ -196,6 +204,6 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
 pass # -- test_array_memory
 
 if __name__ == "__main__":
-   test_array_memory( use_gpu=0, operation="x", debug=1, verbose=0 )
+   test_array_memory_alloc( use_gpu=1, operation="x", debug=1, verbose=0 )
 pass
 
