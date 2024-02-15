@@ -1,7 +1,8 @@
 # 메모리 현황 구하기
-
 import os
- 
+
+print( "source dirname = ", os.path.dirname( os.path.abspath(__file__) ) )
+
 total_mem, used_mem, free_mem = map( int, 
     os.popen('free -b').readlines()[-1].split()[1:] )
 

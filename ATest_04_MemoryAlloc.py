@@ -1,4 +1,4 @@
-import math, psutil
+import os, math, psutil
 from time import *
 from time import perf_counter
 from matplotlib import pyplot as plt
@@ -15,7 +15,7 @@ def get_free_mem_bytes( use_gpu, device = 0, verbose = 0 ) :
 
         verbose and print( f"GPU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )
 
-        return free_mem, total_mem
+        return free_mem, total_mem, free_mem/total_mem
     else :
         import psutil
         ps_mem = psutil.virtual_memory() ; 
@@ -24,7 +24,7 @@ def get_free_mem_bytes( use_gpu, device = 0, verbose = 0 ) :
 
         verbose and print( "PSU = ", psutil.virtual_memory())
         verbose and print( f"PSU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )
-        return free_mem, total_mem
+        return free_mem, total_mem, free_mem/total_mem
     pass
 pass
 
@@ -66,11 +66,10 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         
         debug and print( type_detail_str, flush=1 )
 
-        free_mem_bytes, total_mem_bytes = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
-        free_ratio = free_mem_bytes / total_mem_bytes * 100
+        free_mem_bytes, total_mem_bytes, free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 ) 
 
         free_mem_bytes_prev = free_mem_bytes
-        print( f"free_mem_bytes = {free_mem_bytes:_} bytes {free_ratio:.0f}%", flush=1 )
+        print( f"free_mem_bytes = {free_mem_bytes:_} bytes {free_ratio*100:.0f}%", flush=1 )
 
         tick_count = math.sqrt( free_mem_bytes/data_type_size*0.95 )
         tick_count = int( tick_count )
@@ -132,9 +131,8 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
             test = torch.zeros( [1000], dtype=data_type, device=device )
         pass
 
-        free_mem_bytes, total_mem_bytes = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
-        free_ratio = free_mem_bytes / total_mem_bytes * 100
-        print( f"free_mem_bytes after gc= {free_mem_bytes:_} bytes {free_ratio:.0f}%" , flush=1)
+        free_mem_bytes, total_mem_bytes,free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
+        print( f"free_mem_bytes after gc= {free_mem_bytes:_} bytes {free_ratio*100:.0f}%" , flush=1)
     
         if debug:   
             error and print( error, flush=1 )
@@ -203,10 +201,13 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
     chart.legend(loc="upper center", ncol=3, fontsize=13 )
     
     plt.tight_layout()
-    plt.savefig( f"./result/memory_allocation_{use_gpu}_{len(operation)}.png" )
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    result_chart_file = f"{src_dir}/result/memory_allocation_{use_gpu}_{len(operation)}.png"
+    print( f"Result chart file = {result_chart_file}" )
+    plt.savefig( result_chart_file )
     plt.show(); 
 
-    print( "Done." )
+    print( "\nDone." )
 pass # -- test_array_memory
 
 if __name__ == "__main__":
