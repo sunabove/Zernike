@@ -5,28 +5,9 @@ from matplotlib import pyplot as plt
 
 import torch
 
+from ACommon import *
+
 print( "Hello..." )
-
-def get_free_mem_bytes( use_gpu, device = 0, verbose = 0 ) :
-    if use_gpu : 
-        import torch
-        free_mem, total_mem = torch.cuda.mem_get_info( device )
-        used_mem = total_mem - free_mem
-
-        verbose and print( f"GPU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )
-
-        return free_mem, total_mem, free_mem/total_mem
-    else :
-        import psutil
-        ps_mem = psutil.virtual_memory() ; 
-        total_mem, free_mem = ps_mem[0], ps_mem[1]
-        used_mem = total_mem - free_mem
-
-        verbose and print( "PSU = ", psutil.virtual_memory())
-        verbose and print( f"PSU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )
-        return free_mem, total_mem, free_mem/total_mem
-    pass
-pass
 
 def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
     
@@ -66,7 +47,7 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         if use_gpu : torch.cuda.empty_cache()
 
         free_mem_bytes, total_mem_bytes, free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 ) 
-
+        
         free_mem_bytes_prev = free_mem_bytes
         print( f"free_mem_bytes = {free_mem_bytes:_} bytes {free_ratio*100:.0f}%", flush=1 )
 
@@ -74,7 +55,7 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         tick_count = int( tick_count )
 
         if operation : 
-            tick_count = math.sqrt( free_mem_bytes/3/data_type_size*0.95 )
+            tick_count = math.sqrt( free_mem_bytes/data_type_size*0.95/3 )
             tick_count = int( tick_count )
         pass
         
@@ -148,7 +129,7 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         pass
 
         if True : 
-            duration = 5
+            duration = 3
             print( f"sleep( {duration} )")        
             sleep( duration )
         pass
@@ -174,7 +155,10 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
 
         ymax = yunit*( int( ymax/yunit + 1 ) + 0.2)
     pass
-        
+    
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.size"] = "16"
+
     row_cnt = 1; col_cnt = 1
     
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 6*row_cnt) )
