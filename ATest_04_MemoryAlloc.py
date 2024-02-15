@@ -202,9 +202,9 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
     
     plt.tight_layout()
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_chart_file = f"{src_dir}/result/memory_allocation_{use_gpu}_{len(operation)}.png"
-    print( f"Result chart file = {result_chart_file}" )
-    plt.savefig( result_chart_file )
+    result_figure_file = f"{src_dir}/result/memory_allocation_{use_gpu}_{len(operation)}.png"
+    print( f"Result figure file = {result_figure_file}" )
+    plt.savefig( result_figure_file )
     plt.show(); 
 
     print( "\nDone." )
