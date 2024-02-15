@@ -49,7 +49,7 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         free_mem_bytes, total_mem_bytes, free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 ) 
         
         free_mem_bytes_prev = free_mem_bytes
-        print( f"free_mem_bytes = {free_mem_bytes:_} bytes {free_ratio*100:.0f}%", flush=1 )
+        print( f"free_mem_bytes = {free_mem_bytes:_} bytes {free_ratio:.0%}%", flush=1 )
 
         tick_count = math.sqrt( free_mem_bytes/data_type_size*0.95 )
         tick_count = int( tick_count )
@@ -112,7 +112,7 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
             if use_gpu : torch.cuda.empty_cache()
 
             free_mem_bytes, total_mem_bytes,free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
-            print( f"free_mem_bytes after gc= {free_mem_bytes:_} bytes {free_ratio*100:.0f}%" , flush=1)
+            print( f"free_mem_bytes after gc= {free_mem_bytes:_} bytes {free_ratio:.0%}%" , flush=1)
         pass
 
         if debug:   

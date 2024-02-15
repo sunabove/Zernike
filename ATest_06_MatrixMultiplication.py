@@ -47,7 +47,7 @@ def test_memory_multiplication_performance( device_names, debug=1 ) :
 
             free_mem, total_mem, free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
             free_mem_prev = free_mem
-            print( f"free mem = {free_mem:_} bytes {free_ratio*100:.0f}%", flush=1 )
+            print( f"free mem = {free_mem:_} bytes {free_ratio:.0%}", flush=1 )
         
             tick_count = int( math.sqrt( free_mem*.95/data_type_size/3 ) )
 
