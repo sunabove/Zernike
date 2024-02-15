@@ -44,10 +44,7 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
 
     device = torch.device( device_name) 
 
-    #data_types = [ np.int_, np.double, np.csingle, np.cdouble ]
-    data_types = [ torch.int, torch.int, torch.double, torch.double, torch.cfloat, torch.cfloat, torch.cdouble, torch.cdouble ]
-    
-    dx = 0
+    data_types = [ torch.int, torch.double, torch.cfloat, torch.cdouble ]
 
     types = [ ]
     memories = [ ]
@@ -65,6 +62,8 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         type_detail_str = device_name + " " + type_str + f"({data_type_size} bytes)"  
         
         debug and print( type_detail_str, flush=1 )
+
+        if use_gpu : torch.cuda.empty_cache()
 
         free_mem_bytes, total_mem_bytes, free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 ) 
 
@@ -94,6 +93,8 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
                 
                 memory_size = a.nbytes
                 arrays.append( a )
+
+                a = None
             else :
                 a = torch.zeros( (tick_count, tick_count), dtype=data_type, device=device )
                 arrays.append( a )
@@ -105,6 +106,8 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
                 
                 c= a*b
                 arrays.append( c )
+
+                a = b = c = None
             pass
         
             elapsed = perf_counter() - then 
@@ -116,39 +119,36 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         finally :
             for array in arrays :
                 del array
-                
-                import gc
-                gc.collect()
-                
-                use_gpu and torch.cuda.empty_cache()
             pass
 
             del arrays
 
+            arrays = None
+
             import gc
             gc.collect()
 
-            test = torch.zeros( [1000], dtype=data_type, device=device )
+            if use_gpu : torch.cuda.empty_cache()
+
+            free_mem_bytes, total_mem_bytes,free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
+            print( f"free_mem_bytes after gc= {free_mem_bytes:_} bytes {free_ratio*100:.0f}%" , flush=1)
         pass
 
-        free_mem_bytes, total_mem_bytes,free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
-        print( f"free_mem_bytes after gc= {free_mem_bytes:_} bytes {free_ratio*100:.0f}%" , flush=1)
-    
         if debug:   
             error and print( error, flush=1 )
 
             print( f"tick_count = {tick_count:_}, size = {memory_size/1e9:_.1f} Gb, run-time = {elapsed:.2f} (sec.)", flush=1 )
         pass
         
-        if idx%2 == 0 : 
+        if True : 
             types.append( type_str )
             tick_counts.append( tick_count ) 
             memories.append( memory_size )
             elapsed_times.append( elapsed )
         pass
 
-        if False : 
-            duration = 20
+        if True : 
+            duration = 5
             print( f"sleep( {duration} )")        
             sleep( duration )
         pass
@@ -211,6 +211,10 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
 pass # -- test_array_memory
 
 if __name__ == "__main__":
-   test_array_memory_alloc( use_gpu=1, operation="x", debug=1, verbose=0 )
+    for use_gpu in [ 0, 1 ] : 
+        for operation in [ "", "*" ] : 
+            test_array_memory_alloc( use_gpu=use_gpu, operation=operation, debug=1, verbose=0 )
+        pass
+    pass
 pass
 
