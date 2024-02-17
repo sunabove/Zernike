@@ -2,6 +2,7 @@ torch
 openpyxl
 pandas
 ray
+igpu
 scikit-image
 opencv-contrib-python
 tabulate
@@ -12,6 +13,5 @@ scipy
 tqdm
 psutil
 gputil
-igpu
 ipywidgets
 humanize

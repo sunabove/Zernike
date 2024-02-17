@@ -22,3 +22,8 @@ free_mem, total_mem = torch.cuda.mem_get_info( 0 )
 used_mem = total_mem - free_mem
 
 print( f"GPU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )
+
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.size"] = "16"
+
+chart.grid( axis='y', linestyle="dotted" )

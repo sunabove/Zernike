@@ -23,7 +23,7 @@ log.basicConfig(level=log.DEBUG)
 
 pi = torch.pi
 
-line = line1 = "*"*70 
+line = line1 = "*"*90 
 line2 = "\n" + line + ""
 line3 = line2 + "\n"
 
@@ -543,8 +543,6 @@ def print_gpu_info() :
             gpu_total_memory, gpu_temperature 
         ))
     pass
-    
-    from tabulate import tabulate
     
     print(tabulate(list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature" )))
 pass # -- print_gpu_info 
