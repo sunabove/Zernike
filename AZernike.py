@@ -2,33 +2,30 @@
 
 print( f"Hello... Good morning!" )
 
-import numpy, cupy
-import math, logging as log, cv2 as cv
-import psutil , igpu , GPUtil, pandas as pd
+import os, math, logging as log, cv2 as cv
+import psutil , GPUtil, pandas as pd
+import torch
 import threading, ray # ray for parallel computing
 
-from skimage import data
 from skimage.color import rgb2gray
+
+from skimage import data
 from skimage import io 
 
 from time import *
 from scipy.special import factorial
 from matplotlib import pyplot as plt
 from datetime import datetime
-from tqdm.notebook import tqdm
 from tabulate import tabulate
-from IPython.display import clear_output
 from Profiler import *
 
 log.basicConfig(level=log.DEBUG) 
 
-pi = numpy.pi
+pi = torch.pi
 
-line = line1 = "*"*60 
+line = line1 = "*"*70 
 line2 = "\n" + line + ""
 line3 = line2 + "\n"
-
-numpy.set_printoptions(suppress=1)
 
 print( f"Importing python packages was done." )
 
@@ -57,9 +54,9 @@ pass # ray_init
 def _pqs_facotrial( p, q, t, **options ) :
     use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
         
-    s = numpy.arange( 0, t + 1 ) 
+    s = torch.arange( 0, t + 1 ) 
     
-    R_ps = numpy.power( -1, s )*factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
+    R_ps = torch.power( -1, s )*factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
     
     if use_gpu :
         s = cupy.asarray( s )
@@ -442,7 +439,7 @@ pass
 def print_cpu_info() :
     import platform, psutil
     
-    print("="*40, "CPU Details", "="*40)
+    print( " CPU Details ".center( len(line), "*") ) 
 
     print(f"Processor type: {platform.processor()}")
     #Operating system release
@@ -463,7 +460,7 @@ def print_cpu_info() :
     print(f"Max CPU frequency: {psutil.cpu_freq().max/1000} GHz")
 
     print()
-    print("="*40, "Memory Details", "="*40)
+    print( " Memory Details ".center( len(line), "*") ) 
     #Total RAM
     print(f"Total RAM installed: {round(psutil.virtual_memory().total/10**9, 2)} GB")
     #Available RAM
@@ -520,7 +517,8 @@ def is_scalar( data ) :
 pass # is_scalar
 
 def print_gpu_info() :
-    print("="*40, "GPU Details", "="*40)
+    print( " GPU Details ".center( len(line), "*") ) 
+
     gpus = GPUtil.getGPUs()
     list_gpus = []
     for gpu in gpus:
@@ -1205,3 +1203,9 @@ pass # plot_moment_features
 
 print( "Zernike functions are defined.")
 print()
+
+if __name__ == "__main__" :
+    print_cpu_info()    
+    print()
+    print_gpu_info()
+pass
