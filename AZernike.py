@@ -51,17 +51,11 @@ def ray_init() :
 pass # ray_init
 
 #@profile
-def _pqs_facotrial( p, q, t, **options ) :
-    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
+def _pqs_facotrial( p, q, t, device ) :
         
-    s = torch.arange( 0, t + 1 ) 
+    s = torch.arange( 0, t + 1, device=device) 
     
-    R_ps = torch.power( -1, s )*factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
-    
-    if use_gpu :
-        s = cupy.asarray( s )
-        R_ps = cupy.asarray( R_ps )
-    pass
+    R_ps = torch.pow( -1, s )*( factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s ) )
 
     return R_ps, s 
 pass # _pqs_facotrial
@@ -134,6 +128,7 @@ pass # _rps
 def Rpq(p, q, rho, **options ) :
     debug    = options[ "debug" ] if "debug" in options else 0  
     use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else 0
+    device_no = options[ "device_no" ] if "device_no" in options else 0
     hash     = options[ "hash" ] if "hash" in options else None
     use_hash = options[ "use_hash" ] if "use_hash" in options else 0 
     
@@ -154,19 +149,19 @@ def Rpq(p, q, rho, **options ) :
     key = f"rpq:{p}:{q}"
     
     r_pq_rho = None 
+
+    device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
     
     if use_hash and key in hash :
         r_pq_rho = hash[ key ]
         
         if use_gpu :
-            r_pq_rho = cupy.asarray( r_pq_rho )
+            r_pq_rho = r_pq_rho.to( device )
         pass 
     
         return r_pq_rho 
     pass
 
-    np = cupy if use_gpu else numpy
-    
     if p == 1 and q == 1 :
         r_pq_rho = rho
     elif p == 2 and q == 2 :
@@ -174,10 +169,10 @@ def Rpq(p, q, rho, **options ) :
     else :
         t = max( (p - q)/2, 0 ) 
 
-        R_ps, s = _pqs_facotrial( p, q, t, ** options )
+        R_ps, s = _pqs_facotrial( p, q, t, device=device )
 
         for r_ps, p_2s in zip( R_ps, p - 2*s ) :
-            rps = _rps( r_ps, rho, p_2s, ** options ) 
+            rps = _rps( r_ps, rho, p_2s, **options ) 
             
             if r_pq_rho is None :
                 r_pq_rho = rps
@@ -188,7 +183,7 @@ def Rpq(p, q, rho, **options ) :
     pass
     
     if use_hash : 
-        hash[ key ] = cupy.asnumpy( r_pq_rho ) if use_gpu else r_pq_rho 
+        hash[ key ] = r_pq_rho.to( "cpu" )
     pass
         
     if debug : 
