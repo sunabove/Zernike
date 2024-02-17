@@ -60,14 +60,7 @@ def _pqs_facotrial( p, q, t, device ) :
     return R_ps, s 
 pass # _pqs_facotrial
 
-def _rps( r_ps, rho, p_2s, ** options ) :
-    debug    = options[ "debug" ] if "debug" in options else False  
-    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
-    hash     = options[ "hash" ] if "hash" in options else None
-    use_hash = options[ "use_hash" ] if "use_hash" in options else False 
-    
-    #log.info( f"use_gpu = {use_gpu}" )
-    
+def _rps( r_ps, rho, p_2s, device=None, hash=None ) :
     p_2s = int( p_2s )
     
     key = f"rps:{p_2s}:{r_ps}"
@@ -76,27 +69,21 @@ def _rps( r_ps, rho, p_2s, ** options ) :
     
     if key in hash :
         rho_power = hash[ key ] 
+
+        rho_power = rho_power.to( device )
         
-        if use_gpu :
-            rho_power = cupy.asarray( rho_power )
-        pass
-        
-        return rho_power;
+        return rho_power
     pass
 
     if p_2s in hash :
         rho_power = hash[ p_2s ]
         
-        if use_gpu :
-            rho_power = cupy.asarray( rho_power )
-        pass
+        rho_power = rho_power.to( device )
     else : 
-        np = cupy if use_gpu else numpy 
-        
         if p_2s in [ -2, -1, 0, 1, 2 ] :
-            rho_power = np.power( rho, p_2s )
+            rho_power = torch.pow( rho, p_2s )
         else :
-            rho_power = _rps( 1, rho, p_2s//2, ** options )
+            rho_power = _rps( 1, rho, p_2s//2, device=device, hash=hash )
             
             if p_2s % 2 == 1 : 
                 rho_power = rho_power*rho_power*rho
@@ -105,8 +92,8 @@ def _rps( r_ps, rho, p_2s, ** options ) :
             pass
         pass
     
-        if use_hash : 
-            hash[ p_2s ] = cupy.asnumpy( rho_power ) if use_gpu else rho_power
+        if hash is not None : 
+            hash[ p_2s ] = rho_power.to( "cpu" )
         pass
     pass
 
@@ -114,8 +101,8 @@ def _rps( r_ps, rho, p_2s, ** options ) :
         rho_power = r_ps*rho_power
     pass
     
-    if use_hash : 
-        hash[ key ] = cupy.asnumpy( rho_power ) if use_gpu else rho_power 
+    if hash is not None : 
+        hash[ key ] = rho_power.to( "cpu" )
     pass
 
     #print( f"rho_power type = {rho_power.dtype} " )
@@ -172,7 +159,7 @@ def Rpq(p, q, rho, **options ) :
         R_ps, s = _pqs_facotrial( p, q, t, device=device )
 
         for r_ps, p_2s in zip( R_ps, p - 2*s ) :
-            rps = _rps( r_ps, rho, p_2s, **options ) 
+            rps = _rps( r_ps, rho, p_2s, device=device, hash=hash ) 
             
             if r_pq_rho is None :
                 r_pq_rho = rps
