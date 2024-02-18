@@ -32,7 +32,6 @@ print( f"Importing python packages was done." )
 ray_inited = False 
 
 def ray_init() :
-    
     global ray_inited 
 
     if not ray_inited : 
@@ -52,7 +51,6 @@ pass # ray_init
 
 #@profile
 def _pqs_facotrial( p, q, t, device ) :
-        
     s = torch.arange( 0, t + 1) 
 
     fact = factorial( p - s )/factorial( s )/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
