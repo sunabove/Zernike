@@ -23,7 +23,14 @@ used_mem = total_mem - free_mem
 
 print( f"GPU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )
 
+from matplotlib import pyplot as plt
+
 plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.size"] = "16"
 
 chart.grid( axis='y', linestyle="dotted" )
+
+use_gpu = 1
+device_no = 0 
+hash = {} 
+device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )

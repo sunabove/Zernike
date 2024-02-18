@@ -6,11 +6,11 @@ igpu
 scikit-image
 opencv-contrib-python
 tabulate
+tqdm
 
 shapely
 imutils
 scipy
-tqdm
 psutil
 gputil
 ipywidgets
