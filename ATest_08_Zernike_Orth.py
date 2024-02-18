@@ -263,8 +263,16 @@ def validte_radial_polynomial_ortho( T, debug=0) :
     
 
     plt.tight_layout()
-    plt.savefig( f"./result/zernike_02_radial_orthogonality.png" )
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    result_figure_file = f"{src_dir}/result/zernike_02_radial_orthogonality.png"
+    plt.savefig( result_figure_file )
     plt.show()
 
     print_curr_time()
 pass # -- validte_radial_polynomial
+
+if __name__ == "__main__" :
+    T = 40 #6 #10 # 20
+
+    validte_radial_polynomial_ortho( T, debug=1 )
+pass
