@@ -53,9 +53,13 @@ pass # ray_init
 #@profile
 def _pqs_facotrial( p, q, t, device ) :
         
-    s = torch.arange( 0, t + 1, device=device) 
+    s = torch.arange( 0, t + 1) 
+
+    fact = factorial( p - s )/factorial( s )/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
     
-    R_ps = torch.pow( -1, s )*( factorial(p - s)/factorial(s)/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s ) )
+    R_ps = torch.pow( -1, s )*( fact )
+
+    R_ps = R_ps.to( device )
 
     return R_ps, s 
 pass # _pqs_facotrial
