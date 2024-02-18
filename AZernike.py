@@ -112,15 +112,7 @@ pass # _rps
 
 #@profile
 # radial function
-def Rpq(p, q, rho, **options ) :
-    debug    = options[ "debug" ] if "debug" in options else 0  
-    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else 0
-    device_no = options[ "device_no" ] if "device_no" in options else 0
-    hash     = options[ "hash" ] if "hash" in options else None
-    use_hash = options[ "use_hash" ] if "use_hash" in options else 0 
-    
-    #log.info( f"rps use_gpu = {use_gpu}" )
-    
+def Rpq(p, q, rho, device, hash, debug=0 ) :
     q = abs( q )
     
     if abs(q) > p : 
@@ -135,16 +127,12 @@ def Rpq(p, q, rho, **options ) :
 
     key = f"rpq:{p}:{q}"
     
-    r_pq_rho = None 
-
-    device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
+    r_pq_rho = None
     
-    if use_hash and key in hash :
+    if hash is not None and key in hash :
         r_pq_rho = hash[ key ]
         
-        if use_gpu :
-            r_pq_rho = r_pq_rho.to( device )
-        pass 
+        r_pq_rho = r_pq_rho.to( device )
     
         return r_pq_rho 
     pass
@@ -169,7 +157,7 @@ def Rpq(p, q, rho, **options ) :
         pass 
     pass
     
-    if use_hash : 
+    if hash is not None : 
         hash[ key ] = r_pq_rho.to( "cpu" )
     pass
         
