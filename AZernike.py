@@ -1198,11 +1198,17 @@ print( "Zernike functions are defined.")
 print()
 
 if __name__ == "__main__" :
-    t = 0
+    t = 3
     s = torch.arange( 0, t + 1 ) 
-    s = numpy.arange( 0, t + 1 ) 
-    print( "facotrial(0) = ", factorial( s ) )
-    print_cpu_info()    
-    print()
-    print_gpu_info()
+    t = torch.arange( 0, t + 1 ) 
+
+    print( s*t )
+
+    if False : 
+        s = numpy.arange( 0, t + 1 ) 
+        print( "facotrial(0) = ", factorial( s ) )
+        print_cpu_info()    
+        print()
+        print_gpu_info()
+    pass
 pass

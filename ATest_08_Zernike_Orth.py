@@ -169,7 +169,7 @@ def validte_radial_polynomial_ortho( T, debug=0) :
             dr = 1.0/grid_count
 
             rho = torch.linspace( 0, 1, grid_count, device=device )
-            print( "rho  len = ", len( rho ) )
+            print( f"rho  len = {len(rho):_}" )
             rho = rho[ torch.where( rho <= 1 ) ]
 
             error_sum = 0
@@ -178,34 +178,39 @@ def validte_radial_polynomial_ortho( T, debug=0) :
             hash= {}
 
             for p in range( 0, T + 1 ) :
-                for q in range( 0, T + 1 ) :
-                    for l in range( -q, q + 1 ) :
-                        if abs(l) > p or abs(l) > q:
-                            continue
-                        elif ( p - abs(l) )%2 == 1 :
-                            continue
-                        elif ( q - abs(l) )%2 == 1 :
-                            continue
+                for q in range( 0, p + 1 ) :
+                    for n in range( 0, T + 1 ) :
+                        for m in range( 0, n + 1 ) :
+                            if abs(q) > p or abs(m) > n:
+                                continue
+                            elif ( p - abs(q) )%2 == 1 :
+                                continue
+                            elif ( n - abs(m) )%2 == 1 :
+                                continue
+                            pass
+
+                            r_pq = Rpq( p, q, rho, device=device, hash=hash, debug=0 )
+                            r_nm = Rpq( n, m, rho, device=device, hash=hash, debug=0 )
+                            
+                            sum = torch.sum( r_pq*r_nm*rho*dr )*( 2*(p + 1) )
+
+                            expect = [0, 1][ p == q and n == m ]
+
+                            error = torch.abs( expect - sum )
+
+                            if not math.isnan( error ) : 
+                                error_sum += error
+                                error_cnt += torch.numel( r_pq )
+                            else :
+                                print( f"{__file__} : Nan is encountred." )
+                                True
+                            pass
+                            
+                            if debug :
+                                if expect == 1 : print( line )
+                                print( f"[{grid_count:04d}] R[{p:02d}][{q:02d}] , [{n:02d}][{n:02d}] : exptect = {expect}, sum = {sum}, error = {error}", flush=1 )
+                            pass
                         pass
-
-                        r_pl = Rpq( p, l, rho, device=device, hash=hash, debug=0 )
-                        r_ql = Rpq( q, l, rho, device=device, hash=hash, debug=0 )
-                        
-                        sum = torch.sum( r_pl*r_ql*rho*dr )*( 2*(p + 1) )
-
-                        expect = [0, 1][ p == q ]
-
-                        error = torch.abs( expect - sum )
-
-                        if not math.isnan( error ) : 
-                            error_sum += error
-                            error_cnt += torch.numel( r_pl )
-                        else :
-                            print( f"{__file__} : Nan is encountred." )
-                            True
-                        pass
-                        
-                        #debug and print( f"[{p:02d}][{q:02d}] : Rpl({p}, {l:2d})*Rql({q}, {l:2d}) = {sum}, exptect = {expect}, error = {error}", flush=1 )
                     pass
                 pass
             pass
@@ -220,10 +225,8 @@ def validte_radial_polynomial_ortho( T, debug=0) :
 
             if debug : 
                 print( line2 )
-                print( f"device = {device}" )
-                print( f"Radial Grid Count = {grid_count:_}, T = {T}" )
-                print( f"Elapsed time = {elapsed:,f}" )
-                print( f"Error average = {error_avg:,.10f}" )
+                print( f"device = {device}, Radial Grid Count = {grid_count:_}, T = {T}" )
+                print( f"Elapsed time = {elapsed:,.3f}, Error average = {error_avg:,.4f}" )
             pass
         pass
 
@@ -236,7 +239,7 @@ def validte_radial_polynomial_ortho( T, debug=0) :
         tab.extend( [ device_name, "Error" ] )
         tab.extend( error_avgs.copy() )
 
-        x = torch.tensor( resolutions  )
+        x = torch.log10( torch.tensor( resolutions  ) )
         error_avgs = torch.tensor( error_avgs )
         elapsed_list = torch.tensor( elapsed_list )
 
@@ -249,22 +252,22 @@ def validte_radial_polynomial_ortho( T, debug=0) :
         linestyle = "solid" if use_gpu else "dotted"
         color = "limegreen" if use_gpu else "violet"
 
-        w = 2
+        w = ( max( x ) - min( x ) )/ len( x ) / 3
         n = 2
         
         print( "x len = ", len( x ) )
         print( "error_avgs len = ", len( error_avgs ) )
-        #bar = chart.bar( x - w/2 + w*idx, error_avgs, width=w, label=f"{device_name}" )
-        bar = chart.bar( x, error_avgs, label=f"{device_name}" )
+        bar = chart.bar( x - w/2 + w*idx, error_avgs, width=w, label=f"{device_name}" )
         #chart.bar_label( bar, fmt='%.1f', fontsize=fs-2 )
 
         #chart.plot( x, elapsed_list, marker="s", linestyle=linestyle, label=f"{dn}:Elapsed Time(sec.)" )
         #chart.plot( x, error_avgs,   marker="D", linestyle=linestyle, label=f"{dn}:Orthogonality Error" )
+        
+        chart.set_xticks( x )
+        chart.set_xticklabels( [ f"{x/1_000:1.0f}$K$" for x in resolutions ] )
     pass
 
     #chart.set_ylim( int( ymin - 1 ), int( ymax + 1 ) )
-    chart.set_xticks( resolutions )
-    chart.set_xticklabels( [ f"{x/1_000:1.0f}$K$" for x in resolutions ] )
     
     chart.set_title( f"Zernike Radial Polynomial Orthogonality Error ($p$={T})" )
     chart.set_xlabel( "Grid Tick Counts" )
