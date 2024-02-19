@@ -1,6 +1,6 @@
 from AZernike import *
-from tqdm import tqdm
-from math import isnan
+from tqdm import tqdm 
+import time
 
 def test_process_unit_spec() :
     import psutil, igpu
@@ -148,30 +148,32 @@ def validte_radial_polynomial_ortho( T, debug=0) :
     
     ymin = ymax = 0
 
-    for idx, use_gpu in enumerate( [ 1, 0 ] ) : 
+    tab_rows = [ [], [] ]
+
+    for idx, use_gpu in enumerate( [ 0, 1 ] ) : 
         hash = {}
+        hash = None
         device_no = 0  
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
 
-        print( f"device = {device}" )
-
-        memories = []
+        dn = device_name = "GPU" if use_gpu else "CPU"
+        
         error_avgs = []
         elapsed_list = []
 
         resolutions = [ 2**x for x in range( 10, 14 + 1 ) ]
         
         for grid_count in tqdm( resolutions, desc="Resolution" ):
-            then = perf_counter() 
+            then = time.time()
 
             dr = 1.0/grid_count
 
-            rho = torch.arange( 0, 1 + dr, grid_count, device=device )
+            rho = torch.linspace( 0, 1, grid_count, device=device )
+            print( "rho  len = ", len( rho ) )
             rho = rho[ torch.where( rho <= 1 ) ]
 
             error_sum = 0
-            error_cnt = 0 
-            mem_max = 0 
+            error_cnt = 0
 
             hash= {}
 
@@ -189,20 +191,18 @@ def validte_radial_polynomial_ortho( T, debug=0) :
                         r_pl = Rpq( p, l, rho, device=device, hash=hash, debug=0 )
                         r_ql = Rpq( q, l, rho, device=device, hash=hash, debug=0 )
                         
-                        mem = (r_pl.nbytes + r_ql.nbytes)
-                        
-                        if mem > mem_max :
-                            mem_max = mem
-
                         sum = torch.sum( r_pl*r_ql*rho*dr )*( 2*(p + 1) )
 
                         expect = [0, 1][ p == q ]
 
                         error = torch.abs( expect - sum )
 
-                        if not isnan( error ) : 
+                        if not math.isnan( error ) : 
                             error_sum += error
                             error_cnt += torch.numel( r_pl )
+                        else :
+                            print( f"{__file__} : Nan is encountred." )
+                            True
                         pass
                         
                         #debug and print( f"[{p:02d}][{q:02d}] : Rpl({p}, {l:2d})*Rql({q}, {l:2d}) = {sum}, exptect = {expect}, error = {error}", flush=1 )
@@ -214,9 +214,8 @@ def validte_radial_polynomial_ortho( T, debug=0) :
 
             error_avg = error_sum/error_cnt
             error_avgs.append( error_avg )
-            memories.append( mem_max )
 
-            elapsed = perf_counter() - then
+            elapsed = time.time() - then
             elapsed_list.append( elapsed )
 
             if debug : 
@@ -225,28 +224,42 @@ def validte_radial_polynomial_ortho( T, debug=0) :
                 print( f"Radial Grid Count = {grid_count:_}, T = {T}" )
                 print( f"Elapsed time = {elapsed:,f}" )
                 print( f"Error average = {error_avg:,.10f}" )
-                print( f"Memories used = {mem_max:_} bytes" )
             pass
         pass
 
-        x = torch.tensor( resolutions  )
-        error_avgs = torch.log10( torch.tensor( error_avgs ) ) + 0.015*idx
-        elapsed_list = torch.log10( torch.tensor( elapsed_list ) ) + 0.015*idx
-        memories = torch.log10( torch.tensor( memories ) ) + 0.015*idx
+        if False : 
+            tab = tab_rows[ idx*1 + 0 ]
+            tab.extend( [ device_name, "Elapsed Time (sec.)" ] )
+            tab.extend( elapsed_list.copy() ) 
 
-        ymin_curr = min( torch.min( error_avgs ), torch.min( elapsed_list ), torch.min( memories ) )
-        ymax_curr = max( torch.max( error_avgs ), torch.max( elapsed_list ), torch.max( memories ) )
+        tab = tab_rows[ idx*1 + 0 ]
+        tab.extend( [ device_name, "Error" ] )
+        tab.extend( error_avgs.copy() )
+
+        x = torch.tensor( resolutions  )
+        error_avgs = torch.tensor( error_avgs )
+        elapsed_list = torch.tensor( elapsed_list )
+
+        ymin_curr = min( torch.min( error_avgs ), torch.min( elapsed_list ) )
+        ymax_curr = max( torch.max( error_avgs ), torch.max( elapsed_list ) )
         
         ymin = min( ymin, ymin_curr )
         ymax = max( ymax, ymax_curr )
 
-        dn = device_name = "GPU" if use_gpu else "CPU"
         linestyle = "solid" if use_gpu else "dotted"
         color = "limegreen" if use_gpu else "violet"
 
-        chart.plot( x, memories,     marker="*", linestyle=linestyle, label=f"{dn}:Memories(Gb)" )
-        chart.plot( x, elapsed_list, marker="s", linestyle=linestyle, label=f"{dn}:Elapsed Time(sec.)" )
-        chart.plot( x, error_avgs,   marker="D", linestyle=linestyle, label=f"{dn}:Orthogonality Error" )
+        w = 2
+        n = 2
+        
+        print( "x len = ", len( x ) )
+        print( "error_avgs len = ", len( error_avgs ) )
+        #bar = chart.bar( x - w/2 + w*idx, error_avgs, width=w, label=f"{device_name}" )
+        bar = chart.bar( x, error_avgs, label=f"{device_name}" )
+        #chart.bar_label( bar, fmt='%.1f', fontsize=fs-2 )
+
+        #chart.plot( x, elapsed_list, marker="s", linestyle=linestyle, label=f"{dn}:Elapsed Time(sec.)" )
+        #chart.plot( x, error_avgs,   marker="D", linestyle=linestyle, label=f"{dn}:Orthogonality Error" )
     pass
 
     #chart.set_ylim( int( ymin - 1 ), int( ymax + 1 ) )
@@ -255,12 +268,12 @@ def validte_radial_polynomial_ortho( T, debug=0) :
     
     chart.set_title( f"Zernike Radial Polynomial Orthogonality Error ($p$={T})" )
     chart.set_xlabel( "Grid Tick Counts" )
-    chart.set_ylabel( r"$log_{10}(y)$" )
+    #chart.set_ylabel( r"$log_{10}(y)$" )
 
     chart.grid( axis='y', linestyle="dotted" )
-    chart.legend( loc="upper center", fontsize=fs-2, ncols=3 )
-    chart.legend( fontsize=fs-2 )
-    
+    chart.legend( loc="center", bbox_to_anchor=(0.5, 0.35), fontsize=fs, ncols=1 )
+    #chart.legend( fontsize=fs, ncols=2 )
+    chart.legend()
 
     plt.tight_layout()
     src_dir = os.path.dirname( os.path.abspath(__file__) )
@@ -269,6 +282,12 @@ def validte_radial_polynomial_ortho( T, debug=0) :
     print( f"result_figure_file = {result_figure_file}" )
     plt.show()
 
+    tab_header = [ "Device", "Item" ]
+    tab_header.extend( [ f"{x/1_000:1.0f}K" for x in resolutions ] )
+
+    print( tabulate( tab_rows, headers=tab_header ) )
+
+    print()
     print_curr_time()
 pass # -- validte_radial_polynomial
 

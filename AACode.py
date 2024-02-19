@@ -29,8 +29,12 @@ plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.size"] = "16"
 
 chart.grid( axis='y', linestyle="dotted" )
+chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.26), fontsize=fs-4, ncols=3 )
 
 use_gpu = 1
 device_no = 0 
 hash = {} 
 device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
+
+# 테이블 생성
+print( tabulate( list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature" )) )

@@ -12,7 +12,7 @@ from skimage.color import rgb2gray
 from skimage import data
 from skimage import io 
 
-from time import *
+import numpy
 import scipy
 from matplotlib import pyplot as plt
 from datetime import datetime
@@ -50,28 +50,40 @@ def ray_init() :
 pass # ray_init
 
 def factorial( n ) :
-    #from scipy.special import factorial
-    #from math import factorial
     if torch.is_tensor( n ) :
-        return n.lgamma().exp()
+        v = n.lgamma().exp()
     else :
-        return scipy.special.factorial( n )
+        v = scipy.special.factorial( n )
+    pass 
+
+    if numpy.isnan( v ).any() :
+        print( "factorial() : nan encountered" )
+        True
+    elif numpy.isinf( v ).any() :
+        print( "factorial() : inf encountered" )
+        True
     pass
+
+    return v
 pass
 
 #@profile
 def _pqs_facotrial( p, q, t, device ) :
-    s = torch.arange( 0, t + 1 ) 
+    s = numpy.arange( 0, t + 1 ) 
 
     #fact = factorial( p - s )/factorial( s )/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
     fact = factorial( p - s )
-    fact = fact/factorial( s )
-    fact = fact/factorial( (p + q)/2 - s )
-    fact = fact/factorial( (p - q)/2 - s )
-    
-    R_ps = torch.pow( -1, s )*( fact )
+    fact1 = fact/factorial( s )
+    fact2 = fact1/factorial( (p + q)/2 - s )
+    fact3 = fact2/factorial( (p - q)/2 - s )
+    fact4 = torch.tensor( fact3 ).to( device )
 
-    R_ps = R_ps.to( device )
+    R_ps = torch.pow( -1, torch.tensor( s, device=device ) )*( fact4 )
+
+    if R_ps.isnan().any() :
+        print( "_pqs_factorial( ....) : Nan encountered." )
+        True
+    pass
 
     return R_ps, s 
 pass # _pqs_facotrial
@@ -524,13 +536,10 @@ def print_gpu_info() :
         gpu_temperature = f"{gpu.temperature} °C"
         gpu_uuid = gpu.uuid
         
-        list_gpus.append((
-            gpu_id, gpu_name, gpu_load, gpu_free_memory, gpu_used_memory,
-            gpu_total_memory, gpu_temperature 
-        ))
+        list_gpus.append( ( gpu_id, gpu_name, gpu_load, gpu_free_memory, gpu_used_memory, gpu_total_memory, gpu_temperature ) )
     pass
     
-    print(tabulate(list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature" )))
+    print( tabulate( list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature" )) )
 pass # -- print_gpu_info 
 
 def pq_list( T ) :
@@ -1189,6 +1198,10 @@ print( "Zernike functions are defined.")
 print()
 
 if __name__ == "__main__" :
+    t = 0
+    s = torch.arange( 0, t + 1 ) 
+    s = numpy.arange( 0, t + 1 ) 
+    print( "facotrial(0) = ", factorial( s ) )
     print_cpu_info()    
     print()
     print_gpu_info()
