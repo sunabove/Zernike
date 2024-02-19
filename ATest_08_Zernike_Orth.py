@@ -325,7 +325,7 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
         
         then = time.time() 
 
-        rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type="inner", device=device, hash=hash, debug=debug )
+        rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
         
         good_cnt = 0 
         fail_cnt = 0 
@@ -375,8 +375,8 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
         elapsed_list.append( elapsed )
 
         if 1 or debug : 
-            print( f"Elapsed time = { elapsed }" )
-            print( f"Error avg. = {error_avg:.10f}" )
+            print( f"Elapsed time = {elapsed:_.4f}" )
+            print( f"Error avg. = {error_avg:_.10f}" )
             #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
         pass
     pass

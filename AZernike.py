@@ -244,7 +244,7 @@ def Vpq( p, q, rho, theta, device, hash, debug=0) :
 pass
 
 #@profile
-def rho_theta( resolution, circle_type, device, hash, debug=0 ) :
+def rho_theta( resolution, circle_type, device, debug=0 ) :
     img = torch.ones( ( int(resolution), int( resolution) ), dtype=torch.float64, device=device ) 
     
     h = img.shape[0]
