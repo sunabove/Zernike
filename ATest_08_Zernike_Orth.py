@@ -383,7 +383,7 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
     chart_idx = 0 
     chart = charts[ chart_idx ]
 
-    Ks = torch.tensor( Ks )
+    Ks = torch.tensor( Ks + 0.0 )
     error_avgs = torch.log10( torch.tensor( error_avgs ) )
     elapsed_list = torch.log10( torch.tensor( elapsed_list ) )
 
@@ -394,7 +394,7 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
     chart.set_xlabel( "Grid Tick Count" )
     chart.set_ylabel( "$log_{10}(y)$" )
     chart.set_xticks( Ks ) 
-    chart.set_xticklabels( [ f"{x}$K$" for x in Ks ] ) 
+    chart.set_xticklabels( [ f"{int(x)}$K$" for x in Ks ] )
     chart.grid( axis='y', linestyle="dotted" )
     chart.legend()
 
