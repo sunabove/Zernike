@@ -58,10 +58,8 @@ def factorial( n ) :
 
     if numpy.isnan( v ).any() :
         print( "factorial() : nan encountered" )
-        True
     elif numpy.isinf( v ).any() :
         print( "factorial() : inf encountered" )
-        True
     pass
 
     return v

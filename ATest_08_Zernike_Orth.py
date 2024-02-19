@@ -168,8 +168,7 @@ def validte_radial_polynomial_ortho( T, debug=0) :
 
             dr = 1.0/grid_count
 
-            rho = torch.linspace( 0, 1, grid_count, device=device )
-            print( f"rho  len = {len(rho):_}" )
+            rho = torch.linspace( 0, 1, grid_count, dtype=torch.float64, device=device )
             rho = rho[ torch.where( rho <= 1 ) ]
 
             error_sum = 0
@@ -206,7 +205,7 @@ def validte_radial_polynomial_ortho( T, debug=0) :
                                 True
                             pass
                             
-                            if debug :
+                            if 0*debug :
                                 if expect == 1 : print( line )
                                 print( f"[{grid_count:04d}] R[{p:02d}][{q:02d}] , [{n:02d}][{n:02d}] : exptect = {expect}, sum = {sum}, error = {error}", flush=1 )
                             pass
@@ -224,9 +223,9 @@ def validte_radial_polynomial_ortho( T, debug=0) :
             elapsed_list.append( elapsed )
 
             if debug : 
-                print( line2 )
-                print( f"device = {device}, Radial Grid Count = {grid_count:_}, T = {T}" )
-                print( f"Elapsed time = {elapsed:,.3f}, Error average = {error_avg:,.4f}" )
+                print( line2 )            
+                print( f"device = {device}, Radial Grid Count = {grid_count:_}, T = {T}, rho_len = {len(rho):_}" )
+                print( f"Elapsed time = {elapsed:,.3f}, Error average = {error_avg:,.8f}" )
             pass
         pass
 
@@ -240,8 +239,8 @@ def validte_radial_polynomial_ortho( T, debug=0) :
         tab.extend( error_avgs.copy() )
 
         x = torch.log10( torch.tensor( resolutions  ) )
-        error_avgs = torch.tensor( error_avgs )
-        elapsed_list = torch.tensor( elapsed_list )
+        error_avgs   = torch.tensor( error_avgs ) 
+        elapsed_list = torch.tensor( elapsed_list ) 
 
         ymin_curr = min( torch.min( error_avgs ), torch.min( elapsed_list ) )
         ymax_curr = max( torch.max( error_avgs ), torch.max( elapsed_list ) )
@@ -252,13 +251,11 @@ def validte_radial_polynomial_ortho( T, debug=0) :
         linestyle = "solid" if use_gpu else "dotted"
         color = "limegreen" if use_gpu else "violet"
 
-        w = ( max( x ) - min( x ) )/ len( x ) / 3
+        w = ( max( x ) - min( x ) )/ len( x ) * 0.45
         n = 2
         
-        print( "x len = ", len( x ) )
-        print( "error_avgs len = ", len( error_avgs ) )
         bar = chart.bar( x - w/2 + w*idx, error_avgs, width=w, label=f"{device_name}" )
-        #chart.bar_label( bar, fmt='%.1f', fontsize=fs-2 )
+        #chart.bar_label( bar, fmt="%.2e", fontsize=fs-2 )
 
         #chart.plot( x, elapsed_list, marker="s", linestyle=linestyle, label=f"{dn}:Elapsed Time(sec.)" )
         #chart.plot( x, error_avgs,   marker="D", linestyle=linestyle, label=f"{dn}:Orthogonality Error" )
@@ -270,7 +267,8 @@ def validte_radial_polynomial_ortho( T, debug=0) :
     #chart.set_ylim( int( ymin - 1 ), int( ymax + 1 ) )
     
     chart.set_title( f"Zernike Radial Polynomial Orthogonality Error ($p$={T})" )
-    chart.set_xlabel( "Grid Tick Counts" )
+    chart.set_xlabel( f"Grid Tick Counts" )
+    chart.set_ylabel( f"Error Average" )
     #chart.set_ylabel( r"$log_{10}(y)$" )
 
     chart.grid( axis='y', linestyle="dotted" )
@@ -290,12 +288,18 @@ def validte_radial_polynomial_ortho( T, debug=0) :
 
     print( tabulate( tab_rows, headers=tab_header ) )
 
+    excelData = []
+    excelData.append( tab_header )
+    excelData.extend( tab_rows )
+    df = pd.DataFrame( excelData )
+    df.to_excel( f"{src_dir}/result/zernike_02_radial_orthogonality.xlsx", index=False, header=False, sheet_name='poly orth')
+
     print()
     print_curr_time()
 pass # -- validte_radial_polynomial
 
 if __name__ == "__main__" :
-    T = 40 #6 #10 # 20
+    T = 40 # 40 6 #10 # 20
 
     validte_radial_polynomial_ortho( T, debug=1 )
 pass
