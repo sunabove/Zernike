@@ -48,7 +48,7 @@ def test_process_unit_spec() :
 
     plt.tight_layout()
     plt.show()
-pass
+pass ## test_process_unit_spec()
 
 def test_radial_function_validation() :
     debug = 0
@@ -129,7 +129,7 @@ def test_radial_function_validation() :
     plt.savefig( f"./result/zernike_01_radial_function.png" )
     plt.show()
 
-pass
+pass ## test_radial_function_validation
 
 def validte_radial_polynomial_ortho( T, debug=0) : 
     print_curr_time()
@@ -277,10 +277,12 @@ def validte_radial_polynomial_ortho( T, debug=0) :
     chart.legend()
 
     plt.tight_layout()
+    
     src_dir = os.path.dirname( os.path.abspath(__file__) )
     result_figure_file = f"{src_dir}/result/zernike_02_radial_orthogonality.png"
     plt.savefig( result_figure_file )
     print( f"result_figure_file = {result_figure_file}" )
+    
     plt.show()
 
     tab_header = [ "Device", "Item" ]
@@ -298,8 +300,151 @@ def validte_radial_polynomial_ortho( T, debug=0) :
     print_curr_time()
 pass # -- validte_radial_polynomial
 
-if __name__ == "__main__" :
-    T = 40 # 40 6 #10 # 20
+def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) : 
+    print()
 
-    validte_radial_polynomial_ortho( T, debug=1 )
+    hash = {}
+    hash = None
+    device_no = 0  
+    device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
+    dn = device_name = "GPU" if use_gpu else "CPU"
+
+    print( f"device = {device_name}, hash = { hash is not None }" )
+
+    success_ratios = []
+    error_avgs = []
+    elapsed_list = []
+
+    for K in tqdm( Ks, desc="K" ) :
+        resolution = int( 1_000*K )
+
+        if 1 or debug : 
+            print( line2 )
+            print( f"K = {K}, Resolution = {resolution:_}, T = {T}" )
+        pass
+        
+        then = time.time() 
+
+        w = h = resolution
+        img = torch.ones( (h, w), torch.uint8 )
+        
+        rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type="inner", use_gpu=use_gpu, debug=debug )
+        
+        good_cnt = 0 
+        fail_cnt = 0 
+
+        error_sum = 0
+        
+        hash= {}
+        
+        np = cupy if use_gpu else numpy
+
+        for p1 in range( 0, T + 1 ) :
+            for q1 in range( -p1, p1 + 1, 2 ) :
+                for p2 in range( 0, T +1 ) :
+                    for q2 in range( -p2, p2 + 1, 2 ) : 
+                        v_pl = Vpq( p1, q1, rho, theta, use_gpu=use_gpu, hash=hash, use_hash=use_hash, debug=0)
+                        v_ql = Vpq( p2, q2, rho, theta, use_gpu=use_gpu, hash=hash, use_hash=use_hash, debug=0)
+
+                        sum_arr = np.sum( np.conjugate(v_pl)*v_ql )
+                        sum_integration = sum_arr*dx*dy*(p1 +1)/pi
+                        sum = np.absolute( sum_integration )
+
+                        expect = [0, 1][ p1 == p2 and q1 == q2 ]
+                        error = abs(expect -sum)
+                        error_sum += error
+                        success = error < 1/1_000 
+                        success_t = 'Good' if success else 'Fail'
+
+                        good_cnt += success
+                        fail_cnt += (not success)
+
+                        if not use_hash :
+                            del v_pl, v_ql, sum_arr, sum_integration
+                        pass
+
+                        debug and print( f"[{p1:02d}][{q1:02d}] {success_t} : V*pl({p1}, {q1:2d})*Vpl({p2}, {q2:2d}) = {sum:.4f}, exptect = {expect}, error={error:.4f}", flush=1 )
+                    pass
+                pass
+            pass
+        pass
+
+        del hash
+
+        success_ratio = good_cnt/(good_cnt + fail_cnt)
+        success_ratios.append( success_ratio )
+        error_avg = error_sum/(good_cnt + fail_cnt)
+        error_avgs.append( error_avg )
+        
+        elapsed = time.time() - then
+        elapsed_list.append( elapsed )
+
+        if 1 or debug : 
+            print( f"Elapsed time = { elapsed }" )
+            print( f"Error avg. = {error_avg:.10f}" )
+            #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
+        pass
+    pass
+
+    print( "\nPlotting .... ", flush="True" )
+
+    fs = fontsize = 16
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.size"] = fontsize
+
+    row_cnt = 1; col_cnt = 1
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8.1*col_cnt, 5*row_cnt) )
+    charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
+    chart_idx = 0 
+    chart = charts[ chart_idx ]
+
+    Ks = np.array( Ks )
+    error_avgs = np.log10( np.array( error_avgs ) )
+    success_ratios = np.array( success_ratios )
+    elapsed_list = np.array( elapsed_list )
+    elapsed_list = np.log10( elapsed_list )
+
+    if use_gpu :
+        Ks = cupy.asnumpy( Ks )
+        error_avgs = cupy.asnumpy( error_avgs )
+        elapsed_list = cupy.asnumpy( elapsed_list )
+        success_ratios = cupy.asnumpy( success_ratios )
+    pass
+
+    chart.plot( Ks, error_avgs, marker="D", label="Orthogonality Error" )
+    chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time(secs)" )
+    chart.plot( Ks, success_ratios, marker="*", label="Success Ratio" )
+
+    chart.set_title( f"\nZerinike Function Orthogonality Error (T={T}, GPU={use_gpu})\n" )
+    chart.set_xlabel( "\nAxial Grid Count\n" )
+    chart.set_ylabel( "log10(y)" )
+    chart.set_xticks( Ks ) 
+    chart.set_xticklabels( [ f"{x} K" for x in Ks ] ) 
+    chart.grid( axis='y', linestyle="dotted" )
+    chart.legend()
+
+    plt.tight_layout()
+
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    result_figure_file = f"{src_dir}/result/zernike_03_function_orthogonality.png"
+    plt.savefig( result_figure_file )
+    print( f"result_figure_file = {result_figure_file}" ) 
+
+    plt.show()
+pass # test_zernike_function_orthogonality
+
+if __name__ == "__main__" :
+    if 0 : 
+        T = 40 # 40 6 #10 # 20
+        validte_radial_polynomial_ortho( T, debug=1 )
+    elif 1 :
+        T = 5 #20 #4 #5 #10 # 20 
+        Ks = torch.arange( 0.5, 5.5, 0.5 )
+
+        print( f"T = {T}, Ks = {Ks}" )
+            
+        use_gpu = 1
+        use_hash = 1
+        test_zernike_function_ortho(T, Ks, use_gpu=use_gpu, use_hash=use_hash, debug=0)
+    pass
 pass

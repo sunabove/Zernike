@@ -25,11 +25,17 @@ print( f"GPU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:
 
 from matplotlib import pyplot as plt
 
+fs = fontsize = 16
 plt.rcParams["font.family"] = "sans-serif"
-plt.rcParams["font.size"] = "16"
+plt.rcParams["font.size"] = fontsize
 
 chart.grid( axis='y', linestyle="dotted" )
 chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.26), fontsize=fs-4, ncols=3 )
+
+src_dir = os.path.dirname( os.path.abspath(__file__) )
+result_figure_file = f"{src_dir}/result/zernike_02_radial_orthogonality.png"
+plt.savefig( result_figure_file )
+print( f"result_figure_file = {result_figure_file}" )
 
 use_gpu = 1
 device_no = 0 

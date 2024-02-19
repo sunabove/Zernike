@@ -251,52 +251,40 @@ def Vpq( p, q, rho, theta, **options) :
 pass
 
 #@profile
-def rho_theta( resolution, circle_type, ** options ) :
-    debug    = options[ "debug" ] if "debug" in options else False  
-    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
-    
-    # log.info( f"use_gpu ={use_gpu}" )
-    
-    np = cupy if use_gpu else numpy 
-    
-    img = np.ones( ( int(resolution), int( resolution) ), np.float_ ) 
+def rho_theta( resolution, circle_type, device, debug=0 ) :
+    img = torch.ones( ( int(resolution), int( resolution) ), dt=torch.float64, device=device ) 
     
     h = img.shape[0]
     w = img.shape[1]
     
-    mwh = max( h - 1, w -1 )
-    radius = math.sqrt( 2*mwh*mwh )
+    radius = math.sqrt( w*w + h*h )
     
     debug and print( f"H = {h}, W = {w}, r = {radius}" )
     
-    y, x = np.where( img >= 0 ) 
+    y, x = torch.where( img >= 0 ) 
 
     if debug : 
         print( "x = ", x )
         print( "y = ", y )
     pass
 
-    dx = 2.0/max(h, w)
-    dy = dx
-    
+    dy = dx = 2.0/w    
     area = pi
     
     if "inner" in circle_type : 
-        y = (y/mwh*2 - 1.0).flatten()
-        x = (x/mwh*2 - 1.0).flatten()
+        y = (y/h*2 - 1.0).flatten()
+        x = (x/w*2 - 1.0).flatten()
         
-        dx = 2.0/max(h, w)
-        dy = dx
+        dy = dx = 2.0/max(h, w)
         
-        area = pi # area of the whole circle
+        area = pi # 3.14 area of the whole circle
     else : # outer cirlce
         sqrt_2 = math.sqrt(2)
         
-        y = (y/mwh*sqrt_2 - (1.0/sqrt_2) ).flatten()
-        x = (x/mwh*sqrt_2 - (1.0/sqrt_2) ).flatten()
+        y = (y/h*sqrt_2 - (1.0/sqrt_2) ).flatten()
+        x = (x/w*sqrt_2 - (1.0/sqrt_2) ).flatten()
         
-        dx = sqrt_2/max(h, w)
-        dy = dx
+        dy = dx = sqrt_2/max(h, w)
         
         area = 2  # area of the rectangle inside
     pass 
@@ -311,10 +299,10 @@ def rho_theta( resolution, circle_type, ** options ) :
     k = None
     
     if "inner" in circle_type : 
-        k = np.where( rho_square <= 1.0 )
+        k = torch.where( rho_square <= 1.0 )
     else :
         # all index of outer circle
-        k = np.where( rho_square <= 2.0 )
+        k = torch.where( rho_square <= 2.0 )
     pass
     
     y = y[k]
@@ -326,8 +314,8 @@ def rho_theta( resolution, circle_type, ** options ) :
         print( "y[k] = ", y )
     pass
 
-    rho = np.sqrt( rho_square )
-    theta = np.arctan2( y, x )
+    rho = torch.sqrt( rho_square )
+    theta = torch.arctan2( y, x )
     
     return rho, theta, x, y, dx, dy, k, area
 pass # rho_theta
