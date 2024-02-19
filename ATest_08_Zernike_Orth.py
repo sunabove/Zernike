@@ -303,15 +303,13 @@ pass # -- validte_radial_polynomial
 def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) : 
     print()
 
-    hash = {}
-    hash = None
+    hash = {} if use_hash else None
     device_no = 0  
     device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
     dn = device_name = "GPU" if use_gpu else "CPU"
 
     print( f"device = {device_name}, hash = { hash is not None }" )
 
-    success_ratios = []
     error_avgs = []
     elapsed_list = []
 
@@ -327,38 +325,32 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
 
         rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
         
-        good_cnt = 0 
-        fail_cnt = 0 
-
         error_sum = 0
         
         hash= {}
         
-        for p1 in range( 0, T + 1 ) :
-            for q1 in range( -p1, p1 + 1, 2 ) :
-                for p2 in range( 0, T +1 ) :
-                    for q2 in range( -p2, p2 + 1, 2 ) : 
-                        v_pl = Vpq( p1, q1, rho, theta, device=device, hash=hash, debug=debug )
-                        v_ql = Vpq( p2, q2, rho, theta, device=device, hash=hash, debug=debug )
+        cnt = 0 
+        for p in range( 0, T + 1 ) :
+            for q in range( -p, p + 1, 2 ) :
+                for n in range( 0, T + 1 ) :
+                    for m in range( -n, n + 1, 2 ) : 
+                        v_pl = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug )
+                        v_ql = Vpq( n, m, rho, theta, device=device, hash=hash, debug=debug )
 
                         sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
-                        sum_integration = sum_arr*dx*dy*(p1 +1)/pi
+                        sum_integration = sum_arr*dx*dy*(p +1)/pi
                         sum = torch.absolute( sum_integration )
 
-                        expect = [0, 1][ p1 == p2 and q1 == q2 ]
+                        expect = [0, 1][ p == n and q == m ]
                         error = abs(expect -sum)
                         error_sum += error
-                        success = error < 1/1_000 
-                        success_t = 'Good' if success else 'Fail'
-
-                        good_cnt += success
-                        fail_cnt += (not success)
 
                         if not use_hash :
                             del v_pl, v_ql, sum_arr, sum_integration
                         pass
 
-                        if debug : print( f"[{p1:02d}][{q1:02d}] {success_t} : V*pl({p1}, {q1:2d})*Vpl({p2}, {q2:2d}) = {sum:.4f}, exptect = {expect}, error={error:.4f}", flush=1 )
+                        if debug : print( f"[{cnt:04d}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.4f}", flush=1 )
+                        cnt += 1
                     pass
                 pass
             pass
@@ -366,9 +358,7 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
 
         del hash
 
-        success_ratio = good_cnt/(good_cnt + fail_cnt)
-        success_ratios.append( success_ratio )
-        error_avg = error_sum/(good_cnt + fail_cnt)
+        error_avg = error_sum/cnt
         error_avgs.append( error_avg )
         
         elapsed = time.time() - then
@@ -395,13 +385,10 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
 
     Ks = torch.tensor( Ks )
     error_avgs = torch.log10( torch.tensor( error_avgs ) )
-    success_ratios = torch.tensor( success_ratios )
-    elapsed_list = torch.tensor( elapsed_list )
-    elapsed_list = torch.log10( elapsed_list )
+    elapsed_list = torch.log10( torch.tensor( elapsed_list ) )
 
-    chart.plot( Ks, error_avgs, marker="D", label="Orthogonality Error" )
+    chart.plot( Ks, error_avgs, marker="D", label="Orthogonality Error Avg." )
     chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time (Sec.)" )
-    chart.plot( Ks, success_ratios, marker="*", label="Success Ratio" )
 
     chart.set_title( f"Zerinike Function Orthogonality Error ($p$={T}, {device_name})" )
     chart.set_xlabel( "Grid Tick Count" )
