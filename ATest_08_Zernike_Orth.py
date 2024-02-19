@@ -337,8 +337,6 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
         
         hash= {}
         
-        np = cupy if use_gpu else numpy
-
         for p1 in range( 0, T + 1 ) :
             for q1 in range( -p1, p1 + 1, 2 ) :
                 for p2 in range( 0, T +1 ) :
@@ -346,9 +344,9 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
                         v_pl = Vpq( p1, q1, rho, theta, use_gpu=use_gpu, hash=hash, use_hash=use_hash, debug=0)
                         v_ql = Vpq( p2, q2, rho, theta, use_gpu=use_gpu, hash=hash, use_hash=use_hash, debug=0)
 
-                        sum_arr = np.sum( np.conjugate(v_pl)*v_ql )
+                        sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
                         sum_integration = sum_arr*dx*dy*(p1 +1)/pi
-                        sum = np.absolute( sum_integration )
+                        sum = torch.absolute( sum_integration )
 
                         expect = [0, 1][ p1 == p2 and q1 == q2 ]
                         error = abs(expect -sum)
@@ -363,7 +361,7 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
                             del v_pl, v_ql, sum_arr, sum_integration
                         pass
 
-                        debug and print( f"[{p1:02d}][{q1:02d}] {success_t} : V*pl({p1}, {q1:2d})*Vpl({p2}, {q2:2d}) = {sum:.4f}, exptect = {expect}, error={error:.4f}", flush=1 )
+                        if debug : print( f"[{p1:02d}][{q1:02d}] {success_t} : V*pl({p1}, {q1:2d})*Vpl({p2}, {q2:2d}) = {sum:.4f}, exptect = {expect}, error={error:.4f}", flush=1 )
                     pass
                 pass
             pass
@@ -398,18 +396,11 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
     chart_idx = 0 
     chart = charts[ chart_idx ]
 
-    Ks = np.array( Ks )
-    error_avgs = np.log10( np.array( error_avgs ) )
-    success_ratios = np.array( success_ratios )
-    elapsed_list = np.array( elapsed_list )
-    elapsed_list = np.log10( elapsed_list )
-
-    if use_gpu :
-        Ks = cupy.asnumpy( Ks )
-        error_avgs = cupy.asnumpy( error_avgs )
-        elapsed_list = cupy.asnumpy( elapsed_list )
-        success_ratios = cupy.asnumpy( success_ratios )
-    pass
+    Ks = torch.array( Ks )
+    error_avgs = torch.log10( torch.array( error_avgs ) )
+    success_ratios = torch.array( success_ratios )
+    elapsed_list = torch.array( elapsed_list )
+    elapsed_list = torch.log10( elapsed_list )
 
     chart.plot( Ks, error_avgs, marker="D", label="Orthogonality Error" )
     chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time(secs)" )

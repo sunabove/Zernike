@@ -205,42 +205,35 @@ def vpq_key( p, q ) :
 pass
 
 #@profile
-def Vpq( p, q, rho, theta, **options) :    
+def Vpq( p, q, rho, theta, device, hash, debug=0) :    
     q = int(q)
     
     key = vpq_key( p, q )
     
-    debug    = options[ "debug" ] if "debug" in options else False  
-    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
-    hash     = options[ "hash" ] if "hash" in options else None
-    use_hash = options[ "use_hash" ] if "use_hash" in options else False 
-    
-    if use_hash and key in hash :
+    if hash is not None and key in hash :
         v_pq = hash[ key ]
         
-        return cupy.asarray( v_pq ) if use_gpu else v_pq  
+        return v_pq.to( device )
     pass
-    
-    np = cupy if use_gpu else numpy
     
     v_pq = None 
     
     if q < 0 : 
-        v_pq = Vpq( p, abs(q), rho, theta, ** options )
+        v_pq = Vpq( p, abs(q), rho, theta, device=device, hash=hash, debug=debug )
         
-        v_pq = v_pq.real - 1j*v_pq.imag
+        v_pq = torch.conj( v_pq )
     else : 
-        r_pq = Rpq( p, q, rho, ** options )
+        r_pq = Rpq( p, q, rho, device=device, hash=hash, debug=debug )
 
         if q :
-            v_pq = r_pq*np.exp( (1j*q)*theta )
+            v_pq = r_pq*torch.exp( (1j*q)*theta, device=device )
         else :
             v_pq = r_pq
         pass
     pass
 
     if hash :
-        hash[ key ] = cupy.asnumpy( v_pq ) if use_gpu else v_pq 
+        hash[ key ] = v_pq.cpu()
     pass
     
     if debug :
