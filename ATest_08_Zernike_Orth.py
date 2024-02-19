@@ -320,7 +320,7 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
 
         if 1 or debug : 
             print( line2 )
-            print( f"K = {K}, Resolution = {resolution:_}, T = {T}" )
+            print( f"K = {K}, Resolution = {resolution:_}, T = {T}", flush=1 )
         pass
         
         then = time.time() 
@@ -393,21 +393,21 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
     chart_idx = 0 
     chart = charts[ chart_idx ]
 
-    Ks = torch.array( Ks )
-    error_avgs = torch.log10( torch.array( error_avgs ) )
-    success_ratios = torch.array( success_ratios )
-    elapsed_list = torch.array( elapsed_list )
+    Ks = torch.tensor( Ks )
+    error_avgs = torch.log10( torch.tensor( error_avgs ) )
+    success_ratios = torch.tensor( success_ratios )
+    elapsed_list = torch.tensor( elapsed_list )
     elapsed_list = torch.log10( elapsed_list )
 
     chart.plot( Ks, error_avgs, marker="D", label="Orthogonality Error" )
-    chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time(secs)" )
+    chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time (Sec.)" )
     chart.plot( Ks, success_ratios, marker="*", label="Success Ratio" )
 
-    chart.set_title( f"\nZerinike Function Orthogonality Error (T={T}, GPU={use_gpu})\n" )
-    chart.set_xlabel( "\nAxial Grid Count\n" )
-    chart.set_ylabel( "log10(y)" )
+    chart.set_title( f"Zerinike Function Orthogonality Error ($p$={T}, {device_name})" )
+    chart.set_xlabel( "Grid Tick Count" )
+    chart.set_ylabel( "$log_{10}(y)$" )
     chart.set_xticks( Ks ) 
-    chart.set_xticklabels( [ f"{x} K" for x in Ks ] ) 
+    chart.set_xticklabels( [ f"{x}$K$" for x in Ks ] ) 
     chart.grid( axis='y', linestyle="dotted" )
     chart.legend()
 
