@@ -226,7 +226,7 @@ def Vpq( p, q, rho, theta, device, hash, debug=0) :
         r_pq = Rpq( p, q, rho, device=device, hash=hash, debug=debug )
 
         if q :
-            v_pq = r_pq*torch.exp( (1j*q)*theta, device=device )
+            v_pq = r_pq*torch.exp( (1j*q)*theta )
         else :
             v_pq = r_pq
         pass
@@ -240,12 +240,12 @@ def Vpq( p, q, rho, theta, device, hash, debug=0) :
         print( f"Vpq({p}, {q}) = ", v_pq )
     pass
 
-    return v_pq
+    return v_pq.to( device )
 pass
 
 #@profile
-def rho_theta( resolution, circle_type, device, debug=0 ) :
-    img = torch.ones( ( int(resolution), int( resolution) ), dt=torch.float64, device=device ) 
+def rho_theta( resolution, circle_type, device, hash, debug=0 ) :
+    img = torch.ones( ( int(resolution), int( resolution) ), dtype=torch.float64, device=device ) 
     
     h = img.shape[0]
     w = img.shape[1]

@@ -325,10 +325,7 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
         
         then = time.time() 
 
-        w = h = resolution
-        img = torch.ones( (h, w), torch.uint8 )
-        
-        rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type="inner", use_gpu=use_gpu, debug=debug )
+        rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type="inner", device=device, hash=hash, debug=debug )
         
         good_cnt = 0 
         fail_cnt = 0 
@@ -341,8 +338,8 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
             for q1 in range( -p1, p1 + 1, 2 ) :
                 for p2 in range( 0, T +1 ) :
                     for q2 in range( -p2, p2 + 1, 2 ) : 
-                        v_pl = Vpq( p1, q1, rho, theta, use_gpu=use_gpu, hash=hash, use_hash=use_hash, debug=0)
-                        v_ql = Vpq( p2, q2, rho, theta, use_gpu=use_gpu, hash=hash, use_hash=use_hash, debug=0)
+                        v_pl = Vpq( p1, q1, rho, theta, device=device, hash=hash, debug=debug )
+                        v_ql = Vpq( p2, q2, rho, theta, device=device, hash=hash, debug=debug )
 
                         sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
                         sum_integration = sum_arr*dx*dy*(p1 +1)/pi
