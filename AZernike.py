@@ -13,7 +13,7 @@ from skimage import data
 from skimage import io 
 
 from time import *
-from scipy.special import factorial
+import scipy
 from matplotlib import pyplot as plt
 from datetime import datetime
 from tabulate import tabulate
@@ -48,6 +48,16 @@ def ray_init() :
     pass
 
 pass # ray_init
+
+def factorial( n ) :
+    #from scipy.special import factorial
+    #from math import factorial
+    if torch.is_tensor( n ) :
+        return n.lgamma().exp()
+    else :
+        return scipy.special.factorial( n )
+    pass
+pass
 
 #@profile
 def _pqs_facotrial( p, q, t, device ) :

@@ -251,7 +251,7 @@ def validte_radial_polynomial_ortho( T, debug=0) :
 
     #chart.set_ylim( int( ymin - 1 ), int( ymax + 1 ) )
     chart.set_xticks( resolutions )
-    chart.set_xticklabels( [ f"{x/1_000:1.0f}$K$" for x in resolutions ] )  
+    chart.set_xticklabels( [ f"{x/1_000:1.0f}$K$" for x in resolutions ] )
     
     chart.set_title( f"Zernike Radial Polynomial Orthogonality Error ($p$={T})" )
     chart.set_xlabel( "Grid Tick Counts" )
@@ -266,6 +266,7 @@ def validte_radial_polynomial_ortho( T, debug=0) :
     src_dir = os.path.dirname( os.path.abspath(__file__) )
     result_figure_file = f"{src_dir}/result/zernike_02_radial_orthogonality.png"
     plt.savefig( result_figure_file )
+    print( f"result_figure_file = {result_figure_file}" )
     plt.show()
 
     print_curr_time()
