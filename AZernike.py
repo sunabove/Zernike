@@ -228,7 +228,7 @@ def Vpq( p, q, rho, theta, device, hash, debug=0) :
         if q :
             v_pq = r_pq*torch.exp( (1j*q)*theta )
         else :
-            v_pq = r_pq
+            v_pq = r_pq + 0j
         pass
     pass
 
@@ -355,7 +355,7 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options )
                 z_img = None # zernike image
                 
                 if "im" in img_type : 
-                    z_img = v_pl.imag
+                    z_img = v_pl.imag 
                 elif "abs" in img_type : 
                     z_img = torch.absolute( v_pl )
                 else :
