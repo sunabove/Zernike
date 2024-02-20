@@ -313,8 +313,8 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     return rho, theta, x, y, dx, dy, kidx, area
 pass # rho_theta
 
-# 저니크 피라미드 생성 
-def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options ) : 
+# 저니크 피라미드 생성 테스트
+def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options ) : 
     debug    = options[ "debug" ] if "debug" in options else False  
     use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
     use_hash = options[ "use_hash" ] if "use_hash" in options else False 
@@ -417,8 +417,23 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options )
         if idx == 0 : 
             chart.set_xlim( 0, res )
             chart.set_ylim( 0, res )
-            chart.set_xticks( torch.arange( 0, res + 1, res//4 ) )
-            chart.set_yticks( torch.arange( 0, res + 1, res//4 ) )
+
+            ticks = torch.arange( 0, res + 1, res//4 )
+            tick_cnt = ticks.numel()
+            
+            chart.set_xticks( ticks )
+            chart.set_yticks( ticks )
+
+            tick_labels = [ "" ]*tick_cnt
+            tick_labels[  0 ] = '-1'
+            tick_labels[ -1 ] = '1'
+
+            if "out" in circle_type : 
+                tick_labels[  0 ] = '$\\frac{-1}{\\sqrt{2}}$'
+                tick_labels[ -1 ] = '$\\frac{1}{\\sqrt{2}}$'
+            pass
+
+            chart.set_yticklabels( tick_labels, fontsize=fs )
         pass
     pass
 
@@ -1224,7 +1239,7 @@ if __name__ == "__main__" :
         circle_type = "inner"
         img_type = "real"
 
-        create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu=use_gpu, use_hash=use_hash )
+        test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu=use_gpu, use_hash=use_hash )
     pass
 
 pass

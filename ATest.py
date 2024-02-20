@@ -1,5 +1,8 @@
 # pytorch imaginary number test
 
+
+print( [""] * 4 )
+
 import torch
 
 use_gpu = 1
@@ -13,7 +16,6 @@ c = a.cpu()
 print( a )
 print( a.data_ptr() == b.data_ptr() )
 print( a.data_ptr() == c.data_ptr() )
-
 
 import scipy 
 print( "scipy version = ", scipy.__version__ )
