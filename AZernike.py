@@ -202,7 +202,7 @@ pass # radial function
 
 def vpq_key( p, q ) :
     return f"v:{p}:{q}"
-pass
+pass # vpq_key
 
 #@profile
 def Vpq( p, q, rho, theta, device, hash, debug=0) :    
@@ -257,8 +257,8 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     y, x = torch.where( img >= 0 ) 
 
     if debug : 
-        print( "x = ", x )
-        print( "y = ", y )
+        print( f"x size = {x.size():_}" )
+        print( f"y size = {y.size():_}" )
     pass
 
     dy = dx = 2.0/w    
@@ -283,24 +283,24 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     pass 
     
     if debug : 
-        print( "x = ", x )
-        print( "y = ", y )
+        print( f"x size = {x.size():_}" )
+        print( f"y size = {y.size():_}" )
     pass
     
     rho_square = x**2 + y**2
     
-    k = None
+    kidx = None
     
     if "inner" in circle_type : 
-        k = torch.where( rho_square <= 1.0 )
+        kidx = torch.where( rho_square <= 1.0 )
     else :
         # all index of outer circle
-        k = torch.where( rho_square <= 2.0 )
+        kidx = torch.where( rho_square <= 2.0 )
     pass
     
-    y = y[k]
-    x = x[k]    
-    rho_square = rho_square[k]
+    y = y[kidx]
+    x = x[kidx]    
+    rho_square = rho_square[kidx]
     
     if debug : 
         print( "x[k] = ", x )
@@ -310,34 +310,34 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     rho = torch.sqrt( rho_square )
     theta = torch.arctan2( y, x )
     
-    return rho, theta, x, y, dx, dy, k, area
+    return rho, theta, x, y, dx, dy, kidx, area
 pass # rho_theta
 
 # 저니크 피라미드 생성 
 def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options ) : 
     debug    = options[ "debug" ] if "debug" in options else False  
     use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
-    hash     = options[ "hash" ] if "hash" in options else None
     use_hash = options[ "use_hash" ] if "use_hash" in options else False 
-    
-    print( f"use_gpu = {use_gpu}, use_hash = {use_hash}" )
-    print_curr_time()
 
+    print_curr_time()
     print( "\nZernike Pyramid Creation Validation" )
     
+    device_no = 0 
+    hash = {} if use_hash else None 
+    device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
+    
     K = 2
-    resolution = 1_000*K
+    res = resolution = 1_000*K
     h = resolution
-    w = h  
+    w = h
+
+    print( f"use_gpu = {use_gpu}, use_hash = {use_hash}, circle_type = {circle_type}, resolution = {resolution:_}" )
     
-    rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type, **options )
-    
-    np = cupy if use_gpu else numpy
+    rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
     
     imgs = []
     titles = []
     
-    row_cnt -= 1
     total_cnt = row_cnt*col_cnt
     
     p = 0 
@@ -347,30 +347,34 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options )
         q = - p 
         while idx < total_cnt and q <= p : 
             if (p - q)%2 ==  0 :         
-                title = f"\nZ({p}, {q})"
+                title = f"$Z({p}, {q})$"
                 titles.append( title )
             
-                v_pl = Vpq( p, q, rho, theta, **options )
+                v_pl = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug )
                 
                 z_img = None # zernike image
                 
                 if "im" in img_type : 
                     z_img = v_pl.imag
                 elif "abs" in img_type : 
-                    z_img = np.absolute( v_pl )
+                    z_img = torch.absolute( v_pl )
                 else :
                     z_img = v_pl.real
                 pass 
                 
-                img = np.zeros( (h, w), numpy.float_ )
-                
+                img = torch.zeros( (h, w), dtype=torch.float, device=device )
                 img_rav = img.ravel()
-                
-                img_rav[k] = z_img
-                
-                #img = img.reshape( h, w ) 
-                
+                img_rav[ kidx ] = z_img
+
                 imgs.append( img )
+
+                if debug : 
+                    print( f"rho size : {rho.size()}" )
+                    print( f"v_pl size : {v_pl.size()}" )
+                    print( f"z_img size : {z_img.size()}" )
+                    print( f"img size : {img.size()}" )
+                    print( f"img_rav size : {img_rav.size()}" )
+                pass
                 
                 idx += 1
             pass
@@ -381,31 +385,51 @@ def create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options )
         p += 1
     pass
 
-    n = len( imgs ) 
-    
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 3*col_cnt, 3*row_cnt) )
+    fs = fontsize = 16
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.size"] = fontsize
+
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 2.5*col_cnt, 2.5*row_cnt) )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0 
     
     for idx, img in enumerate( imgs ) : 
         chart = charts[ idx ]
-                
-        if use_gpu :
-            img = cupy.asnumpy( img )
-        pass
 
+        img = img.cpu()
+                
         pos = chart.imshow( img, cmap="Spectral" )
-        if idx % col_cnt == col_cnt - 1  : 
-            fig.colorbar(pos, ax=chart)
+
+        if idx == 0 : 
+            fig.colorbar(pos, ax=chart )
         pass
         
-        chart.set_xlabel( f"{titles[idx]}\n" ) 
+        chart.set_title( f"{titles[idx]}", fontsize=fs+4)
+
+        chart.set_xticks( torch.arange( 0, res + 1, res//4 ) )
+        chart.set_yticks( torch.arange( 0, res + 1, res//4 ) )
+
+        if 1 :
+            chart.set_xticklabels( [] )
+            chart.set_yticklabels( [] ) 
+        pass
+
+        if idx == 0 : 
+            chart.set_xlim( 0, res )
+            chart.set_ylim( 0, res )
+            chart.set_xticks( torch.arange( 0, res + 1, res//4 ) )
+            chart.set_yticks( torch.arange( 0, res + 1, res//4 ) )
+        pass
     pass
 
-    plt.tight_layout();
-    plt.savefig( f"./pyramid/zernike_pyramid.png" )
+    plt.tight_layout()
     plt.show()
-    
+
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    result_figure_file = f"{src_dir}/pyramid/zernike_pyramid_{circle_type}_{K:02d}k_{img_type}.png"
+    plt.savefig( result_figure_file )
+    print( f"result_figure_file = {result_figure_file}" )
+
 pass #create_zernike_pyramid
 
 def print_curr_time() :
@@ -1177,17 +1201,30 @@ print( "Zernike functions are defined.")
 print()
 
 if __name__ == "__main__" :
-    t = 3
-    s = torch.arange( 0, t + 1 ) 
-    t = torch.arange( 0, t + 1 ) 
-
-    print( s*t )
-
+    
     if False : 
         s = numpy.arange( 0, t + 1 ) 
         print( "facotrial(0) = ", factorial( s ) )
         print_cpu_info()    
         print()
         print_gpu_info()
+    elif False :
+        t = 3
+        s = torch.arange( 0, t + 1 ) 
+        t = torch.arange( 0, t + 1 ) 
+
+        print( s*t )
+    elif True : # create_zernike_pyramid
+        use_gpu = 1
+        use_hash = 1
+
+        row_cnt = 7
+        col_cnt = 4
+
+        circle_type = "inner"
+        img_type = "real"
+
+        create_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu=use_gpu, use_hash=use_hash )
     pass
+
 pass
