@@ -52,14 +52,14 @@ pass # ray_init
 def factorial( n ) :
     if torch.is_tensor( n ) :
         v = (n + 1).lgamma().exp()
+
+        if torch.isnan( v ).any() : print( "torch factorial() : nan encountered" ); print( f"n = {n}")
+        if torch.isinf( v ).any() : print( "torch factorial() : inf encountered" ); print( f"n = {n}")
     else :
         v = scipy.special.factorial( n )
-    pass 
 
-    if numpy.isnan( v ).any() :
-        print( "factorial() : nan encountered" )
-    elif numpy.isinf( v ).any() :
-        print( "factorial() : inf encountered" )
+        if numpy.isnan( v ).any() : print( "numpy factorial() : nan encountered" ); print( f"n = {n}")
+        if numpy.isinf( v ).any() : print( "numpy factorial() : inf encountered" ); print( f"n = {n}")
     pass
 
     return v
@@ -67,7 +67,7 @@ pass
 
 #@profile
 def _pqs_facotrial( p, q, t, device ) :
-    s = torch.arange( 0, t + 1, device=device ) 
+    s = numpy.arange( 0, t + 1 ) 
 
     #fact = factorial( p - s )/factorial( s )/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
     fact = factorial( p - s )
@@ -75,13 +75,13 @@ def _pqs_facotrial( p, q, t, device ) :
     fact2 = fact1/factorial( (p + q)/2 - s )
     fact3 = fact2/factorial( (p - q)/2 - s )
     fact4 = torch.tensor( fact3 ).to( device )
+    
+    R_ps = torch.pow( -1, torch.tensor( s, device=device ) )*( fact4 )    
 
-    #R_ps = torch.pow( -1, torch.tensor( s, device=device ) )*( fact4 )
-    R_ps = torch.pow( -1, s )*( fact4 )
+    #R_ps = torch.pow( -1, s )*( fact3 )
 
     if R_ps.isnan().any() :
         print( "_pqs_factorial( ....) : Nan encountered." )
-        True
     pass
 
     return R_ps, s 

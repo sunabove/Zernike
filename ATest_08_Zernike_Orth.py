@@ -197,12 +197,12 @@ def validte_radial_polynomial_ortho( T, debug=0) :
 
                             error = torch.abs( expect - sum )
 
-                            if not math.isnan( error ) : 
-                                error_sum += error
-                                error_cnt += torch.numel( r_pq )
-                            else :
+                            if math.isnan( error ) : 
                                 print( f"{__file__} : Nan is encountred." )
                                 True
+                            else :
+                                error_sum += error
+                                error_cnt += torch.numel( r_pq )
                             pass
                             
                             if 0*debug :
@@ -390,7 +390,7 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
     chart.plot( Ks, error_avgs, marker="D", label="Orthogonality Error Avg." )
     chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time (Sec.)" )
 
-    chart.set_title( f"Zerinike Function Orthogonality Error ($p$={T}, {device_name})" )
+    chart.set_title( f"Zerinike Function Orthogonality Error ($P$={T}, {device_name})" )
     chart.set_xlabel( "Grid Tick Count" )
     chart.set_ylabel( "$log_{10}(y)$" )
     chart.set_xticks( Ks ) 
