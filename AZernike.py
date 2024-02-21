@@ -282,7 +282,7 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
         
         area = 2  # area of the rectangle inside
     pass 
-    
+
     if debug : 
         print( f"x size = {x.size():_}" )
         print( f"y size = {y.size():_}" )
@@ -293,15 +293,17 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     kidx = None
     
     if "inner" in circle_type : 
-        kidx = torch.where( rho_square <= 1.0 )
+        dr_square = dx*dx + dy*dy
+
+        kidx = torch.where( rho_square <= 1.0 - dr_square )
     else :
         # all index of outer circle
-        kidx = torch.where( rho_square <= 2.0 )
+        kidx = torch.where( rho_square <= 2.0)
     pass
     
-    y = y[kidx]
-    x = x[kidx]    
-    rho_square = rho_square[kidx]
+    y = y[ kidx ]
+    x = x[ kidx ]    
+    rho_square = rho_square[ kidx ]
     
     if debug : 
         print( "x[k] = ", x )
