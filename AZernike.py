@@ -258,8 +258,8 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     y, x = torch.where( img >= 0 ) 
 
     if debug : 
-        print( f"x size = {x.size():_}" )
-        print( f"y size = {y.size():_}" )
+        print( f"x size = { x.size()}" )
+        print( f"y size = { y.size()}" )
     pass
 
     dy = dx = 2.0/w    
@@ -284,8 +284,8 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     pass 
 
     if debug : 
-        print( f"x size = {x.size():_}" )
-        print( f"y size = {y.size():_}" )
+        print( f"x size = {x.size()}" )
+        print( f"y size = {y.size()}" )
     pass
     
     rho_square = x**2 + y**2

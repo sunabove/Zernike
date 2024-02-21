@@ -131,7 +131,7 @@ def test_radial_function_validation() :
 
 pass ## test_radial_function_validation
 
-def validte_radial_polynomial_ortho( T, debug=0) : 
+def validte_radial_function_ortho( T, Ks, debug=0 ) : 
     print_curr_time()
 
     print( "\nZernike Radial polynomial orthogonality validation\n" ) 
@@ -158,18 +158,23 @@ def validte_radial_polynomial_ortho( T, debug=0) :
 
         dn = device_name = "GPU" if use_gpu else "CPU"
         
+        resolutions = []
         error_avgs = []
         elapsed_list = []
-
-        resolutions = [ 2**x for x in range( 10, 14 + 1 ) ]
         
-        for grid_count in tqdm( resolutions, desc="Resolution" ):
+        for K in tqdm( Ks, desc="K" ) :
             then = time.time()
 
-            dr = 1.0/grid_count
+            resolution = int( 1_000*K )
+            resolutions.append( resolution )
 
-            rho = torch.linspace( 0, 1, grid_count, dtype=torch.float64, device=device )
-            rho = rho[ torch.where( rho <= 1 ) ]
+            #rho = torch.linspace( 0, 1, grid_count, dtype=torch.float64, device=device )
+
+            circle_type = "inner"
+            
+            rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
+
+            ds = dx*dy
 
             error_sum = 0
             error_cnt = 0
@@ -191,7 +196,7 @@ def validte_radial_polynomial_ortho( T, debug=0) :
                             r_pq = Rpq( p, q, rho, device=device, hash=hash, debug=0 )
                             r_nm = Rpq( n, m, rho, device=device, hash=hash, debug=0 )
                             
-                            sum = torch.sum( r_pq*r_nm*rho*dr )*( 2*(p + 1) )
+                            sum = torch.sum( r_pq*r_nm*rho )*( ds*2*(p + 1) )
 
                             expect = [0, 1][ p == q and n == m ]
 
@@ -207,7 +212,7 @@ def validte_radial_polynomial_ortho( T, debug=0) :
                             
                             if 0*debug :
                                 if expect == 1 : print( line )
-                                print( f"[{grid_count:04d}] R[{p:02d}][{q:02d}] , [{n:02d}][{n:02d}] : exptect = {expect}, sum = {sum}, error = {error}", flush=1 )
+                                print( f"[{resolution:04d}] R[{p:02d}][{q:02d}] , [{n:02d}][{n:02d}] : exptect = {expect}, sum = {sum}, error = {error}", flush=1 )
                             pass
                         pass
                     pass
@@ -224,7 +229,7 @@ def validte_radial_polynomial_ortho( T, debug=0) :
 
             if debug : 
                 print( line2 )            
-                print( f"device = {device}, Radial Grid Count = {grid_count:_}, T = {T}, rho_len = {len(rho):_}" )
+                print( f"device = {device}, Radial Tick Count = {resolution:_}, T = {T}, rho_len = {len(rho):_}" )
                 print( f"Elapsed time = {elapsed:,.3f}, Error average = {error_avg:,.8f}" )
             pass
         pass
@@ -238,7 +243,7 @@ def validte_radial_polynomial_ortho( T, debug=0) :
         tab.extend( [ device_name, "Error" ] )
         tab.extend( error_avgs.copy() )
 
-        x = torch.log10( torch.tensor( resolutions  ) )
+        x = Ks.clone().detach()
         error_avgs   = torch.tensor( error_avgs ) 
         elapsed_list = torch.tensor( elapsed_list ) 
 
@@ -261,12 +266,12 @@ def validte_radial_polynomial_ortho( T, debug=0) :
         #chart.plot( x, error_avgs,   marker="D", linestyle=linestyle, label=f"{dn}:Orthogonality Error" )
         
         chart.set_xticks( x )
-        chart.set_xticklabels( [ f"{x/1_000:1.0f}$K$" for x in resolutions ] )
+        chart.set_xticklabels( [ f"{float(x):.0f}$K$" for x in Ks ] )
     pass
 
     #chart.set_ylim( int( ymin - 1 ), int( ymax + 1 ) )
     
-    chart.set_title( f"Zernike Radial Polynomial Orthogonality Error ($p$={T})" )
+    chart.set_title( f"Zernike Radial Polynomial Orthogonality Error ($P$={T})" )
     chart.set_xlabel( f"Grid Tick Counts" )
     chart.set_ylabel( f"Error Average" )
     #chart.set_ylabel( r"$log_{10}(y)$" )
@@ -410,8 +415,8 @@ pass # test_zernike_function_orthogonality
 
 if __name__ == "__main__" :
     if 0 : 
-        T = 40 # 40 6 #10 # 20
-        validte_radial_polynomial_ortho( T, debug=1 )
+        T = 10 # 40 6 #10 # 20
+        validte_radial_function_ortho( T, debug=1 )
     elif 1 :
         T = 5 #20 #4 #5 #10 # 20 
         Ks = torch.arange( 0.5, 5.5, 0.5 )
