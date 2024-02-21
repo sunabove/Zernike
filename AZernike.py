@@ -534,7 +534,7 @@ pass # -- max_gpu_memory
 
 # 배열 여부 체크 
 def is_array( data ) :
-    return isinstance( data, (list, tuple, numpy.ndarray, cupy.ndarray) )
+    return isinstance( data, (list, tuple, numpy.ndarray, torch.Tensor) )
 pass # is_array
 
 # 스칼라 여부 체크 

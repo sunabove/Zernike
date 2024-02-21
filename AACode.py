@@ -47,3 +47,5 @@ print( tabulate( list_gpus, headers=("id", "name", "load", "free memory", "used 
 
 kidx = torch.where( rho_square <= 1.0 )
 
+Ks = torch.arange( 1, 6 + 1, 1 )
+
