@@ -388,7 +388,7 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
     chart_idx = 0 
     chart = charts[ chart_idx ]
 
-    Ks = torch.tensor( Ks.clone().detach() )
+    Ks = Ks.clone().detach()
     error_avgs = torch.log10( torch.tensor( error_avgs ) )
     elapsed_list = torch.log10( torch.tensor( elapsed_list ) )
 
