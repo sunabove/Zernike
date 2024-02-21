@@ -348,19 +348,26 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options ) :
         while idx < total_cnt and q <= p : 
             if (p - q)%2 ==  0 :         
                 title = f"$Z({p}, {q})$"
-                titles.append( title )
-            
+                            
                 v_pl = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug )
                 
                 z_img = None # zernike image
                 
                 if "im" in img_type : 
                     z_img = v_pl.imag 
+
+                    title = f"$Im(Z({p}, {q}))$"
                 elif "abs" in img_type : 
                     z_img = torch.absolute( v_pl )
+
+                    title = f"$|Z({p}, {q})|$"
                 else :
                     z_img = v_pl.real
+
+                    title = f"$Re(Z({p}, {q}))$"
                 pass 
+
+                titles.append( title )
                 
                 img = torch.zeros( (h, w), dtype=torch.float, device=device )
                 img_rav = img.ravel()
