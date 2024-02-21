@@ -51,7 +51,7 @@ pass # ray_init
 
 def factorial( n ) :
     if torch.is_tensor( n ) :
-        v = n.lgamma().exp()
+        v = (n + 1).lgamma().exp()
     else :
         v = scipy.special.factorial( n )
     pass 
@@ -67,7 +67,7 @@ pass
 
 #@profile
 def _pqs_facotrial( p, q, t, device ) :
-    s = numpy.arange( 0, t + 1 ) 
+    s = torch.arange( 0, t + 1 ) 
 
     #fact = factorial( p - s )/factorial( s )/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
     fact = factorial( p - s )
@@ -1224,9 +1224,16 @@ print()
 
 if __name__ == "__main__" :
     
-    if False : 
+    if 1 :
+        t = 3 
+        s = torch.arange( 0, t + 1 ) 
+        print( f"torch s = {s}")
+        print( "torch facotrial(0) = ", factorial( s ) )
+
         s = numpy.arange( 0, t + 1 ) 
-        print( "facotrial(0) = ", factorial( s ) )
+        print( f"numpy s = {s}")
+        print( "numpy facotrial(0) = ", factorial( s ) )
+    elif False :
         print_cpu_info()    
         print()
         print_gpu_info()
