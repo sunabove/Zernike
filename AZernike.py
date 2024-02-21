@@ -67,7 +67,7 @@ pass
 
 #@profile
 def _pqs_facotrial( p, q, t, device ) :
-    s = torch.arange( 0, t + 1 ) 
+    s = torch.arange( 0, t + 1, device=device ) 
 
     #fact = factorial( p - s )/factorial( s )/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
     fact = factorial( p - s )
@@ -76,7 +76,8 @@ def _pqs_facotrial( p, q, t, device ) :
     fact3 = fact2/factorial( (p - q)/2 - s )
     fact4 = torch.tensor( fact3 ).to( device )
 
-    R_ps = torch.pow( -1, torch.tensor( s, device=device ) )*( fact4 )
+    #R_ps = torch.pow( -1, torch.tensor( s, device=device ) )*( fact4 )
+    R_ps = torch.pow( -1, s )*( fact4 )
 
     if R_ps.isnan().any() :
         print( "_pqs_factorial( ....) : Nan encountered." )
