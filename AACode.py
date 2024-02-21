@@ -45,6 +45,5 @@ device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu
 # 테이블 생성
 print( tabulate( list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature" )) )
 
-
 kidx = torch.where( rho_square <= 1.0 )
 
