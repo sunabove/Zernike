@@ -611,27 +611,21 @@ def get_core_count(**options) :
 pass
     
 # 모멘트 계산 
-def calc_moments( T, img, rho, theta, dx, dy, device, debug=0) : 
+def calc_moments( T, img, rho, theta, dx, dy, device, hash, debug=0 ) : 
     then = time.time()
-        
-    s = T 
-    
-    moments = torch.zeros( (s + 1, 2*s + 1), torch.complex64 )
 
-    img_flat = img.ravel()
+    moments = torch.zeros( (T + 1, 2*T + 1), torch.complex64 )
 
-    def moment_pq(p, q, rho, theta, dx, dy, use_gpu, idx ):
+    img_rav = img.ravel()
+
+    for p, q in pq_list( T ) : 
         v_pq = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug ) 
         
-        moment = torch.dot( v_pq, img_flat )*(dx*dy)
+        moment = torch.dot( v_pq, img_rav )*dx*dy
 
         moment = torch.conjugate( moment )
 
-        return moment
-    pass 
-
-    for p, q in pq_list( T ) : 
-        moments[ p, q ] = moment_pq( p, q, rho, theta, dx, dy, use_gpu, -1 )
+        moments[ p, q ] = moment
     pass
 
     if 0 :
@@ -797,9 +791,11 @@ def test_zernike_moments( datas, use_gpus, use_hashs, Ks, Ts, debug=0 ) :
             
             run_times = data[ "run_times" ] 
             
-            circle_type = "outer" 
+            circle_type = "outer"
 
-            rho, theta, x, y, dx, dy, k, area = rho_theta( 1000*K, circle_type, device=device, debug=debug ) 
+            resolution = 1_000*K
+
+            rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type, device=device, debug=debug ) 
 
             if debug : print( f"rho shape = {rho.shape}" )
 
@@ -811,19 +807,17 @@ def test_zernike_moments( datas, use_gpus, use_hashs, Ks, Ts, debug=0 ) :
 
             img = cv.resize( img_org, (int(K*1_000), int(K*1_000)), interpolation=cv.INTER_AREA )
 
-            if options['use_gpu']  : 
-                img = np.array( img )
-            pass
-
             img_org = img
 
             if debug : 
                 print( "img shape= ", img.shape ) 
                 print( line )
             pass
+
+            img = torch.tensor( img )
         
             for T in Ts :
-                moments, run_time = calc_moments(T, img, rho, theta, dx, dy, **options )
+                moments, run_time = calc_moments(T, img, rho, theta, dx, dy, device=device, hash=hash, debug=debug )
                 
                 print( f"K = {K:2}, T = {T:2}, Run-time = {run_time:7.2f} (sec.)" ) 
                 
