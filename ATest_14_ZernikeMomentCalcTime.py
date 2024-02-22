@@ -96,7 +96,7 @@ def test_plot_zernike_moment_calc_times( datas ) :
     row_cnt = 1
     col_cnt = 1
 
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(12*col_cnt, 8*row_cnt) )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(12*col_cnt, 8*row_cnt), tight_layout=1 )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0 
     chart = charts[ chart_idx ] ; chart_idx += 1
@@ -104,47 +104,43 @@ def test_plot_zernike_moment_calc_times( datas ) :
     Ps = []
     Ks = []
     run_times_all = []
+    use_hash = 0 
+    device_name = "" 
 
     for key in datas : 
         data = datas[ key ]
         
         Ks = data[ "Ks" ]
-        run_times = data[ "run_times" ]
-
         P = data[ "P" ]
-        Ps.append( P )
-
-        device_name = data[ "device_name" ]
+        run_times = data[ "run_times" ]
         use_hash = data[ "use_hash" ]
-        
-        label = f"{device_name},P={P},H={use_hash}"
-        
-        linestyle = "solid"
-        marker = "*"
-        color = "b"
-        
-        if "cuda" in device_name or "GPU" in device_name :
-            linestyle = "dotted"
-            marker = "s" 
-            color = "orange"
-        pass
+        device_name = data[ "device_name" ]
 
-        if use_hash : linestyle = "dashed"
-
-        y = torch.log10( torch.tensor( run_times ) ) 
-    
-        chart.plot( Ks, y, marker=marker, color=color, label=label, linestyle=linestyle )
-        
-        chart.set_title( f"Zernike Moment Run-time" )
-        chart.set_xlabel( "Grid Tick Count" )
-        chart.set_ylabel( "$Log_{10}(y)$ (sec.)")
-        chart.set_xticks( Ks )
-        chart.set_xticklabels( [ f"${K} K$" for K in Ks ] )
-        
-        chart.legend( loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=4 ) 
+        Ps.append( P )
+        run_times_all.append( run_times )
     pass
 
-    plt.tight_layout()
+    x = Ks
+    y = Ps
+    x, y = numpy.meshgrid( x, y )    
+    z = torch.log10( torch.tensor( run_times_all ) ) 
+
+    vmin = int( torch.min( z ) - 0.5 )
+    vmax = int( torch.max( z ) + 1.5 )
+
+    pos = chart.pcolormesh( x, y, z, vmin=vmin, vmax=vmax )
+    fig.colorbar( pos, ax=chart, label="$Log(seconds)$" )
+
+    chart.set_title( f"Zernike Moment Run-time ({device_name}, Cache={bool(use_hash)})" )
+    chart.set_xlabel( "Grid Tick Count" )
+    chart.set_ylabel( "P")
+
+    chart.set_xticks( Ks )
+    chart.set_xticklabels( [ f"${K}K$" for K in Ks ] ) 
+
+    chart.set_yticks( Ps )
+    chart.set_yticklabels( [ f"${P}$" for P in Ps ] ) 
+
     plt.show()
 pass # test_plot_zernike_moment_calc_times
 

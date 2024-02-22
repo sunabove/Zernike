@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-print( f"Hello... Good morning!" )
+print( f"Hello... Good morning!\n" )
 
 import os, time, math, logging as log, cv2 as cv
 import psutil, GPUtil, pandas as pd
@@ -25,7 +25,7 @@ line = line1 = "*"*90
 line2 = "\n" + line + ""
 line3 = line2 + "\n"
 
-print( f"Importing python packages was done." )
+print( f"Packages imported." )
 
 ray_inited = False 
 
@@ -408,7 +408,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options ) :
         pos = chart.imshow( img, cmap="Spectral" )
 
         if idx == 0 : 
-            fig.colorbar(pos, ax=chart )
+            fig.colorbar( pos, ax=chart )
         pass
         
         chart.set_title( f"{titles[idx]}", fontsize=fs+4)
@@ -971,7 +971,6 @@ pass # plot_moment_features
 ###########################################################################
 
 print( "Zernike functions are defined.")
-print()
 
 if __name__ == "__main__" :
     
