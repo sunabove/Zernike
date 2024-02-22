@@ -1,22 +1,21 @@
 from AZernike import *
 
 # 저니크 모멘트 함수 실험 
-def test_zernike_moments_calc_times( datas, use_gpus, use_hashs, Ks, Ts, debug=0 ) : 
+def test_zernike_moments_calc_times( datas, use_gpus, use_hashs, Ks, Ps, debug=0 ) : 
     
     if is_array( use_gpus ) :
         for use_gpu in use_gpus :
-            test_zernike_moments_calc_times( datas, use_gpu, use_hashs, Ks, Ts, debug=debug )
+            test_zernike_moments_calc_times( datas, use_gpu, use_hashs, Ks, Ps, debug=debug )
         pass
     elif is_array( use_hashs ) :
         for use_hash in use_hashs :
-            test_zernike_moments_calc_times( datas, use_gpus, use_hash, Ks, Ts, debug=debug )
+            test_zernike_moments_calc_times( datas, use_gpus, use_hash, Ks, Ps, debug=debug )
         pass 
     else :
         use_hash = use_hashs
         use_gpu = use_gpus
-        device_no = 0
 
-        hash = {} if use_gpu else None
+        device_no = 0
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
         dn = device_name = "GPU" if use_gpu else "CPU"
         
@@ -24,61 +23,60 @@ def test_zernike_moments_calc_times( datas, use_gpus, use_hashs, Ks, Ts, debug=0
             Ks = [ Ks ]
         pass
     
-        if is_scalar( Ts ) :
-            Ts = [ Ts ]
+        if is_scalar( Ps ) :
+            Ps = [ Ps ]
         pass 
         
-        key = None
-        for K in Ks :
+        img_org = cv.imread( 'image/lenna.png', 0 )
+
+        if debug : print( "img shape= ", img_org.shape )
+
+        for P in Ps :
                         
-            if len( Ts ) > 1 : 
-                key = f"{device}, Hash={use_hash}, K=({K})"
-            pass    
+            key = f"{device_name},P=({P}),H={use_hash}"
             
             if not key in datas :
                 print()
-                print( f"device={key}", flush=True)
+                print( f"key = {key}", flush=True)
             
                 data = {}
+
+                data[ "P" ] = P
                 data[ "Ks" ] = Ks
-                data[ "Ts" ] = Ts
+                data[ "device_name" ] = device_name
+                data[ "use_hash" ] = use_hash
                 data[ "run_times" ] = []
+
                 datas[ key ] = data 
             pass
         
             data = datas[ key ]
             
-            run_times = data[ "run_times" ] 
-            
-            circle_type = "outer"
-
-            resolution = 1_000*K
-
-            rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type, device=device, debug=debug ) 
-
-            if debug : print( f"rho shape = {rho.shape}" )
-
-            img = cv.imread( 'image/lenna.png', 0 )
-
-            if debug : print( "img shape= ", img.shape )
-
-            img_org = img 
-
-            img = cv.resize( img_org, (int(K*1_000), int(K*1_000)), interpolation=cv.INTER_AREA )
-
-            img_org = img
+            run_times = data[ "run_times" ]
 
             if debug : 
                 print( "img shape= ", img.shape ) 
                 print( line )
             pass
 
-            img = torch.tensor( img, dtype=torch.complex64, device=device )
+            for K in Ks :
+                hash = {} if use_hash else None
         
-            for T in Ts :
-                moments, run_time = calc_moments(T, img, rho, theta, dx, dy, device=device, hash=hash, debug=debug )
+                circle_type = "outer"
+
+                resolution = 1_000*K
+
+                rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type, device=device, debug=debug ) 
+
+                if debug : print( f"rho shape = {rho.shape}" )
+
+                img = cv.resize( img_org, ( int(resolution), int( resolution) ), interpolation=cv.INTER_AREA )
+
+                img = torch.tensor( img, dtype=torch.complex64, device=device )
+            
+                moments, run_time = calc_moments(P, img, rho, theta, dx, dy, device=device, hash=hash, debug=debug )
                 
-                print( f"K = {K:2}, T = {T:2}, Run-time = {run_time:7.2f} (sec.)" ) 
+                print( f"K = {K:2}, P = {P:2}, Run-time = {run_time:7.2f} (sec.)" ) 
                 
                 run_times.append( run_time )
             pass # T
@@ -91,6 +89,74 @@ def test_plot_zernike_moment_calc_times( datas ) :
     print( "\nPlotting .... ")
         
     # 서브 챠트 생성 
+    fs = fontsize = 16
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.size"] = fontsize
+
+    row_cnt = 1
+    col_cnt = 1
+
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(12*col_cnt, 8*row_cnt) )
+    charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
+    chart_idx = 0 
+    chart = charts[ chart_idx ] ; chart_idx += 1
+    
+    Ps = []
+    Ks = []
+    run_times_all = []
+
+    for key in datas : 
+        data = datas[ key ]
+        
+        Ks = data[ "Ks" ]
+        run_times = data[ "run_times" ]
+
+        P = data[ "P" ]
+        Ps.append( P )
+
+        device_name = data[ "device_name" ]
+        use_hash = data[ "use_hash" ]
+        
+        label = f"{device_name},P={P},H={use_hash}"
+        
+        linestyle = "solid"
+        marker = "*"
+        color = "b"
+        
+        if "cuda" in device_name or "GPU" in device_name :
+            linestyle = "dotted"
+            marker = "s" 
+            color = "orange"
+        pass
+
+        if use_hash : linestyle = "dashed"
+
+        y = torch.log10( torch.tensor( run_times ) ) 
+    
+        chart.plot( Ks, y, marker=marker, color=color, label=label, linestyle=linestyle )
+        
+        chart.set_title( f"Zernike Moment Run-time" )
+        chart.set_xlabel( "Grid Tick Count" )
+        chart.set_ylabel( "$Log_{10}(y)$ (sec.)")
+        chart.set_xticks( Ks )
+        chart.set_xticklabels( [ f"${K} K$" for K in Ks ] )
+        
+        chart.legend( loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=4 ) 
+    pass
+
+    plt.tight_layout()
+    plt.show()
+pass # test_plot_zernike_moment_calc_times
+
+def test_plot_zernike_moment_calc_times_old( datas ) : 
+
+    print( "\nPlotting .... ")
+        
+    # 서브 챠트 생성 
+    fs = fontsize = 16
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.size"] = fontsize
+
     row_cnt = 1
     col_cnt = 1
 
@@ -102,62 +168,40 @@ def test_plot_zernike_moment_calc_times( datas ) :
     for key in datas : 
         data = datas[ key ]
         
-        Ks = data[ "Ks" ]
-        Ts = data[ "Ts" ]
-        
+        Ks = data[ "Ks" ]        
         run_times = data[ "run_times" ]
+
+        P = data[ "P" ]
+        device_name = data[ "device_name" ]
+        use_hash = data[ "use_hash" ]
         
-        x = Ts if "K" in key else Ks
-        y = numpy.log10( run_times ) 
-        
-        label = f"{key}"
+        label = f"{device_name},P={P},H={use_hash}"
         
         linestyle = "solid"
         marker = "*"
         color = "b"
         
-        if "cuda" in label :
+        if "cuda" in device_name or "GPU" in device_name :
             linestyle = "dotted"
-            color = "g"
             marker = "s" 
+            color = "orange"
         pass
-    
-        label = label.replace( "Hash", "H" )
 
-        chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle )
-        
-        title = f"Run-time"
-        
-        if len(Ks) == 1 :
-            title = f"Run-time(K={Ks[0]})"
-        elif len(Ts) == 1 :
-            title = f"Run-time(T={Ts[0]})"
-        pass
+        if use_hash : linestyle = "dashed"
+
+        y = torch.log10( torch.tensor( run_times ) ) 
     
-        chart.set_title( title ) 
+        chart.plot( Ks, y, marker=marker, color=color, label=label, linestyle=linestyle )
         
+        chart.set_title( f"Zernike Moment Run-time" )
         chart.set_xlabel( "Grid Tick Count" )
         chart.set_ylabel( "$Log_{10}(y)$ (sec.)")
-        chart.set_xticks( x )
+        chart.set_xticks( Ks )
+        chart.set_xticklabels( [ f"${K} K$" for K in Ks ] )
         
-        if "K" in key :
-            chart.set_xticklabels( [ f"{t} T" for t in x ] )
-        else :
-            chart.set_xticklabels( [ f"{k} K" for k in x ] )
-        pass    
-        
-        #chart.set_xlim( numpy.min(x) - 1, numpy.max(x) + 1 )
-        
-        n = len( datas ) 
-        ncol = 4
-        for i in range( 2, 8 ) :
-            if n % i == 0 :
-                ncol = i 
-            pass
-        pass
-        
-        chart.legend(loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=ncol) 
+        chart.legend( loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=4 ) 
     pass
 
-    plt.tight_layout(); plt.show()
-pass # test_plot_zernike_moment_calc_times
+    plt.tight_layout()
+    plt.show()
+pass # test_plot_zernike_moment_calc_times_old
