@@ -255,6 +255,7 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     
     debug and print( f"H = {h}, W = {w}, r = {radius}" )
     
+    # 직교 좌표계 좌표값들 추출
     y, x = torch.where( img >= 0 ) 
 
     if debug : 
@@ -293,12 +294,10 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     kidx = None
     
     if "inner" in circle_type : 
-        dr_square = dx*dx + dy*dy
-
-        kidx = torch.where( rho_square <= 1.0 - dr_square )
+        kidx = torch.where( rho_square <= 1.0 )
     else :
         # all index of outer circle
-        kidx = torch.where( rho_square <= 2.0)
+        kidx = torch.where( rho_square <= 2.0 )
     pass
     
     y = y[ kidx ]
