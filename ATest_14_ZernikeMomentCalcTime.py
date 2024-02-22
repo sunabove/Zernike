@@ -76,7 +76,7 @@ def test_zernike_moments_calc_times( datas, use_gpus, use_hashs, Ks, Ps, debug=0
             
                 moments, run_time = calc_moments(P, img, rho, theta, dx, dy, device=device, hash=hash, debug=debug )
                 
-                print( f"K = {K:2}, P = {P:2}, Run-time = {run_time:7.2f} (sec.)" ) 
+                print( f"P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.)" ) 
                 
                 run_times.append( run_time )
             pass # T
@@ -96,7 +96,7 @@ def test_plot_zernike_moment_calc_times( datas ) :
     row_cnt = 1
     col_cnt = 1
 
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(12*col_cnt, 8*row_cnt), tight_layout=1 )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(9*col_cnt, 8*row_cnt), tight_layout=1 )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0 
     chart = charts[ chart_idx ] ; chart_idx += 1
@@ -128,12 +128,12 @@ def test_plot_zernike_moment_calc_times( datas ) :
     vmin = int( torch.min( z ) - 0.5 )
     vmax = int( torch.max( z ) + 1.5 )
 
-    pos = chart.pcolormesh( x, y, z, vmin=vmin, vmax=vmax )
+    pos = chart.pcolormesh( x, y, z, vmin=vmin, vmax=vmax, cmap=plt.cm.Pastel1 )
     fig.colorbar( pos, ax=chart, label="$Log(seconds)$" )
 
     chart.set_title( f"Zernike Moment Run-time ({device_name}, Cache={bool(use_hash)})" )
     chart.set_xlabel( "Grid Tick Count" )
-    chart.set_ylabel( "P")
+    chart.set_ylabel( "Order($P$)")
 
     chart.set_xticks( Ks )
     chart.set_xticklabels( [ f"${K}K$" for K in Ks ] ) 
