@@ -18,6 +18,7 @@ def test_zernike_moments_calc_times( datas, use_gpus, use_hashs, Ks, Ts, debug=0
 
         hash = {} if use_gpu else None
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
+        dn = device_name = "GPU" if use_gpu else "CPU"
         
         if is_scalar( Ks ) :
             Ks = [ Ks ]
@@ -32,8 +33,6 @@ def test_zernike_moments_calc_times( datas, use_gpus, use_hashs, Ks, Ts, debug=0
                         
             if len( Ts ) > 1 : 
                 key = f"{device}, Hash={use_hash}, K=({K})"
-            else :
-                key = f"{device}, Hash={use_hash}"
             pass    
             
             if not key in datas :
@@ -41,8 +40,8 @@ def test_zernike_moments_calc_times( datas, use_gpus, use_hashs, Ks, Ts, debug=0
                 print( f"device={key}", flush=True)
             
                 data = {}
-                data[ "Ks"] = Ks
-                data[ "Ts"] = Ts
+                data[ "Ks" ] = Ks
+                data[ "Ts" ] = Ts
                 data[ "run_times" ] = []
                 datas[ key ] = data 
             pass
@@ -114,23 +113,13 @@ def test_plot_zernike_moment_calc_times( datas ) :
         label = f"{key}"
         
         linestyle = "solid"
-        
-        if "M" in label :
-            linestyle = "dotted"
-        pass
-        
+        marker = "*"
         color = "b"
         
-        if "GPU" in label :
+        if "cuda" in label :
+            linestyle = "dotted"
             color = "g"
-        pass
-
-        marker = "*"
-        if "Hash=0" in label : 
             marker = "s" 
-            if "GPU" in label :
-                color = "r"
-            pass 
         pass
     
         label = label.replace( "Hash", "H" )
@@ -147,9 +136,10 @@ def test_plot_zernike_moment_calc_times( datas ) :
     
         chart.set_title( title ) 
         
-        chart.set_xlabel( "Axial Grid Count" )
-        chart.set_ylabel( "log10(Times) (sec.)")
+        chart.set_xlabel( "Grid Tick Count" )
+        chart.set_ylabel( "$Log_{10}(y)$ (sec.)")
         chart.set_xticks( x )
+        
         if "K" in key :
             chart.set_xticklabels( [ f"{t} T" for t in x ] )
         else :
