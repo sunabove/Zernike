@@ -131,7 +131,7 @@ def test_plot_zernike_moment_calc_times( datas ) :
     pos = chart.pcolormesh( x, y, z, vmin=vmin, vmax=vmax, cmap=plt.cm.Pastel1 )
     fig.colorbar( pos, ax=chart, label="$Log(seconds)$" )
 
-    chart.set_title( f"Zernike Moment Run-time ({device_name}, Cache={bool(use_hash)})" )
+    chart.set_title( f"Zernike Moment Run-time ({device_name})" )
     chart.set_xlabel( "Grid Tick Count" )
     chart.set_ylabel( "Order($P$)")
 
