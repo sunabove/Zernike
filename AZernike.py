@@ -2,18 +2,16 @@
 
 print( f"Hello... Good morning!" )
 
-import os, math, logging as log, cv2 as cv
-import psutil , GPUtil, pandas as pd
+import os, time, math, logging as log, cv2 as cv
+import psutil, GPUtil, pandas as pd
 import torch
+import numpy, scipy
 import threading, ray # ray for parallel computing
 
+from skimage import data
+from skimage import io
 from skimage.color import rgb2gray
 
-from skimage import data
-from skimage import io 
-
-import numpy
-import scipy
 from matplotlib import pyplot as plt
 from datetime import datetime
 from tabulate import tabulate
@@ -614,7 +612,7 @@ pass
 def calc_moments( T, img, rho, theta, dx, dy, device, hash, debug=0 ) : 
     then = time.time()
 
-    moments = torch.zeros( (T + 1, 2*T + 1), torch.complex64 )
+    moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
 
     img_rav = img.ravel()
 
