@@ -611,79 +611,34 @@ def get_core_count(**options) :
 pass
     
 # 모멘트 계산 
-def calc_moments( T, img, rho, theta, dx, dy , **options ) : 
-    then = perf_counter()
-        
-    use_gpu = get_option( "use_gpu", **options )
-    use_thread = get_option( "use_thread", **options )
+def calc_moments( T, img, rho, theta, dx, dy, device, debug=0) : 
+    then = time.time()
         
     s = T 
-    np = cupy if use_gpu else numpy
     
-    moments = np.zeros( (s + 1, 2*s + 1), np.complex_ )
+    moments = torch.zeros( (s + 1, 2*s + 1), torch.complex64 )
 
     img_flat = img.ravel()
 
-    pqs = pq_list( T )
-    
-    def _moment(p, q, rho, theta, dx, dy, use_gpu, idx ):
-        moment = None
-        if use_gpu and idx > -1 : 
-            dev_id = 0 
-            dev_cnt = cupy.cuda.runtime.getDeviceCount()
-
-            if dev_cnt > 1 :
-                dev_id = idx % ( dev_cnt - 1 ) 
-                dev_id += 1
-            pass
-
-            v_pq = Vpq( p, q, rho, theta, **options )
-            
-            with cupy.cuda.Device( dev_id ):
-                v_pq = cupy.array( v_pq )
-                img_flat = cupy.array( img )
-                img_flat = img_flat.ravel()
-                
-                moment = np.dot( v_pq, img_flat )*dx*dy 
-
-                moment = np.conjugate( moment )
-            pass
-        else :
-            moment = _moment_impl(p, q, rho, theta, dx, dy )
-        pass
-
-        moments[ p, q ] = moment
-    pass
-    
-    def _moment_impl(p, q, rho, theta, dx, dy):
-        v_pq = Vpq( p, q, rho, theta, **options ) 
+    def moment_pq(p, q, rho, theta, dx, dy, use_gpu, idx ):
+        v_pq = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug ) 
         
-        moment = np.dot( v_pq, img_flat )*dx*dy
+        moment = torch.dot( v_pq, img_flat )*(dx*dy)
 
-        moment = np.conjugate( moment )
-        
+        moment = torch.conjugate( moment )
+
         return moment
-    pass # _moment 
-
-    if use_thread :
-        threads = [ threading.Thread(target=_moment, args=(p, q, rho, theta, dx, dy, use_gpu, idx) ) for idx, [p, q] in enumerate( pqs ) ]
-        
-        for thread in threads :
-            thread.start()
-        pass
-    
-        for thread in threads :
-            thread.join()
-        pass        
-    else :
-        futures = [ _moment( p, q, rho, theta, dx, dy, use_gpu, -1 ) for idx, [p, q] in enumerate( pqs ) ]
     pass 
+
+    for p, q in pq_list( T ) : 
+        moments[ p, q ] = moment_pq( p, q, rho, theta, dx, dy, use_gpu, -1 )
+    pass
 
     if 0 :
         print( "Moments = ", moments )
     pass
 
-    run_time = perf_counter() - then
+    run_time = time.time() - then
 
     return moments, run_time
 pass # calc_moments
@@ -792,45 +747,23 @@ def get_moments_disp(moments, **options ) :
 pass # get_moments_disp
 
 # 저니크 모멘트 함수 실험 
-def test_zernike_moments( datas, use_gpus, use_threads, use_hashs, Ks, Ts, **options ) : 
+def test_zernike_moments( datas, use_gpus, use_hashs, Ks, Ts, debug=0 ) : 
     
     if is_array( use_gpus ) :
         for use_gpu in use_gpus :
-            options = {}
-            options[ "debug" ] = get_option( "debug", **options )
-            options[ "use_gpu" ] = use_gpu 
-            options[ "use_thread"] = 0 
-            options[ "use_hash" ] = 0 
-            
-            test_zernike_moments( datas, use_gpu, use_threads, use_hashs, Ks, Ts, **options )
+            test_zernike_moments( datas, use_gpu, use_hashs, Ks, Ts, debug=debug )
         pass
-    elif is_array( use_threads ) :
-        for use_thread in use_threads :
-            options = {}
-            options[ "debug" ] = get_option( "debug", **options )
-            options[ "use_gpu" ] = use_gpus 
-            options[ "use_thread"] = use_thread  
-            
-            test_zernike_moments( datas, use_gpus, use_thread, use_hashs, Ks, Ts, **options )
-        pass        
     elif is_array( use_hashs ) :
         for use_hash in use_hashs :
-            options = {}
-            options[ "debug" ] = get_option( "debug", **options )
-            options[ "use_gpu" ] = use_gpus 
-            options[ "use_thread"] = use_threads
-            options[ "use_hash" ] = use_hash
-            
-            test_zernike_moments( datas, use_gpus, use_threads, use_hash, Ks, Ts, **options )
+            test_zernike_moments( datas, use_gpus, use_hash, Ks, Ts, debug=debug )
         pass 
     else :
-        debug = get_option( "debug", **options )
-        use_hash = get_option( "use_hash", ** options )
-        use_thread = get_option( "use_thread", **options )
-        use_gpu = get_option( "use_gpu", **options )
-    
-        device = "GPU" if use_gpu else "CPU"
-        multi = "M-" if use_thread else ""
+        use_hash = use_hashs
+        use_gpu = use_gpus
+        device_no = 0
+
+        hash = {} if use_gpu else None
+        device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
         
         if is_scalar( Ks ) :
             Ks = [ Ks ]
@@ -844,9 +777,9 @@ def test_zernike_moments( datas, use_gpus, use_threads, use_hashs, Ks, Ts, **opt
         for K in Ks :
                         
             if len( Ts ) > 1 : 
-                key = f"{multi}{device}, Hash={use_hash}, K=({K})"
+                key = f"{device}, Hash={use_hash}, K=({K})"
             else :
-                key = f"{multi}{device}, Hash={use_hash}"
+                key = f"{device}, Hash={use_hash}"
             pass    
             
             if not key in datas :
@@ -862,13 +795,11 @@ def test_zernike_moments( datas, use_gpus, use_threads, use_hashs, Ks, Ts, **opt
         
             data = datas[ key ]
             
-            run_times = data[ "run_times" ]
-        
-            options[ "hash" ] = {} 
+            run_times = data[ "run_times" ] 
             
             circle_type = "outer" 
 
-            rho, theta, x, y, dx, dy, k, area = rho_theta( 1000*K, circle_type, **options ) 
+            rho, theta, x, y, dx, dy, k, area = rho_theta( 1000*K, circle_type, device=device, debug=debug ) 
 
             if debug : print( f"rho shape = {rho.shape}" )
 
@@ -877,8 +808,6 @@ def test_zernike_moments( datas, use_gpus, use_threads, use_hashs, Ks, Ts, **opt
             if debug : print( "img shape= ", img.shape )
 
             img_org = img 
-
-            np = cupy if options['use_gpu'] else numpy
 
             img = cv.resize( img_org, (int(K*1_000), int(K*1_000)), interpolation=cv.INTER_AREA )
 
