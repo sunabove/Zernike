@@ -181,7 +181,7 @@ def validte_radial_function_ortho( T, Ks, debug=0 ) :
 
             if debug : 
                 print( line2 )            
-                print( f"device = {device}, Radial Tick Count = {resolution:_}, T = {T}, rho_len = {len(rho):_}" )
+                print( f"device = {device}, Radial Tick Count = {resolution:_}, P = {T}, rho_len = {len(rho):_}" )
                 print( f"Elapsed time = {elapsed:,.3f}, Error average = {error_avg:,.8f}" )
             pass
         pass
@@ -257,7 +257,7 @@ def validte_radial_function_ortho( T, Ks, debug=0 ) :
     print_curr_time()
 pass # -- validte_radial_polynomial
 
-def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) : 
+def test_zernike_function_ortho( T, Ks, use_gpu=1, use_hash=0, debug = 0 ) : 
     print()
 
     hash = {} if use_hash else None
@@ -275,7 +275,7 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
 
         if 1 or debug : 
             print( line2 )
-            print( f"K = {K}, Resolution = {resolution:_}, T = {T}", flush=1 )
+            print( f"K = {K}, Resolution = {resolution:_}, P = {T}", flush=1 )
         pass
         
         then = time.time() 
@@ -349,7 +349,7 @@ def test_zernike_function_ortho( T, Ks, use_gpu, use_hash=0, debug = 0 ) :
 
     chart.set_title( f"Zerinike Function Orthogonality Error ($P$={T}, {device_name})" )
     chart.set_xlabel( "Grid Tick Count" )
-    chart.set_ylabel( "$log_{10}(y)$" )
+    chart.set_ylabel( "$Log_{10}(y)$" )
     chart.set_xticks( Ks ) 
     chart.set_xticklabels( [ f"{int(x)}$K$" for x in Ks ] )
     chart.grid( axis='y', linestyle="dotted" )
