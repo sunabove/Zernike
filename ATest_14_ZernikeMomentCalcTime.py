@@ -227,9 +227,8 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
 
         y = torch.log10( torch.tensor( run_times ) )
 
-        max_y = max( max_y, max(y) + 0.1 )
+        max_y = max( max_y, max(y) )
         min_y = min( min_y, min(y) )
-        min_y = int( min_y - 0.5 ) if min_y < 0 else min_y
 
         chart.plot( Ks, y, marker=marker, color=color, label=label, linestyle=linestyle )
         
@@ -247,9 +246,19 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
         chart.legend()
     pass
 
+    max_y = max_y + 0.1 
+    min_y = min( min_y, 0 )
+
+    if min_y < 0 : min_y = math.floor( min_y )
     chart.set_ylim( min_y, max_y )
 
     plt.show()
+
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    result_figure_file = f"{src_dir}/result/zernike_15_moment_times_{P}_P.png"
+    plt.savefig( result_figure_file )
+    print( f"result_figure_file = {result_figure_file}" )
+
 pass # test_zernike_moments_calc_times_by_p
 
 def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) : 
@@ -272,6 +281,8 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
 
         data[ "device_name" ] = device_name
         data[ "run_times" ] = run_times
+
+        datas.append( data )
 
         for P in Ps :
             run_time = _get_moment_calc_time( img_org, P, K, device=device, debug=debug )
@@ -318,9 +329,8 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
         x = Ps
         y = torch.log10( torch.tensor( run_times ) )
 
-        max_y = max( max_y, max(y) + 0.1 )
+        max_y = max( max_y, max(y) )
         min_y = min( min_y, min(y) )
-        min_y = int( min_y - 0.5 ) if min_y < 0 else min_y
 
         chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle )
         
@@ -337,9 +347,20 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
         chart.legend()
     pass
 
-    #chart.set_ylim( min_y, max_y )
+    max_y = max_y + 0.1 
+    min_y = min( min_y, 0 )
+
+    if min_y < 0 : min_y = math.floor( min_y )
+
+    chart.set_ylim( min_y, max_y )
 
     plt.show()
+
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    result_figure_file = f"{src_dir}/result/zernike_16_moment_times_{K}_K.png"
+    plt.savefig( result_figure_file )
+    print( f"result_figure_file = {result_figure_file}" )
+
 pass # test_zernike_moments_calc_times_by_k
 
 if __name__ == "__main__" :
