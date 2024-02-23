@@ -283,7 +283,7 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     
     debug and print( f"H = {h}, W = {w}, r = {radius}" )
     
-    # 직교 좌표계 좌표값들 추출
+    # 영상 인덱스를 직교 좌표계 값으로 변환
     y, x = torch.where( img >= 0 ) 
 
     if debug : 

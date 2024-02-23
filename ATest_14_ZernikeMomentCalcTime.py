@@ -1,5 +1,28 @@
 from AZernike import *
 
+
+def _get_moment_calc_time( img_org, P, K, device, use_hash=0, debug=0) :
+    hash = {} if use_hash else None
+
+    circle_type = "outer"
+
+    resolution = 1_000*K
+
+    rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type, device=device, debug=debug ) 
+
+    if debug : print( f"rho shape = {rho.shape}" )
+
+    img = cv.resize( img_org, ( int(resolution), int( resolution) ), interpolation=cv.INTER_AREA )
+
+    img = torch.tensor( img, dtype=torch.complex64, device=device )
+
+    moments, run_time = calc_moments(P, img, rho, theta, dx, dy, device=device, hash=hash, debug=debug )
+    
+    print( f"P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.)" )
+
+    return run_time
+pass # _test_moment_calc_time
+
 # 저니크 모멘트 함수 실험 
 def test_zernike_moments_calc_times( datas, use_gpus, use_hashs, Ks, Ps, debug=0 ) : 
     
@@ -60,24 +83,7 @@ def test_zernike_moments_calc_times( datas, use_gpus, use_hashs, Ks, Ps, debug=0
             pass
 
             for K in Ks :
-                hash = {} if use_hash else None
-        
-                circle_type = "outer"
-
-                resolution = 1_000*K
-
-                rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type, device=device, debug=debug ) 
-
-                if debug : print( f"rho shape = {rho.shape}" )
-
-                img = cv.resize( img_org, ( int(resolution), int( resolution) ), interpolation=cv.INTER_AREA )
-
-                img = torch.tensor( img, dtype=torch.complex64, device=device )
-            
-                moments, run_time = calc_moments(P, img, rho, theta, dx, dy, device=device, hash=hash, debug=debug )
-                
-                print( f"P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.)" ) 
-                
+                run_time = _get_moment_calc_time( img_org, P, K, device=device, use_hash=0, debug=debug )
                 run_times.append( run_time )
             pass # T
         pass # K
