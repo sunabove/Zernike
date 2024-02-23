@@ -30,6 +30,13 @@ fs = fontsize = 16
 plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.size"] = fontsize
 
+row_cnt = 1
+col_cnt = 1
+fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(9*col_cnt, 8*row_cnt), tight_layout=1 )
+charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
+chart_idx = 0 
+chart = charts[ chart_idx ] ; chart_idx += 1
+
 chart.grid( axis='y', linestyle="dotted" )
 chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.26), fontsize=fs-4, ncols=3 )
 

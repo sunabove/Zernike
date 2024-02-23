@@ -859,7 +859,7 @@ pass # plot_moment_features
 ###########################################################################
 ###########################################################################
 
-print( "Zernike functions are defined.")
+print( "Zernike functions are defined.\n")
 
 if __name__ == "__main__" :
     

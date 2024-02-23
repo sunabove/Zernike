@@ -16,11 +16,18 @@ def _get_moment_calc_time( img_org, P, K, device, debug=0) :
 
     img = cv.resize( img_org, ( int(resolution), int( resolution) ), interpolation=cv.INTER_AREA )
 
+    if debug : 
+        print( "img shape= ", img.shape ) 
+        print( line )
+    pass
+
     img = torch.tensor( img, dtype=torch.complex64, device=device )
 
     moments, run_time = calc_moments(P, img, rho, theta, dx, dy, device=device, hash=hash, debug=debug )
     
-    print( f"P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.)" )
+    dn = device_name = "CPU" if "CPU" in f"{device}".upper() else "GPU"
+
+    print( f"{dn}, P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.)" )
 
     return run_time
 pass # _test_moment_calc_time
@@ -48,7 +55,8 @@ def test_zernike_moments_calc_times( datas, use_gpus, Ks, Ps, debug=0 ) :
             Ps = [ Ps ]
         pass 
         
-        img_org = cv.imread( 'image/lenna.png', 0 )
+        src_dir = os.path.dirname( os.path.abspath(__file__) )
+        img_org = cv.imread( f"{src_dir}/image/lenna.png", 0 )
 
         if debug : print( "img shape= ", img_org.shape )
 
@@ -75,13 +83,8 @@ def test_zernike_moments_calc_times( datas, use_gpus, Ks, Ps, debug=0 ) :
             
             run_times = data[ "run_times" ]
 
-            if debug : 
-                print( "img shape= ", img.shape ) 
-                print( line )
-            pass
-
             for K in Ks :
-                run_time = _get_moment_calc_time( img_org, P, K, device=device, use_hash=0, debug=debug )
+                run_time = _get_moment_calc_time( img_org, P, K, device=device, debug=debug )
                 run_times.append( run_time )
             pass # T
         pass # K
@@ -89,7 +92,7 @@ def test_zernike_moments_calc_times( datas, use_gpus, Ks, Ps, debug=0 ) :
     pass
 pass # test_zernike_moments_calc_times
 
-def test_plot_zernike_moment_calc_times( datas ) : 
+def plot_test_zernike_moment_calc_times( datas ) : 
 
     print( "\nPlotting .... ")
         
@@ -132,12 +135,15 @@ def test_plot_zernike_moment_calc_times( datas ) :
     vmin = -2
     vmax = 4
 
-    pos = chart.pcolormesh( x, y, z, vmin=vmin, vmax=vmax, cmap=plt.get_cmap('cool') )
+    cmap = plt.get_cmap('cool')
+    cmap = plt.get_cmap('inferno')
+    cmap = plt.get_cmap('jet')
+    pos = chart.pcolormesh( x, y, z, vmin=vmin, vmax=vmax, cmap=cmap )
     fig.colorbar( pos, ax=chart, label="$Log(seconds)$" )
 
     chart.set_title( f"Zernike Moment Run-time ({device_name})" )
     chart.set_xlabel( "Grid Tick Count" )
-    chart.set_ylabel( "Order($P$)")
+    chart.set_ylabel( "Zernike Order($P$)")
 
     chart.set_xticks( Ks )
     chart.set_xticklabels( [ f"${K}K$" for K in Ks ] ) 
@@ -154,64 +160,36 @@ def test_plot_zernike_moment_calc_times( datas ) :
 
 pass # test_plot_zernike_moment_calc_times
 
-def test_zernike_moments_calc_times_by_P( datas, use_gpus, Ks, P, debug=0 ) : 
+def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) : 
     
+    datas = [ ]
+
     for use_gpu in use_gpus : 
 
         device_no = 0
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
         dn = device_name = "GPU" if use_gpu else "CPU"
         
-        if is_scalar( Ks ) :
-            Ks = [ Ks ]
-        pass
-    
-        if is_scalar( Ps ) :
-            Ps = [ Ps ]
-        pass 
-        
-        img_org = cv.imread( 'image/lenna.png', 0 )
+        src_dir = os.path.dirname( os.path.abspath(__file__) )
+        img_org = cv.imread( f"{src_dir}/image/lenna.png", 0 )
 
         if debug : print( "img shape= ", img_org.shape )
-
-        for P in Ps :
                         
-            key = f"{device_name},P=({P}),H={use_hash}"
-            
-            if not key in datas :
-                print()
-                print( f"key = {key}", flush=True)
-            
-                data = {}
+        data = { }
+        run_times = []
 
-                data[ "P" ] = P
-                data[ "Ks" ] = Ks
-                data[ "device_name" ] = device_name
-                data[ "use_hash" ] = use_hash
-                data[ "run_times" ] = []
+        data[ "device_name" ] = device_name
+        data[ "run_times" ] = run_times
 
-                datas[ key ] = data 
-            pass
-        
-            data = datas[ key ]
-            
-            run_times = data[ "run_times" ]
+        datas.append( data )
 
-            if debug : 
-                print( "img shape= ", img.shape ) 
-                print( line )
-            pass
+        for K in Ks :
+            run_time = _get_moment_calc_time( img_org, P, K, device=device, debug=debug )
+            run_times.append( run_time )
+        pass
 
-            for K in Ks :
-                run_time = _get_moment_calc_time( img_org, P, K, device=device, use_hash=0, debug=debug )
-                run_times.append( run_time )
-            pass # T
-        pass # K
-    
+        print()
     pass
-pass # test_zernike_moments_calc_times
-
-def test_plot_zernike_moment_calc_times_old( datas ) : 
 
     print( "\nPlotting .... ")
         
@@ -223,22 +201,19 @@ def test_plot_zernike_moment_calc_times_old( datas ) :
     row_cnt = 1
     col_cnt = 1
 
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(12*col_cnt, 8*row_cnt) )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(9*col_cnt, 6*row_cnt), tight_layout=1 )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0 
     chart = charts[ chart_idx ] ; chart_idx += 1
     
-    for key in datas : 
-        data = datas[ key ]
-        
-        Ks = data[ "Ks" ]        
-        run_times = data[ "run_times" ]
+    min_y = 0
+    max_y = 0 
 
-        P = data[ "P" ]
+    for data in datas : 
         device_name = data[ "device_name" ]
-        use_hash = data[ "use_hash" ]
+        run_times = data[ "run_times" ]
         
-        label = f"{device_name},P={P},H={use_hash}"
+        label = f"{device_name}"
         
         linestyle = "solid"
         marker = "*"
@@ -250,21 +225,149 @@ def test_plot_zernike_moment_calc_times_old( datas ) :
             color = "orange"
         pass
 
-        if use_hash : linestyle = "dashed"
+        y = torch.log10( torch.tensor( run_times ) )
 
-        y = torch.log10( torch.tensor( run_times ) ) 
-    
+        max_y = max( max_y, max(y) + 0.1 )
+        min_y = min( min_y, min(y) )
+        min_y = int( min_y - 0.5 ) if min_y < 0 else min_y
+
         chart.plot( Ks, y, marker=marker, color=color, label=label, linestyle=linestyle )
         
-        chart.set_title( f"Zernike Moment Run-time" )
+        chart.set_title( f"Zernike Moment Run-time at Order(P=${P}$)" )
         chart.set_xlabel( "Grid Tick Count" )
-        chart.set_ylabel( "$Log_{10}(y)$ (sec.)")
         chart.set_xticks( Ks )
-        chart.set_xticklabels( [ f"${K} K$" for K in Ks ] )
+        chart.set_xticklabels( [ f"${k}K$" for k in Ks ] )
         
-        chart.legend( loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=4 ) 
+        chart.set_ylabel( "$Log_{10}(seconds)$")
+
+        chart.grid( axis='x', linestyle="dotted" )
+        chart.grid( axis='y', linestyle="dotted" )
+        
+        #chart.legend( loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=len(datas) ) 
+        chart.legend()
     pass
 
-    plt.tight_layout()
+    chart.set_ylim( min_y, max_y )
+
     plt.show()
-pass # test_plot_zernike_moment_calc_times_old
+pass # test_zernike_moments_calc_times_by_p
+
+def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) : 
+    
+    datas = [ ]
+
+    for use_gpu in use_gpus : 
+
+        device_no = 0
+        device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
+        dn = device_name = "GPU" if use_gpu else "CPU"
+        
+        src_dir = os.path.dirname( os.path.abspath(__file__) )
+        img_org = cv.imread( f"{src_dir}/image/lenna.png", 0 )
+
+        if debug : print( "img shape= ", img_org.shape )
+                        
+        data = { }
+        run_times = []
+
+        data[ "device_name" ] = device_name
+        data[ "run_times" ] = run_times
+
+        for P in Ps :
+            run_time = _get_moment_calc_time( img_org, P, K, device=device, debug=debug )
+            run_times.append( run_time )
+        pass
+
+        print()    
+    pass
+
+    print( "\nPlotting .... ")
+        
+    # 서브 챠트 생성 
+    fs = fontsize = 16
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.size"] = fontsize
+
+    row_cnt = 1
+    col_cnt = 1
+
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(9*col_cnt, 6*row_cnt), tight_layout=1 )
+    charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
+    chart_idx = 0 
+    chart = charts[ chart_idx ] ; chart_idx += 1
+    
+    min_y = 0
+    max_y = 0 
+
+    for data in datas : 
+        device_name = data[ "device_name" ]
+        run_times = data[ "run_times" ]
+        
+        label = f"{device_name}"
+        
+        linestyle = "solid"
+        marker = "*"
+        color = "b"
+        
+        if "cuda" in device_name or "GPU" in device_name :
+            linestyle = "dotted"
+            marker = "s" 
+            color = "orange"
+        pass
+
+        x = Ps
+        y = torch.log10( torch.tensor( run_times ) )
+
+        max_y = max( max_y, max(y) + 0.1 )
+        min_y = min( min_y, min(y) )
+        min_y = int( min_y - 0.5 ) if min_y < 0 else min_y
+
+        chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle )
+        
+        chart.set_title( f"Zernike Moment Run-time at Grid Count(${K}K$)" )
+        chart.set_xlabel( "Zernike Order" )
+        chart.set_xticks( Ps )
+        chart.set_xticklabels( [ f"${p}$" for p in Ps ] )
+
+        chart.set_ylabel( "$Log_{10}(seconds)$")
+        chart.grid( axis='x', linestyle="dotted" )
+        chart.grid( axis='y', linestyle="dotted" )
+        
+        #chart.legend( loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=len(datas) ) 
+        chart.legend()
+    pass
+
+    #chart.set_ylim( min_y, max_y )
+
+    plt.show()
+pass # test_zernike_moments_calc_times_by_k
+
+if __name__ == "__main__" :
+    if 0 : 
+        use_gpus  = [ 1, 0 ]
+
+        Ks = torch.arange( 1, 6 + 1, 1 )
+        Ks = torch.arange( 1, 3 + 1, 1 )
+
+        P  = 30
+        P  = 10
+
+        datas = { }
+
+        test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 )
+
+        print( "Done")
+    elif 1 :
+        use_gpus  = [ 1, 0 ]
+
+        K  = 6
+        Ps = torch.arange( 5, 30 + 1, 5 )
+
+        K  = 2
+        Ps = torch.arange( 5, 20 + 1, 5 )
+
+        test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 )
+
+        print( "Done")
+    pass
+pass
