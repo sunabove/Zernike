@@ -1,5 +1,6 @@
 # 메모리 현황 구하기
 import os
+import torch
 
 print( "source dirname = ", os.path.dirname( os.path.abspath(__file__) ) )
 

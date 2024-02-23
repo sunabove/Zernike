@@ -81,6 +81,7 @@ def test_zernike_moments_calc_times( datas, use_gpus, use_hashs, Ks, Ps, debug=0
                 run_times.append( run_time )
             pass # T
         pass # K
+    
     pass
 pass # test_zernike_moments_calc_times
 
@@ -104,7 +105,6 @@ def test_plot_zernike_moment_calc_times( datas ) :
     Ps = []
     Ks = []
     run_times_all = []
-    use_hash = 0 
     device_name = "" 
 
     for key in datas : 
@@ -142,7 +142,15 @@ def test_plot_zernike_moment_calc_times( datas ) :
     chart.set_yticklabels( [ f"${P}$" for P in Ps ] ) 
 
     plt.show()
+
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    result_figure_file = f"{src_dir}/result/zernike_14_moment_times_{device_name}_{int(max(Ps))}P_{int(max(Ks))}K.png"
+    plt.savefig( result_figure_file )
+    print( f"result_figure_file = {result_figure_file}" )
+
 pass # test_plot_zernike_moment_calc_times
+
+
 
 def test_plot_zernike_moment_calc_times_old( datas ) : 
 
