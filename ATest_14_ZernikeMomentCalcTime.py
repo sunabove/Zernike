@@ -1,7 +1,9 @@
 from AZernike import *
 
 
-def _get_moment_calc_time( img_org, P, K, device, use_hash=0, debug=0) :
+def _get_moment_calc_time( img_org, P, K, device, debug=0) :
+    use_hash = 0 
+    
     hash = {} if use_hash else None
 
     circle_type = "outer"
@@ -24,18 +26,14 @@ def _get_moment_calc_time( img_org, P, K, device, use_hash=0, debug=0) :
 pass # _test_moment_calc_time
 
 # 저니크 모멘트 함수 실험 
-def test_zernike_moments_calc_times( datas, use_gpus, use_hashs, Ks, Ps, debug=0 ) : 
+def test_zernike_moments_calc_times( datas, use_gpus, Ks, Ps, debug=0 ) : 
     
     if is_array( use_gpus ) :
         for use_gpu in use_gpus :
-            test_zernike_moments_calc_times( datas, use_gpu, use_hashs, Ks, Ps, debug=debug )
-        pass
-    elif is_array( use_hashs ) :
-        for use_hash in use_hashs :
-            test_zernike_moments_calc_times( datas, use_gpus, use_hash, Ks, Ps, debug=debug )
+            test_zernike_moments_calc_times( datas, use_gpu, Ks, Ps, debug=debug )
         pass 
     else :
-        use_hash = use_hashs
+        use_hash = 0
         use_gpu = use_gpus
 
         device_no = 0
@@ -156,7 +154,62 @@ def test_plot_zernike_moment_calc_times( datas ) :
 
 pass # test_plot_zernike_moment_calc_times
 
+def test_zernike_moments_calc_times_by_P( datas, use_gpus, Ks, P, debug=0 ) : 
+    
+    for use_gpu in use_gpus : 
 
+        device_no = 0
+        device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
+        dn = device_name = "GPU" if use_gpu else "CPU"
+        
+        if is_scalar( Ks ) :
+            Ks = [ Ks ]
+        pass
+    
+        if is_scalar( Ps ) :
+            Ps = [ Ps ]
+        pass 
+        
+        img_org = cv.imread( 'image/lenna.png', 0 )
+
+        if debug : print( "img shape= ", img_org.shape )
+
+        for P in Ps :
+                        
+            key = f"{device_name},P=({P}),H={use_hash}"
+            
+            if not key in datas :
+                print()
+                print( f"key = {key}", flush=True)
+            
+                data = {}
+
+                data[ "P" ] = P
+                data[ "Ks" ] = Ks
+                data[ "device_name" ] = device_name
+                data[ "use_hash" ] = use_hash
+                data[ "run_times" ] = []
+
+                datas[ key ] = data 
+            pass
+        
+            data = datas[ key ]
+            
+            run_times = data[ "run_times" ]
+
+            if debug : 
+                print( "img shape= ", img.shape ) 
+                print( line )
+            pass
+
+            for K in Ks :
+                run_time = _get_moment_calc_time( img_org, P, K, device=device, use_hash=0, debug=debug )
+                run_times.append( run_time )
+            pass # T
+        pass # K
+    
+    pass
+pass # test_zernike_moments_calc_times
 
 def test_plot_zernike_moment_calc_times_old( datas ) : 
 
