@@ -51,6 +51,8 @@ def factorial( n ) :
     if torch.is_tensor( n ) :
         v = torch.exp( torch.lgamma(n + 1) )
 
+        v[ torch.where( v.isinf() ) ] = 0 
+
         if torch.isnan( v ).any() : print( "torch factorial() : nan encountered" ); print( f"n = {n}")
         if torch.isinf( v ).any() : print( "torch factorial() : inf encountered" ); print( f"n = {n}")
     else :
@@ -64,7 +66,39 @@ def factorial( n ) :
 pass
 
 #@profile
-def _pqs_facotrial( p, q, kmax, device ) :
+def _pqs_facotrial( p, q, device ) :
+    use_torch = 1
+
+    if use_torch : 
+        return _pqs_facotrial_torch( p, q, device )
+    else :
+        return _pqs_facotrial_numpy( p, q, device )
+    pass
+pass # _pqs_facotrial
+
+def _pqs_facotrial_torch( p, q, device ) :
+    kmax = max( (p - q)/2, 0 ) 
+
+    k = torch.arange( 0, kmax + 1, device=device ) 
+
+    #fact = factorial( p - s )/factorial( s )/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
+    fact = factorial( p - k )
+    fact1 = fact/factorial( k )
+    fact2 = fact1/factorial( (p + q)/2 - k )
+    fact3 = fact2/factorial( (p - q)/2 - k )
+    
+    R_ps = torch.pow( -1, k )*( fact3 )
+
+    if R_ps.isnan().any() :
+        print( "_pqs_factorial( ....) : Nan encountered." )
+    pass
+
+    return R_ps, k 
+pass # _pqs_facotrial_torch
+
+def _pqs_facotrial_numpy( p, q, device ) :
+    kmax = max( (p - q)/2, 0 ) 
+
     k = numpy.arange( 0, kmax + 1 ) 
 
     #fact = factorial( p - s )/factorial( s )/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
@@ -74,16 +108,14 @@ def _pqs_facotrial( p, q, kmax, device ) :
     fact3 = fact2/factorial( (p - q)/2 - k )
     fact4 = torch.tensor( fact3 ).to( device )
     
-    R_ps = torch.pow( -1, torch.tensor( s, device=device ) )*( fact4 )    
-
-    #R_ps = torch.pow( -1, k )*( fact3 )
+    R_ps = torch.pow( -1, torch.tensor( k, device=device ) )*( fact4 )    
 
     if R_ps.isnan().any() :
         print( "_pqs_factorial( ....) : Nan encountered." )
     pass
 
     return R_ps, k 
-pass # _pqs_facotrial
+pass # _pqs_facotrial_numpy
 
 def _rps( r_ps, rho, p_2s, device=None, hash=None ) :
     p_2s = int( p_2s )
@@ -167,9 +199,7 @@ def Rpq(p, q, rho, device, hash, debug=0 ) :
     elif p == 2 and q == 2 :
         r_pq_rho = rho*rho
     else :
-        kmax = max( (p - q)/2, 0 ) 
-
-        R_ps, k = _pqs_facotrial( p, q, kmax, device=device )
+        R_ps, k = _pqs_facotrial( p, q, device=device )
 
         for r_ps, p_2s in zip( R_ps, p - 2*k ) :
             rps = _rps( r_ps, rho, p_2s, device=device, hash=hash ) 
@@ -834,12 +864,12 @@ print( "Zernike functions are defined.")
 if __name__ == "__main__" :
     
     if 1 :
-        t = -10 
-        s = torch.arange( 0, t + 1, -1 ) 
+        t = 5
+        s = torch.arange( -t, t + 1 ) 
         print( f"torch s = {s}")
         print( "torch facotrial(0) = ", factorial( s ) )
 
-        s = numpy.arange( 0, t + 1 ) 
+        s = numpy.arange( -t, t + 1 ) 
         print( f"numpy s = {s}")
         print( "numpy facotrial(0) = ", factorial( s ) )
     elif False :

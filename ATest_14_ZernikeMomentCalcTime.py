@@ -125,10 +125,10 @@ def test_plot_zernike_moment_calc_times( datas ) :
     x, y = numpy.meshgrid( x, y )    
     z = torch.log10( torch.tensor( run_times_all ) ) 
 
-    vmin = int( torch.min( z ) - 0.5 )
-    vmax = int( torch.max( z ) + 1.5 )
+    vmin = -2
+    vmax = 4
 
-    pos = chart.pcolormesh( x, y, z, vmin=vmin, vmax=vmax, cmap=plt.cm.Pastel1 )
+    pos = chart.pcolormesh( x, y, z, vmin=vmin, vmax=vmax, cmap=plt.get_cmap('cool') )
     fig.colorbar( pos, ax=chart, label="$Log(seconds)$" )
 
     chart.set_title( f"Zernike Moment Run-time ({device_name})" )
