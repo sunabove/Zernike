@@ -281,7 +281,7 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
     plt.show()
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/zernike_15_moment_times_{P}_P.png"
+    result_figure_file = f"{src_dir}/result/zernike_15_moment_times_{P}P.png"
     plt.savefig( result_figure_file )
     print( f"result_figure_file = {result_figure_file}" )
 
@@ -296,7 +296,7 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
     excelData.append( tab_header )
     excelData.extend( tab_rows )
     df = pd.DataFrame( excelData )
-    df.to_excel( f"{src_dir}/result/zernike_15_moment_times_{P}_P.xlsx", index=False, header=False )
+    df.to_excel( f"{src_dir}/result/zernike_15_moment_times_{P}P.xlsx", index=False, header=False )
 
 pass # test_zernike_moments_calc_times_by_p
 
@@ -421,7 +421,7 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
     plt.show()
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/zernike_16_moment_times_{K}_K.png"
+    result_figure_file = f"{src_dir}/result/zernike_16_moment_times_{K}K.png"
     plt.savefig( result_figure_file )
     print( f"result_figure_file = {result_figure_file}" )
 
@@ -436,7 +436,7 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
     excelData.append( tab_header )
     excelData.extend( tab_rows )
     df = pd.DataFrame( excelData )
-    df.to_excel( f"{src_dir}/result/zernike_16_moment_times_{K}_K.xlsx", index=False, header=False )
+    df.to_excel( f"{src_dir}/result/zernike_16_moment_times_{K}K.xlsx", index=False, header=False )
 
 pass # test_zernike_moments_calc_times_by_k
 
