@@ -230,9 +230,10 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
         color = None
         
         if "cuda" in device_name or "GPU" in device_name :
-            linestyle = "dotted"
+            #linestyle = "dotted"
             marker = "s" 
             color = "orange"
+            color = None
         pass
 
         x = Ks
@@ -241,20 +242,28 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
         import numpy
         fit = numpy.polyfit( numpy.log10(x), numpy.array( y ), 1)
 
-        if debug : print( f"fit = {fit}" )
+        if 1 or debug : print( f"fit = {fit}" )
 
         max_y = max( max_y, max(y) )
         min_y = min( min_y, min(y) )
 
         chart.plot( Ks, y, marker=marker, color=color, label=label, linestyle=linestyle )
-        chart.plot( x, fit[0] + fit[1]*numpy.log10(x), color=color )
+        chart.plot( x, fit[0]*numpy.log10(x) + fit[1], color=color, linestyle="dashed" )
+
+        # add annotation to log fitting line
+        mx = numpy.median( x )
+        my = fit[0]*numpy.log10( mx ) + fit[1]
+        a = fit[0]
+        b = fit[1]
+        sign = "+" if b >= 0 else "-"
+        chart.text( mx, my, f"$y = {a:.1f}*Log(x)$ {sign} {abs(b):.1f}", fontsize=fs-2)
         
         chart.set_title( f"Zernike Moment Run-time at Order(P=${P}$)" )
         chart.set_xlabel( "Grid Tick Count" )
         chart.set_xticks( Ks )
         chart.set_xticklabels( [ f"${k}K$" for k in Ks ] )
         
-        chart.set_ylabel( "$Log_{10}(seconds)$")
+        chart.set_ylabel( "$Log(seconds)$")
 
         chart.grid( axis='x', linestyle="dotted" )
         chart.grid( axis='y', linestyle="dotted" )
@@ -362,22 +371,37 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
             linestyle = "dotted"
             marker = "s" 
             color = "orange"
+            color = None
         pass
 
         x = Ps
         y = torch.log10( torch.tensor( run_times ) )
 
+        import numpy
+        fit = numpy.polyfit( numpy.log10(x), numpy.array( y ), 1)
+
+        if 1 or debug : print( f"fit = {fit}" )
+
         max_y = max( max_y, max(y) )
         min_y = min( min_y, min(y) )
 
         chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle )
+        chart.plot( x, fit[0]*numpy.log10(x) + fit[1], color=color, linestyle="dashed" )
+
+        # add annotation to log fitting line
+        mx = numpy.median( x )
+        my = fit[0]*numpy.log10( mx ) + fit[1]
+        a = fit[0]
+        b = fit[1]
+        sign = "+" if b >= 0 else "-"
+        chart.text( mx, my, f"$y = {a:.1f}*Log(x)$ {sign} {abs(b):.1f}", fontsize=fs-2)
         
         chart.set_title( f"Zernike Moment Run-time at Grid Count(${K}K$)" )
         chart.set_xlabel( "Zernike Order" )
         chart.set_xticks( Ps )
         chart.set_xticklabels( [ f"${p}$" for p in Ps ] )
 
-        chart.set_ylabel( "$Log_{10}(seconds)$")
+        chart.set_ylabel( "$Log(seconds)$")
         chart.grid( axis='x', linestyle="dotted" )
         chart.grid( axis='y', linestyle="dotted" )
         
