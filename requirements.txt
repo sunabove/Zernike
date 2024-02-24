@@ -8,6 +8,8 @@ opencv-contrib-python
 tabulate
 tqdm
 
+pooch # skimage data
+
 shapely
 imutils
 scipy

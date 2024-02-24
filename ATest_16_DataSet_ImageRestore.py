@@ -34,14 +34,14 @@ def plot_dataset_image_restore() :
         chart = charts[idx]
 
         shape = img.shape
-        channel = img.ndim
+        channel = shape[ -1 ] if len( shape ) > 2 else 1
         h = shape[ 0 ]
         w = shape[ 1 ]
 
-        print( f"[{idx:03}] name = {klass}, channel = {channel}, shape={shape}" )
+        print( f"[{idx:03}] name = {klass}, channel = {channel}, shape={shape}", flush=1 )
 
         if channel == 3 : 
-            img = sk.color.rgb2gray( img )
+            img = sk.color.rgb2gray( img ) 
         pass
 
         xticks = torch.arange( 0, w, pow( 10, int( math.log10( w ) ) ) )
