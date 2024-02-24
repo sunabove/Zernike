@@ -288,7 +288,9 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
     tab_header = [ "Device", "P" ]
     tab_header.extend( [ f"{int(K)} K" for K in Ks ] )
 
+    print()
     print( tabulate( tab_rows, headers=tab_header ) )
+    print()
 
     excelData = []
     excelData.append( tab_header )
@@ -426,7 +428,9 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
     tab_header = [ "Device", "K" ]
     tab_header.extend( [ f"{int(P)} P" for P in Ps ] )
 
+    print()
     print( tabulate( tab_rows, headers=tab_header ) )
+    print()
 
     excelData = []
     excelData.append( tab_header )
