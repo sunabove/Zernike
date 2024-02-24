@@ -209,15 +209,25 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
     min_y = 0
     max_y = 0 
 
+    tab_rows = []
+
     for data in datas : 
         device_name = data[ "device_name" ]
         run_times = data[ "run_times" ]
         
+        tab_row = []
+        tab_rows.append( tab_row )
+
+        tab_row.append( device_name )
+        tab_row.append( P )
+        tab_row.extend( run_times )
+
         label = f"{device_name}"
-        
+
         linestyle = "solid"
         marker = "*"
         color = "b"
+        color = None
         
         if "cuda" in device_name or "GPU" in device_name :
             linestyle = "dotted"
@@ -225,12 +235,19 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
             color = "orange"
         pass
 
+        x = Ks
         y = torch.log10( torch.tensor( run_times ) )
+
+        import numpy
+        fit = numpy.polyfit( numpy.log10(x), numpy.array( y ), 1)
+
+        if debug : print( f"fit = {fit}" )
 
         max_y = max( max_y, max(y) )
         min_y = min( min_y, min(y) )
 
         chart.plot( Ks, y, marker=marker, color=color, label=label, linestyle=linestyle )
+        chart.plot( x, fit[0] + fit[1]*numpy.log10(x), color=color )
         
         chart.set_title( f"Zernike Moment Run-time at Order(P=${P}$)" )
         chart.set_xlabel( "Grid Tick Count" )
@@ -258,6 +275,17 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
     result_figure_file = f"{src_dir}/result/zernike_15_moment_times_{P}_P.png"
     plt.savefig( result_figure_file )
     print( f"result_figure_file = {result_figure_file}" )
+
+    tab_header = [ "Device", "P" ]
+    tab_header.extend( [ f"{int(K)} K" for K in Ks ] )
+
+    print( tabulate( tab_rows, headers=tab_header ) )
+
+    excelData = []
+    excelData.append( tab_header )
+    excelData.extend( tab_rows )
+    df = pd.DataFrame( excelData )
+    df.to_excel( f"{src_dir}/result/zernike_15_moment_times_{P}_P.xlsx", index=False, header=False )
 
 pass # test_zernike_moments_calc_times_by_p
 
@@ -310,15 +338,25 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
     min_y = 0
     max_y = 0 
 
+    tab_rows = []
+
     for data in datas : 
         device_name = data[ "device_name" ]
         run_times = data[ "run_times" ]
+
+        tab_row = []
+        tab_rows.append( tab_row )
+
+        tab_row.append( device_name )
+        tab_row.append( K )
+        tab_row.extend( run_times )
         
         label = f"{device_name}"
         
         linestyle = "solid"
         marker = "*"
         color = "b"
+        color = None
         
         if "cuda" in device_name or "GPU" in device_name :
             linestyle = "dotted"
@@ -360,6 +398,17 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
     result_figure_file = f"{src_dir}/result/zernike_16_moment_times_{K}_K.png"
     plt.savefig( result_figure_file )
     print( f"result_figure_file = {result_figure_file}" )
+
+    tab_header = [ "Device", "K" ]
+    tab_header.extend( [ f"{int(P)} P" for P in Ps ] )
+
+    print( tabulate( tab_rows, headers=tab_header ) )
+
+    excelData = []
+    excelData.append( tab_header )
+    excelData.extend( tab_rows )
+    df = pd.DataFrame( excelData )
+    df.to_excel( f"{src_dir}/result/zernike_16_moment_times_{K}_K.xlsx", index=False, header=False )
 
 pass # test_zernike_moments_calc_times_by_k
 

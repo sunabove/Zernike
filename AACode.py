@@ -50,10 +50,23 @@ device_no = 0
 hash = {} if use_gpu else None
 device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
 
-# 테이블 생성
-print( tabulate( list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature" )) )
-
 kidx = torch.where( rho_square <= 1.0 )
 
 Ks = torch.arange( 1, 6 + 1, 1 )
+
+# 테이블 생성
+tab_header = [ "Device", "Item" ]
+tab_header.extend( [ f"{x/1_000:1.0f}K" for x in resolutions ] )
+
+print( tabulate( tab_rows, headers=tab_header ) )
+
+excelData = []
+excelData.append( tab_header )
+excelData.extend( tab_rows )
+df = pd.DataFrame( excelData )
+df.to_excel( f"{src_dir}/result/zernike_02_radial_orthogonality.xlsx", index=False, header=False, sheet_name='poly orth')
+
+# 로그 피팅
+
+torch.fit
 
