@@ -1,4 +1,5 @@
 import os
+import math
 import torch
 import matplotlib.pyplot as plt
 
@@ -33,17 +34,33 @@ def plot_dataset_image_restore() :
         chart = charts[idx]
 
         shape = img.shape
-        channel = shape[ -1 ]
+        channel = img.ndim
+        h = shape[ 0 ]
+        w = shape[ 1 ]
+
+        print( f"[{idx:03}] name = {klass}, channel = {channel}, shape={shape}" )
+
         if channel == 3 : 
             img = sk.color.rgb2gray( img )
         pass
 
+        xticks = torch.arange( 0, w, pow( 10, int( math.log10( w ) ) ) )
+        xtick_labels = [ f"{int(t)}" for t in xticks ]
+        yticks = torch.arange( 0, h, pow( 10, int( math.log10( h ) ) ) )
+        ytick_labels = [ f"{int(t)}" for t in yticks ]
+
         chart.imshow( img, cmap=plt.cm.gray )
-        chart.set_title( klass )
+        
+        chart.set_title( klass, fontsize=fs+4 )
+
+        chart.set_xticks( xticks )
+        chart.set_xticklabels( xtick_labels, fontsize=fs-4 )
+        chart.set_yticks( yticks )
+        chart.set_yticklabels( ytick_labels, fontsize=fs-4 )
     pass 
 
-    #plt.tight_layout()
     result_figure_file = f"./result/dataset_overview_image_restore.png"
+    print()
     print( f"Result figure file = {result_figure_file}" )
     plt.savefig( result_figure_file )
     plt.show()
