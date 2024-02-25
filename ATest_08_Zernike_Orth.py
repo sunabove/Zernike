@@ -270,6 +270,9 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], use_hash=0, debug = 0 ) :
     min_y = None
     max_y = None
 
+    tot_idx = len( use_gpus )*len( Ps )*len( Ks )
+    cur_idx = 0 
+
     for use_gpu in use_gpus : 
         hash = {} if use_hash else None
         device_no = 0  
@@ -283,11 +286,13 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], use_hash=0, debug = 0 ) :
             elapsed_list = []
 
             for K in Ks :
+                pct = int( (100.0*cur_idx)/tot_idx ) 
+
                 resolution = int( 1_000*K )
 
                 if 1 or debug : 
                     print( line2 )
-                    print( f"{device_name}, P = {P}, K = {K}, Resolution = {resolution:_}" , flush=1 )
+                    print( f"[ {pct:3d} % ] {device_name}, P = {P}, K = {K}, Resolution = {resolution:_}" , flush=1 )
                 pass
                 
                 then = time.time() 
@@ -341,8 +346,11 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], use_hash=0, debug = 0 ) :
                 elapsed = time.time() - then
                 elapsed_list.append( elapsed )
 
+                cur_idx += 1
+                pct = int( (100.0*cur_idx)/tot_idx )
+                    
                 if 1 or debug : 
-                    print( f"Error avg. = {error_avg:_.10f}, Elapsed time = {elapsed:_.4f}, {timedelta(seconds=elapsed)}" )
+                    print( f"[ {pct:3d} % ] Error avg. = {error_avg:_.10f}, Elapsed time = {elapsed:_.4f}, {timedelta(seconds=elapsed)}" )
                     #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
                 pass
             pass
@@ -389,7 +397,7 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], use_hash=0, debug = 0 ) :
     src_dir = os.path.dirname( os.path.abspath(__file__) )
     result_figure_file = f"{src_dir}/result/zernike_03_function_orthogonality.png"
     plt.savefig( result_figure_file )
-    print( f"result_figure_file = {result_figure_file}" ) 
+    print( f"\nresult_figure_file = {result_figure_file}" ) 
 
     plt.show()
 pass # test_zernike_function_orthogonality

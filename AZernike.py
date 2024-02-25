@@ -500,11 +500,14 @@ def get_core_count(**options) :
 pass
     
 # 모멘트 계산
-def calc_moments( T, img, rho, theta, dx, dy, device, hash, debug=0 ) : 
+def calc_moments( img, T, resolution, circle_type, device, hash=0, debug=0 ) : 
     then = time.time()
 
     moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
 
+    rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
+    if debug : print( f"rho shape = {rho.shape}" )
+    
     img_rav = img.ravel()
 
     for p, q in pq_list( T ) : 
