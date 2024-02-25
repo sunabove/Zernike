@@ -257,7 +257,7 @@ def validte_radial_function_ortho( T, Ks, debug=0 ) :
     print_curr_time()
 pass # -- validte_radial_polynomial
 
-def test_zernike_function_ortho( T, Ks, use_gpu=1, use_hash=0, debug = 0 ) : 
+def test_zernike_function_ortho( Ps, Ks, use_gpu=1, use_hash=0, debug = 0 ) : 
     print()
 
     hash = {} if use_hash else None
@@ -267,95 +267,95 @@ def test_zernike_function_ortho( T, Ks, use_gpu=1, use_hash=0, debug = 0 ) :
 
     print( f"device = {device_name}, hash = { hash is not None }" )
 
-    error_avgs = []
-    elapsed_list = []
-
-    for K in tqdm( Ks, desc="K" ) :
-        resolution = int( 1_000*K )
-
-        if 1 or debug : 
-            print( line2 )
-            print( f"K = {K}, Resolution = {resolution:_}, P = {T}", flush=1 )
-        pass
-        
-        then = time.time() 
-
-        rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
-        
-        error_sum = 0
-        
-        hash= {}
-        
-        cnt = 0 
-        for p in range( 0, T + 1 ) :
-            for q in range( -p, p + 1, 2 ) :
-                for n in range( 0, T + 1 ) :
-                    for m in range( -n, n + 1, 2 ) : 
-                        v_pl = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug )
-                        v_ql = Vpq( n, m, rho, theta, device=device, hash=hash, debug=debug )
-
-                        sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
-                        sum_integration = sum_arr*dx*dy*(p +1)/pi
-                        sum = torch.absolute( sum_integration )
-
-                        expect = [0, 1][ p == n and q == m ]
-                        error = abs(expect -sum)
-                        error_sum += error
-
-                        if not use_hash :
-                            del v_pl, v_ql, sum_arr, sum_integration
-                        pass
-
-                        if debug : print( f"[{cnt:04d}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.4f}", flush=1 )
-                        cnt += 1
-                    pass
-                pass
-            pass
-        pass
-
-        del hash
-
-        error_avg = error_sum/cnt
-        error_avgs.append( error_avg )
-        
-        elapsed = time.time() - then
-        elapsed_list.append( elapsed )
-
-        if 1 or debug : 
-            print( f"Elapsed time = {elapsed:_.4f}" )
-            print( f"Error avg. = {error_avg:_.10f}" )
-            #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
-        pass
-    pass
-
-    print( "\nPlotting .... ", flush="True" )
-
     fs = fontsize = 16
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.size"] = fontsize
 
     row_cnt = 1; col_cnt = 1
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8.1*col_cnt, 5*row_cnt) )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8.1*col_cnt, 5*row_cnt), tight_layout=1 )
     charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
-    chart_idx = 0 
-    chart = charts[ chart_idx ]
+    
+    for idx, P in enumerate( Ps )  :
+        error_avgs = []
+        elapsed_list = []
 
-    Ks = Ks.clone().detach()
-    error_avgs = torch.log10( torch.tensor( error_avgs ) )
-    elapsed_list = torch.log10( torch.tensor( elapsed_list ) )
+        for K in Ks :
+            resolution = int( 1_000*K )
 
-    chart.plot( Ks, error_avgs, marker="D", label="Orthogonality Error Avg." )
-    chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time (Sec.)" )
+            if 1 or debug : 
+                print( line2 )
+                print( f"K = {K}, Resolution = {resolution:_}, P = {P}", flush=1 )
+            pass
+            
+            then = time.time() 
 
-    chart.set_title( f"Zerinike Function Orthogonality Error ($P$={T}, {device_name})" )
-    chart.set_xlabel( "Grid Tick Count" )
-    chart.set_ylabel( "$Log_{10}(y)$" )
-    chart.set_xticks( Ks ) 
-    chart.set_xticklabels( [ f"{int(x)}$K$" for x in Ks ] )
-    chart.grid( axis='y', linestyle="dotted" )
-    chart.legend()
+            rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
+            
+            error_sum = 0
+            
+            hash= {}
+            
+            cnt = 0 
+            for p in range( 0, P + 1 ) :
+                for q in range( -p, p + 1, 2 ) :
+                    for n in range( 0, P + 1 ) :
+                        for m in range( -n, n + 1, 2 ) : 
+                            v_pl = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug )
+                            v_ql = Vpq( n, m, rho, theta, device=device, hash=hash, debug=debug )
 
-    plt.tight_layout()
+                            sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
+                            sum_integration = sum_arr*dx*dy*(p +1)/pi
+                            sum = torch.absolute( sum_integration )
+
+                            expect = [0, 1][ p == n and q == m ]
+                            error = abs(expect -sum)
+                            error_sum += error
+
+                            if not use_hash :
+                                del v_pl, v_ql, sum_arr, sum_integration
+                            pass
+
+                            if debug : print( f"[{cnt:04d}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.4f}", flush=1 )
+                            cnt += 1
+                        pass
+                    pass
+                pass
+            pass
+
+            del hash
+
+            error_avg = error_sum/cnt
+            error_avgs.append( error_avg )
+            
+            elapsed = time.time() - then
+            elapsed_list.append( elapsed )
+
+            if 1 or debug : 
+                print( f"Elapsed time = {elapsed:_.4f}" )
+                print( f"Error avg. = {error_avg:_.10f}" )
+                #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
+            pass
+        pass
+
+        chart_idx = 0
+        chart = charts[ chart_idx ]
+
+        Ks = Ks.clone().detach()
+        error_avgs = torch.log10( torch.tensor( error_avgs ) )
+        elapsed_list = torch.log10( torch.tensor( elapsed_list ) )
+
+        chart.plot( Ks, error_avgs, marker="D", label=f"Orth. Error Avg. (${P}P$)" )
+        #chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time (Sec.)" )
+
+        chart.set_title( f"Zerinike Function Orthogonality Error ({device_name})" )
+        chart.set_xlabel( "Grid Tick Count" )
+        chart.set_ylabel( "$log_{10}(y)$" )
+        chart.set_xticks( Ks ) 
+        chart.set_xticklabels( [ f"{int(x)}$K$" for x in Ks ] )
+        chart.grid( axis='x', linestyle="dotted" )
+        chart.grid( axis='y', linestyle="dotted" )
+        chart.legend() 
+    pass # data
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
     result_figure_file = f"{src_dir}/result/zernike_03_function_orthogonality.png"

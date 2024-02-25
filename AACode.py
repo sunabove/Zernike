@@ -37,6 +37,8 @@ charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
 chart_idx = 0 
 chart = charts[ chart_idx ] ; chart_idx += 1
 
+markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
+
 chart.grid( axis='y', linestyle="dotted" )
 chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.26), fontsize=fs-4, ncols=3 )
 
