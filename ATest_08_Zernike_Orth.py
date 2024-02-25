@@ -370,10 +370,11 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], use_hash=0, debug = 0 ) :
                 max_y = max( max_y, torch.max( error_avgs) )
             pass
 
-            linestyle = "solid" if use_gpu else "dashed"
-
             marker = markers[ idx%len( markers ) ]
-            chart.plot( Ks, error_avgs, marker=marker, linestyle=linestyle, label=f"{dn}: Orth. Error (${P}P$)" )
+            linestyle = "solid" if use_gpu else "dashed"
+            label = f"{dn}: Orth. Error (${P}P$)"
+
+            chart.plot( Ks, error_avgs, marker=marker, linestyle=linestyle, label=label )
             #chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time (Sec.)" )
 
             chart.set_title( f"Zerinike Function Orthogonality Error Average" )
