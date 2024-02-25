@@ -1,5 +1,5 @@
 from AZernike import *
-from tqdm import tqdm 
+from tqdm import tqdm
 import time
 
 def test_radial_function_validation() :
@@ -120,8 +120,6 @@ def validte_radial_function_ortho( T, Ks, debug=0 ) :
             resolution = int( 1_000*K )
             resolutions.append( resolution )
 
-            #rho = torch.linspace( 0, 1, grid_count, dtype=torch.float64, device=device )
-
             circle_type = "inner"
             
             rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
@@ -182,7 +180,7 @@ def validte_radial_function_ortho( T, Ks, debug=0 ) :
             if debug : 
                 print( line2 )            
                 print( f"device = {device}, Radial Tick Count = {resolution:_}, P = {T}, rho_len = {len(rho):_}" )
-                print( f"Elapsed time = {elapsed:,.3f}, Error average = {error_avg:,.8f}" )
+                print( f"Error average = {error_avg:,.8f}, Elapsed time = {elapsed:,.3f} {timedelta(seconds=elapsed)}" )
             pass
         pass
 
@@ -257,15 +255,8 @@ def validte_radial_function_ortho( T, Ks, debug=0 ) :
     print_curr_time()
 pass # -- validte_radial_polynomial
 
-def test_zernike_function_ortho( Ps, Ks, use_gpu=1, use_hash=0, debug = 0 ) : 
+def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], use_hash=0, debug = 0 ) : 
     print()
-
-    hash = {} if use_hash else None
-    device_no = 0  
-    device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
-    dn = device_name = "GPU" if use_gpu else "CPU"
-
-    print( f"device = {device_name}, hash = { hash is not None }" )
 
     fs = fontsize = 16
     plt.rcParams["font.family"] = "sans-serif"
@@ -274,88 +265,126 @@ def test_zernike_function_ortho( Ps, Ks, use_gpu=1, use_hash=0, debug = 0 ) :
     row_cnt = 1; col_cnt = 1
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8.1*col_cnt, 5*row_cnt), tight_layout=1 )
     charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
-    
-    for idx, P in enumerate( Ps )  :
-        error_avgs = []
-        elapsed_list = []
+    markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
 
-        for K in Ks :
-            resolution = int( 1_000*K )
+    min_y = None
+    max_y = None
 
-            if 1 or debug : 
-                print( line2 )
-                print( f"K = {K}, Resolution = {resolution:_}, P = {P}", flush=1 )
-            pass
-            
-            then = time.time() 
+    for use_gpu in use_gpus : 
+        hash = {} if use_hash else None
+        device_no = 0  
+        device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
+        dn = device_name = "GPU" if use_gpu else "CPU"
 
-            rho, theta, x, y, dx, dy, k, area = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
-            
-            error_sum = 0
-            
-            hash= {}
-            
-            cnt = 0 
-            for p in range( 0, P + 1 ) :
-                for q in range( -p, p + 1, 2 ) :
-                    for n in range( 0, P + 1 ) :
-                        for m in range( -n, n + 1, 2 ) : 
-                            v_pl = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug )
-                            v_ql = Vpq( n, m, rho, theta, device=device, hash=hash, debug=debug )
+        print( f"device = {device_name}, hash = { hash is not None }" )
 
-                            sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
-                            sum_integration = sum_arr*dx*dy*(p +1)/pi
-                            sum = torch.absolute( sum_integration )
+        for idx, P in enumerate( Ps )  :
+            error_avgs = []
+            elapsed_list = []
 
-                            expect = [0, 1][ p == n and q == m ]
-                            error = abs(expect -sum)
-                            error_sum += error
+            for K in Ks :
+                resolution = int( 1_000*K )
 
-                            if not use_hash :
-                                del v_pl, v_ql, sum_arr, sum_integration
+                if 1 or debug : 
+                    print( line2 )
+                    print( f"{device_name}, P = {P}, K = {K}, Resolution = {resolution:_}" , flush=1 )
+                pass
+                
+                then = time.time() 
+
+                rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
+                
+                error_sum = 0
+                error_cnt = 0
+                pq_cnt = 0 
+
+                hash = {} if use_hash else None
+
+                for p in range( 0, P + 1 ) :
+                    for q in range( -p, p + 1, 2 ) :
+                        for n in range( 0, P + 1 ) :
+                            for m in range( -n, n + 1, 2 ) : 
+                                v_pl = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug )
+                                v_ql = Vpq( n, m, rho, theta, device=device, hash=hash, debug=debug )
+
+                                sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
+                                sum_integration = sum_arr*dx*dy*(p +1)/pi
+                                sum = torch.absolute( sum_integration )
+
+                                expect = [ 0, 1 ][ p == n and q == m ]
+                                error = abs( expect - sum )
+                                error_sum += error
+
+                                result = error < 1e-4
+
+                                if not result :
+                                    error_cnt += 1
+                                pass
+
+                                if not use_hash :
+                                    del v_pl, v_ql, sum_arr, sum_integration
+                                pass
+
+                                if debug : print( f"[{pq_cnt:04d}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.6f} result = {result}", flush=1 )
+
+                                pq_cnt += 1
                             pass
-
-                            if debug : print( f"[{cnt:04d}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.4f}", flush=1 )
-                            cnt += 1
                         pass
                     pass
                 pass
+
+                del hash
+
+                error_avg = error_sum/pq_cnt
+                error_avgs.append( error_avg )
+                
+                elapsed = time.time() - then
+                elapsed_list.append( elapsed )
+
+                if 1 or debug : 
+                    print( f"Error avg. = {error_avg:_.10f}, Elapsed time = {elapsed:_.4f}, {timedelta(seconds=elapsed)}" )
+                    #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
+                pass
             pass
 
-            del hash
+            chart_idx = 0
+            chart = charts[ chart_idx ]
 
-            error_avg = error_sum/cnt
-            error_avgs.append( error_avg )
-            
-            elapsed = time.time() - then
-            elapsed_list.append( elapsed )
+            Ks = Ks.clone().detach()
+            error_avgs = torch.log10( torch.tensor( error_avgs ) )
+            elapsed_list = torch.log10( torch.tensor( elapsed_list ) )
 
-            if 1 or debug : 
-                print( f"Elapsed time = {elapsed:_.4f}" )
-                print( f"Error avg. = {error_avg:_.10f}" )
-                #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
+            if idx == 0 :
+                min_y = torch.min( error_avgs)
+                max_y = torch.max( error_avgs)
+            else : 
+                min_y = min( min_y, torch.min( error_avgs) )
+                max_y = max( max_y, torch.max( error_avgs) )
             pass
-        pass
 
-        chart_idx = 0
-        chart = charts[ chart_idx ]
+            linestyle = "solid" if use_gpu else "dashed"
 
-        Ks = Ks.clone().detach()
-        error_avgs = torch.log10( torch.tensor( error_avgs ) )
-        elapsed_list = torch.log10( torch.tensor( elapsed_list ) )
+            marker = markers[ idx%len( markers ) ]
+            chart.plot( Ks, error_avgs, marker=marker, linestyle=linestyle, label=f"{dn}: Orth. Error (${P}P$)" )
+            #chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time (Sec.)" )
 
-        chart.plot( Ks, error_avgs, marker="D", label=f"Orth. Error Avg. (${P}P$)" )
-        #chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time (Sec.)" )
+            chart.set_title( f"Zerinike Function Orthogonality Error Average" )
+            chart.set_xlabel( "Grid Tick Count" )
+            chart.set_ylabel( "Error Average : $log_{10}(y)$" )
+            chart.set_xticks( Ks ) 
+            chart.set_xticklabels( [ f"{int(x)}$K$" for x in Ks ] )
+            chart.grid( axis='x', linestyle="dotted" )
+            chart.grid( axis='y', linestyle="dotted" )
+            chart.legend( fontsize=fs-2 ) 
+        pass # data
+    pass # use_gpus
 
-        chart.set_title( f"Zerinike Function Orthogonality Error ({device_name})" )
-        chart.set_xlabel( "Grid Tick Count" )
-        chart.set_ylabel( "$log_{10}(y)$" )
-        chart.set_xticks( Ks ) 
-        chart.set_xticklabels( [ f"{int(x)}$K$" for x in Ks ] )
-        chart.grid( axis='x', linestyle="dotted" )
-        chart.grid( axis='y', linestyle="dotted" )
-        chart.legend() 
-    pass # data
+    if 1 : 
+        min_y = math.floor( min_y )
+        max_y = math.ceil( max_y )
+
+        chart.set_ylim( min_y, max_y )
+    pass
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
     result_figure_file = f"{src_dir}/result/zernike_03_function_orthogonality.png"

@@ -44,9 +44,18 @@ def plot_dataset_image_restore() :
             img = sk.color.rgb2gray( img ) 
         pass
 
-        xticks = torch.arange( 0, w, pow( 10, int( math.log10( w ) ) ) )
+        if 0 and h > 500 and w > 500 :
+            # image croping
+            img = img[ :500, :500 ]
+
+            shape = img.shape
+            h = shape[ 0 ]
+            w = shape[ 1 ]
+        pass
+
+        xticks = torch.arange( 0, w + 1, pow( 10, int( math.log10( w ) ) ) )
         xtick_labels = [ f"{int(t)}" for t in xticks ]
-        yticks = torch.arange( 0, h, pow( 10, int( math.log10( h ) ) ) )
+        yticks = torch.arange( 0, h + 1, pow( 10, int( math.log10( h ) ) ) )
         ytick_labels = [ f"{int(t)}" for t in yticks ]
 
         chart.imshow( img, cmap=plt.cm.gray )

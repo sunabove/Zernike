@@ -40,7 +40,6 @@ def test_zernike_polynomial_orth(div_count = 10_000) :
                 elif sum < 0.01 :
                     result = 'Good'
                 pass
-                    
             
                 print( f"Rsum({p}, {q}) = {sum:.10f}, result = {result}" )
                 

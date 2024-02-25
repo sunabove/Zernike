@@ -6,7 +6,7 @@ import os, time, math, logging as log, cv2 as cv
 import psutil, GPUtil, pandas as pd
 import torch
 import numpy, scipy
-import threading, ray # ray for parallel computing
+import ray # ray for parallel computing
 
 from skimage import data
 from skimage import io
@@ -14,6 +14,8 @@ from skimage.color import rgb2gray
 
 from matplotlib import pyplot as plt
 from datetime import datetime
+from datetime import timedelta
+
 from tabulate import tabulate
 from Profiler import *
 
@@ -497,7 +499,7 @@ def get_core_count(**options) :
     return core_count
 pass
     
-# 모멘트 계산 
+# 모멘트 계산
 def calc_moments( T, img, rho, theta, dx, dy, device, hash, debug=0 ) : 
     then = time.time()
 
@@ -863,7 +865,7 @@ print( "Zernike functions are defined.\n")
 
 if __name__ == "__main__" :
     
-    if 1 :
+    if 0 :
         t = 5
         s = torch.arange( -t, t + 1 ) 
         print( f"torch s = {s}")
@@ -872,11 +874,11 @@ if __name__ == "__main__" :
         s = numpy.arange( -t, t + 1 ) 
         print( f"numpy s = {s}")
         print( "numpy facotrial(0) = ", factorial( s ) )
-    elif False :
+    elif 1 :
         print_cpu_info()    
         print()
         print_gpu_info()
-    elif False :
+    elif 0 :
         t = 3
         s = torch.arange( 0, t + 1 ) 
         t = torch.arange( 0, t + 1 ) 

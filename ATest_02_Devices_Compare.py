@@ -61,7 +61,7 @@ def test_gpu_specs_compare() :
     fs = fontsize = 16
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.size"] = fontsize
-    markers = [ ".", "o", "s", "p", "*", "D", "d" ]
+    markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
     row_cnt = 1; col_cnt = 1
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 4.5*row_cnt) )
     charts = charts.flatten() if row_cnt*col_cnt > 1 else [ charts ]
