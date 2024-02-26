@@ -104,7 +104,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 # fitting pologon
                 import numpy
                 fit = numpy.polyfit( numpy.log10(x), numpy.array( y ), 1 )
-                mx = numpy.median( x ) + (max(x) - min(x))/10
+                mx = numpy.median( x ) + (max(x) - min(x))*.12
                 my = fit[0]*numpy.log10( mx ) + fit[1]
                 a = fit[0]
                 b = fit[1]
