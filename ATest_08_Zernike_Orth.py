@@ -302,8 +302,6 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
                 error_cnt = 0
                 pq_cnt = 0 
 
-                hash = {} if use_hash else None
-
                 for p in range( 0, P + 1 ) :
                     for q in range( -p, p + 1, 2 ) :
                         for n in range( 0, P + 1 ) :
@@ -325,8 +323,9 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
                                     error_cnt += 1
                                 pass
 
-                                if not use_hash :
+                                if True : # memory clear
                                     del v_pl, v_ql, sum_arr, sum_integration
+                                    v_pl = v_ql = sum_arr = sum_integration = None
                                 pass
 
                                 if debug : print( f"[{pq_cnt:04d}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.6f} result = {result}", flush=1 )
@@ -335,9 +334,7 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
                             pass
                         pass
                     pass
-                pass
-
-                del hash
+                pass # pq
 
                 error_avg = error_sum/pq_cnt
                 error_avgs.append( error_avg )
@@ -352,7 +349,7 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
                     print( f"[ {pct:3d} % ] Error avg. = {error_avg:_.10f}, Elapsed time = {elapsed:_.4f}, {timedelta(seconds=elapsed)}" )
                     #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
                 pass
-            pass
+            pass # K
 
             chart_idx = 0
             chart = charts[ chart_idx ]
@@ -371,7 +368,7 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
 
             marker = markers[ idx%len( markers ) ]
             linestyle = "solid" if use_gpu else "dashed"
-            label = f"{dn}: Orth. Error (${P}P$)"
+            label = f"{dn}:(${P}P$)"
 
             chart.plot( Ks, error_avgs, marker=marker, linestyle=linestyle, label=label )
             #chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time (Sec.)" )
@@ -384,7 +381,7 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
             chart.grid( axis='x', linestyle="dotted" )
             chart.grid( axis='y', linestyle="dotted" )
             chart.legend( fontsize=fs-2 ) 
-        pass # data
+        pass # P
     pass # use_gpus
 
     if 1 : 

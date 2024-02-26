@@ -119,7 +119,7 @@ def _pqs_facotrial_numpy( p, q, device ) :
     return R_ps, k 
 pass # _pqs_facotrial_numpy
 
-def _rps( r_ps, rho, p_2s ) :
+def _rps( r_ps, rho, p_2s, debug=0 ) :
     p_2s = int( p_2s )
     
     rho_power = None
@@ -168,7 +168,7 @@ def Rpq( p, q, rho, device, debug=0 ) :
         R_ps, k = _pqs_facotrial( p, q, device=device )
 
         for r_ps, p_2s in zip( R_ps, p - 2*k ) :
-            rps = _rps( r_ps, rho, p_2s, device=device, debug=debug ) 
+            rps = _rps( r_ps, rho, p_2s, debug=debug ) 
             
             if r_pq_rho is None :
                 r_pq_rho = rps
