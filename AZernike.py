@@ -453,9 +453,19 @@ pass
 def calc_moments( img, T, resolution, circle_type, device, use_cache=0, debug=0 ) : 
     then = time.time()
 
+    img = cv.resize( img, ( int(resolution), int( resolution) ), interpolation=cv.INTER_AREA )
+
+    if debug : 
+        print( "img shape= ", img.shape ) 
+        print( line )
+    pass
+
+    img = torch.tensor( img, dtype=torch.complex64, device=device )
+
     moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
 
     rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
+    
     if debug : print( f"rho shape = {rho.shape}" )
     
     img_rav = img.ravel()
