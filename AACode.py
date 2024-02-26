@@ -73,6 +73,8 @@ kidx = torch.where( rho_square <= 1.0 )
 
 Ks = torch.arange( 1, 6 + 1, 1 )
 
+run_time_human = f"{timedelta(seconds=run_time)}".split('.')[0]
+
 # 테이블 생성
 tab_header = [ "Device", "Item" ]
 tab_header.extend( [ f"{x/1_000:1.0f}K" for x in resolutions ] )

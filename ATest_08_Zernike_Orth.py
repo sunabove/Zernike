@@ -345,7 +345,8 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
                 pct = int( (100.0*cur_idx)/tot_idx )
                     
                 if 1 or debug : 
-                    print( f"[ {pct:3d} % ] Error avg. = {error_avg:_.10f}, Elapsed time = {elapsed:_.4f}, {timedelta(seconds=elapsed)}" )
+                    run_time_human = f"{timedelta(seconds=elapsed)}".split('.')[0]
+                    print( f"[ {pct:3d} % ] Error avg. = {error_avg:_.10f}, Elapsed time = {elapsed:_.4f}, {run_time_human}" )
                     #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
                 pass
             pass # K
