@@ -1,17 +1,8 @@
 from AZernike import *
 
 
-def _get_moment_calc_time( img_org, P, K, device, debug=0) :
+def _get_moment_calc_time( img, P, resolution, device, debug=0) :
     circle_type = "outer"
-
-    resolution = 1_000*K
-    
-    img = cv.resize( img_org, ( int(resolution), int( resolution) ), interpolation=cv.INTER_AREA )
-
-    if debug : 
-        print( "img shape= ", img.shape ) 
-        print( line )
-    pass
 
     img = torch.tensor( img, dtype=torch.complex64, device=device )
 
@@ -61,7 +52,17 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
 
             for K in Ks :
                 cur_idx += 1
-                run_time = _get_moment_calc_time( img_org, P, K, device=device, debug=debug )
+
+                resolution = 1_000*K
+    
+                img = cv.resize( img_org, ( int(resolution), int( resolution) ), interpolation=cv.INTER_AREA )
+
+                if debug : 
+                    print( "img shape= ", img.shape ) 
+                    print( line )
+                pass
+
+                run_time = _get_moment_calc_time( img, P, resolution, device=device, debug=debug )
                 run_times.append( run_time )
 
                 pct = float( (100.0*cur_idx)/tot_idx )
