@@ -99,6 +99,9 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
             color = colors[ idx%len(colors) ]
             linestyle = "dashed" if use_gpu else "dotted"
             label = f"{dn}: ${P:2d}P$"
+            linewidth = 2
+
+            chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle, linewidth=linewidth )
 
             if True :
                 # fitting pologon
@@ -113,15 +116,15 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 text = f"$y = {a:.1f}*log_{'{10}'}(x) {sign} {abs(b):.1f}$"
                 
                 x2 = numpy.linspace( min(x), max(x), 100 )
-                chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle="solid" )
+                linestyle_fit = "solid"
+                linewidth = 1.5
+                chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle=linestyle_fit, linewidth=linewidth )
                 chart.text( mx, my, text, color=color, fontsize=fs-2 )
 
                 tab_row.append( int( P ) )
                 tab_row.append( a )
                 tab_row.append( b )
             pass # fit
-
-            chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle )
 
             tab_row.extend( run_times ) 
 
