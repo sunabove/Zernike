@@ -2,10 +2,6 @@ from AZernike import *
 
 
 def _get_moment_calc_time( img_org, P, K, device, debug=0) :
-    use_hash = 0 
-    
-    hash = {} if use_hash else None
-
     circle_type = "outer"
 
     resolution = 1_000*K
@@ -19,7 +15,7 @@ def _get_moment_calc_time( img_org, P, K, device, debug=0) :
 
     img = torch.tensor( img, dtype=torch.complex64, device=device )
 
-    moments, run_time = calc_moments(img, P, resolution, circle_type=circle_type, device=device, hash=hash, debug=debug )
+    moments, run_time = calc_moments(img, P, resolution, circle_type=circle_type, device=device, debug=debug )
     
     return run_time
 pass # _test_moment_calc_time
