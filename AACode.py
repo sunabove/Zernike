@@ -64,7 +64,6 @@ result_figure_file = f"{src_dir}/result/zernike_02_radial_orthogonality.png"
 plt.savefig( result_figure_file )
 print( f"result_figure_file = {result_figure_file}" )
 
-
 use_gpu = 1
 device_no = 0 
 hash = {} if use_gpu else None

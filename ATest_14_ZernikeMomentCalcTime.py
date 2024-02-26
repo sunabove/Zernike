@@ -74,7 +74,8 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 run_times.append( run_time )
 
                 pct = float( (100.0*cur_idx)/tot_idx )
-                print( f"[ {pct:3.0f} % ] {dn}: P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.)" )
+                run_time_human = f"{timedelta(seconds=run_time)}".split('.')[0]
+                print( f"[ {pct:3.0f} % ] {dn}: P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}" )
             pass # K
 
             x = Ks
