@@ -1,9 +1,9 @@
 from AZernike import *
 
 # 저니크 피라미드 생성 테스트
-def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, debug=0 ) : 
+def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tight_layout=0, debug=0 ) : 
     print_curr_time()
-    print( "\nZernike Pyramid Creation Validation" )
+    print( "\nZernike Pyramid Creation Validation\n" )
     
     device_no = 0 
     device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
@@ -27,9 +27,12 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, debu
 
     while idx < total_cnt : 
         q = - p 
+
         while idx < total_cnt and q <= p : 
-            if (p - q)%2 ==  0 :         
+            if (p - q)%2 ==  0 :
                 title = f"$Z({p}, {q})$"
+
+                print( f"p = {p:3d}, q = {q:3d}, img type = {img_type}" )
                             
                 v_pl = Vpq( p, q, rho, theta, device=device, debug=debug )
                 
@@ -74,11 +77,13 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, debu
         p += 1
     pass
 
+    print( "\nPlotting ...")
+
     fs = fontsize = 16
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.size"] = fontsize
 
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 2.5*col_cnt, 2.5*row_cnt) )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 2.5*col_cnt, 2.5*row_cnt), tight_layout=tight_layout )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     
     for idx, img in enumerate( imgs ) : 
@@ -88,10 +93,6 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, debu
                 
         pos = chart.imshow( img, cmap="Spectral" )
 
-        if idx == 0 : 
-            fig.colorbar( pos, ax=chart )
-        pass
-        
         chart.set_title( f"{titles[idx]}", fontsize=fs+4)
 
         chart.set_xticks( torch.arange( 0, res + 1, res//4 ) )
@@ -103,6 +104,8 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, debu
         pass
 
         if idx == 0 : 
+            fig.colorbar( pos, ax=chart, format=lambda x, _: f"{x:.1f}" )
+
             chart.set_xlim( 0, res )
             chart.set_ylim( 0, res )
 
@@ -121,15 +124,15 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, debu
                 tick_labels[ -1 ] = '$\\frac{1}{\\sqrt{2}}$'
             pass
 
+            #chart.set_xticklabels( tick_labels, fontsize=fs )
             chart.set_yticklabels( tick_labels, fontsize=fs )
         pass
     pass
 
-    plt.tight_layout()
     plt.show()
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/pyramid/zernike_pyramid_{circle_type}_{K:02d}k_{img_type}.png"
+    result_figure_file = f"{src_dir}/result/zernike_pyramid_{circle_type}_{K:02d}k_{img_type}.png"
     plt.savefig( result_figure_file )
     print( f"result_figure_file = {result_figure_file}" )
 
