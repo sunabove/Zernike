@@ -1,6 +1,5 @@
 from AZernike import *
 
-
 def _get_moment_calc_time( img, P, resolution, device, debug=0) :
     circle_type = "outer"
 
@@ -28,6 +27,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     chart = charts[ chart_idx ] ; chart_idx += 1
 
     markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
+    colors  = [ mcolors.TABLEAU_COLORS[key] for key in mcolors.TABLEAU_COLORS ]
 
     tot_idx = len( use_gpus )*len( Ps )* len( Ks )
     cur_idx = 0 
@@ -91,12 +91,29 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 max_y = max( max_y, torch.max( y ) )
             pass
 
-            marker = markers[ idx%len(Ps) ]
-            color = None
-            linestyle = "solid" if use_gpu else "dashed"
+            marker = markers[ idx%len(markers) ]
+            color = colors[ idx%len(colors) ]
+            linestyle = "dashed" if use_gpu else "dotted"
             label = f"{dn}: ${P:2d}P$"
 
+            if True :
+                # fitting pologon
+                import numpy
+                fit = numpy.polyfit( numpy.log10(x), numpy.array( y ), 1 )
+                mx = numpy.median( x )
+                my = fit[0]*numpy.log10( mx ) + fit[1]
+                a = fit[0]
+                b = fit[1]
+                sign = "+" if b >= 0 else "-"
+
+                text = f"$y = {a:.1f}*log_{'{10}'}(x)$ {sign} {abs(b):.1f}"
+                
+                chart.plot( x, a*numpy.log10(x) + b, color=color, linestyle="solid" )
+                chart.text( mx, my, text, color=color, fontsize=fs-2 )
+            pass # fit
+
             chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle )
+
         pass # P
 
         print()
@@ -105,7 +122,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
 
     chart.set_title( f"Zernike Moment Run-time" )
     chart.set_xlabel( "Grid Tick Count" )
-    chart.set_ylabel( "Run-time: $log_{10}(seconds)$")
+    chart.set_ylabel( f"Run-time: log_{'{10}'}(seconds)$")
 
     chart.set_xticks( Ks )
     chart.set_xticklabels( [ f"${K}K$" for K in Ks ] )  
@@ -222,14 +239,14 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
         a = fit[0]
         b = fit[1]
         sign = "+" if b >= 0 else "-"
-        chart.text( mx, my, f"$y = {a:.1f}*Log(x)$ {sign} {abs(b):.1f}", fontsize=fs-2)
+        chart.text( mx, my, f"$y = {a:.1f}*log_{'{10}'}(x)$ {sign} {abs(b):.1f}", fontsize=fs-2)
         
         chart.set_title( f"Zernike Moment Run-time at Order(P=${P}$)" )
         chart.set_xlabel( "Grid Tick Count" )
         chart.set_xticks( Ks )
         chart.set_xticklabels( [ f"${k}K$" for k in Ks ] )
         
-        chart.set_ylabel( "$Log(seconds)$")
+        chart.set_ylabel( f"$log_{'{10}'}(seconds)$")
 
         chart.grid( axis='x', linestyle="dotted" )
         chart.grid( axis='y', linestyle="dotted" )
@@ -364,14 +381,14 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
         a = fit[0]
         b = fit[1]
         sign = "+" if b >= 0 else "-"
-        chart.text( mx, my, f"$y = {a:.1f}*Log(x)$ {sign} {abs(b):.1f}", fontsize=fs-2)
+        chart.text( mx, my, f"$y = {a:.1f}*log_{'{10}'}(x)$ {sign} {abs(b):.1f}", fontsize=fs-2)
         
         chart.set_title( f"Zernike Moment Run-time at Grid Count(${K}K$)" )
         chart.set_xlabel( "Zernike Order" )
         chart.set_xticks( Ps )
         chart.set_xticklabels( [ f"${p}$" for p in Ps ] )
 
-        chart.set_ylabel( "$Log(seconds)$")
+        chart.set_ylabel( f"$log_{'{10}'}(seconds)$")
         chart.grid( axis='x', linestyle="dotted" )
         chart.grid( axis='y', linestyle="dotted" )
         

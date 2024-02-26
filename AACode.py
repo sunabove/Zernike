@@ -38,14 +38,32 @@ chart_idx = 0
 chart = charts[ chart_idx ] ; chart_idx += 1
 
 markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
+colors = mcolors.TABLEAU_COLORS
 
 chart.grid( axis='y', linestyle="dotted" )
 chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.26), fontsize=fs-4, ncols=3 )
+
+from matplotlib import colors as mcolors
+plot_colortable( mcolors.TABLEAU_COLORS, ncols=2, sort_colors=False)
+
+import numpy
+fit = numpy.polyfit( numpy.log10(x), numpy.array( y ), 1)
+# add annotation to log fitting line
+mx = numpy.median( x )
+my = fit[0]*numpy.log10( mx ) + fit[1]
+a = fit[0]
+b = fit[1]
+sign = "+" if b >= 0 else "-"
+
+chart.plot( x, a*numpy.log10(x) + b, color=color, linestyle="dashed" )
+chart.text( mx, my, f"$y = {a:.1f}*Log(x)$ {sign} {abs(b):.1f}", fontsize=fs-2)
+
 
 src_dir = os.path.dirname( os.path.abspath(__file__) )
 result_figure_file = f"{src_dir}/result/zernike_02_radial_orthogonality.png"
 plt.savefig( result_figure_file )
 print( f"result_figure_file = {result_figure_file}" )
+
 
 use_gpu = 1
 device_no = 0 

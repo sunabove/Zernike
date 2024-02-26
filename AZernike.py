@@ -13,6 +13,8 @@ from skimage import io
 from skimage.color import rgb2gray
 
 from matplotlib import pyplot as plt
+from matplotlib import colors as mcolors
+
 from datetime import datetime
 from datetime import timedelta
 
