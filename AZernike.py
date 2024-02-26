@@ -219,7 +219,7 @@ def Vpq( p, q, rho, theta, device, debug=0) :
         print( f"Vpq({p}, {q}) = ", v_pq )
     pass
 
-    return v_pq.to( device )
+    return v_pq
 pass
 
 #@profile
