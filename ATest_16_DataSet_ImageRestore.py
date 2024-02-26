@@ -10,27 +10,25 @@ def plot_dataset_image_restore() :
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
 
-    images = [ ]
+    img_lbls = [ ]
 
-    images.append( cv.imread( f'{src_dir}/image/lenna.png', 0 ) )
-    images.append( sk.data.astronaut() )
-    images.append( sk.data.camera() )
-    images.append( sk.data.brick() )
-    images.append( sk.data.moon() )
-    images.append( sk.data.grass() )
-
-    classes = [ "lena", "astronaut", "camera", "brick", "moon", "grass" ]
+    img_lbls.append( [ cv.imread( f'{src_dir}/image/lenna.png', 0 ), "lenna" ] )
+    img_lbls.append( [ sk.data.astronaut(), "astronaut" ] )
+    img_lbls.append( [ sk.data.camera(), "camera" ] )
+    img_lbls.append( [ sk.data.brick(), "brick" ] )
+    img_lbls.append( [ sk.data.moon(), "moon" ] )
+    img_lbls.append( [ sk.data.grass(), "grass" ] )
 
     fs = fontsize = 16
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.size"] = fs
 
     col_cnt = 3
-    row_cnt = int( float(len( images ))/col_cnt + 0.5 )
+    row_cnt = int( float(len( img_lbls ))/col_cnt + 0.5 )
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 3*col_cnt, 3*row_cnt), tight_layout=1 )
     charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
 
-    for idx, ( img, klass ) in enumerate( zip( images, classes ) ) :
+    for idx, [ img, lbl ] in enumerate( img_lbls ) :
         chart = charts[idx]
 
         shape = img.shape
@@ -38,7 +36,7 @@ def plot_dataset_image_restore() :
         h = shape[ 0 ]
         w = shape[ 1 ]
 
-        print( f"[{idx:03}] name = {klass}, channel = {channel}, shape={shape}", flush=1 )
+        print( f"[{idx:03}] name = {lbl}, channel = {channel}, shape={shape}", flush=1 )
 
         if channel == 3 : 
             img = sk.color.rgb2gray( img ) 
@@ -60,7 +58,7 @@ def plot_dataset_image_restore() :
 
         chart.imshow( img, cmap=plt.cm.gray )
         
-        chart.set_title( klass, fontsize=fs+4 )
+        chart.set_title( lbl.capitalize(), fontsize=fs+4 )
 
         chart.set_xticks( xticks )
         chart.set_xticklabels( xtick_labels, fontsize=fs-4 )
