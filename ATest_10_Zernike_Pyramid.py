@@ -1,16 +1,11 @@
 from AZernike import *
 
 # 저니크 피라미드 생성 테스트
-def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options ) : 
-    debug    = options[ "debug" ] if "debug" in options else False  
-    use_gpu  = options[ "use_gpu" ] if "use_gpu" in options else False
-    use_hash = options[ "use_hash" ] if "use_hash" in options else False 
-
+def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, debug=0 ) : 
     print_curr_time()
     print( "\nZernike Pyramid Creation Validation" )
     
     device_no = 0 
-    hash = {} if use_hash else None 
     device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
     
     K = 2
@@ -18,7 +13,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options ) :
     h = resolution
     w = h
 
-    print( f"use_gpu = {use_gpu}, use_hash = {use_hash}, circle_type = {circle_type}, resolution = {resolution:_}" )
+    print( f"use_gpu = {use_gpu}, circle_type = {circle_type}, resolution = {resolution:_}" )
     
     rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
     
@@ -36,7 +31,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, **options ) :
             if (p - q)%2 ==  0 :         
                 title = f"$Z({p}, {q})$"
                             
-                v_pl = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug )
+                v_pl = Vpq( p, q, rho, theta, device=device, debug=debug )
                 
                 z_img = None # zernike image
                 

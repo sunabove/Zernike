@@ -290,7 +290,6 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
                 resolution = int( 1_000*K )
 
                 if 1 or debug : 
-                    print( line2 )
                     print( f"[ {pct:3d} % ] {device_name}, P = {P}, K = {K}, Resolution = {resolution:_}" , flush=1 )
                 pass
                 
