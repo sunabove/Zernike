@@ -95,16 +95,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 max_y = max( max_y, torch.max( y ) )
             pass
 
-            marker = markers[ idx%len(markers) ]
-            color = colors[ idx%len(colors) ]
-            linestyle = "dashed" if use_gpu else "dotted"
-            label = f"{dn}: ${P:2d}P$"
-            linewidth = 2
-
-            chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle, linewidth=linewidth )
-
-            if True :
-                # fitting pologon
+            if True : # fitting pologon
                 import numpy
                 fit = numpy.polyfit( numpy.log10(x), numpy.array( y ), 1 )
                 mx = numpy.median( x ) + (max(x) - min(x))*.12
@@ -116,15 +107,27 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 text = f"$y = {a:.1f}*log_{'{10}'}(x) {sign} {abs(b):.1f}$"
                 
                 x2 = numpy.linspace( min(x), max(x), 100 )
+                
+                line_color = colors[ 0 ]
+                text_color = colors[ idx%len(colors) ]
                 linestyle_fit = "solid"
-                linewidth = 1.5
-                chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle=linestyle_fit, linewidth=linewidth )
-                chart.text( mx, my, text, color=color, fontsize=fs-2 )
+                linewidth = 1.2
+
+                chart.plot( x2, a*numpy.log10(x2) + b, color=line_color, linestyle=linestyle_fit, linewidth=linewidth )
+                chart.text( mx, my, text, color=text_color, fontsize=fs-2 )
 
                 tab_row.append( int( P ) )
                 tab_row.append( a )
                 tab_row.append( b )
-            pass # fit
+            pass # fit polygon
+
+            marker = markers[ idx%len(markers) ]
+            color = colors[ idx%len(colors) ]
+            linestyle = "dashed" if use_gpu else "dotted"
+            label = f"{dn}: ${P:2d}P$"
+            linewidth = 2
+
+            chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle, linewidth=linewidth )
 
             tab_row.extend( run_times ) 
 
