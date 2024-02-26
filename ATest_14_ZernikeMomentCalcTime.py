@@ -31,13 +31,24 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
 
     tot_idx = len( use_gpus )*len( Ps )* len( Ks )
     cur_idx = 0 
+
+    warm_up = { }
     
-    for use_gpu in use_gpus : 
-        use_hash = 0 
+    for use_gpu in use_gpus :
 
         device_no = 0
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
         dn = device_name = "GPU" if use_gpu else "CPU"
+
+        if not device in warm_up :
+            # warm up device by assing temporary memory
+            warm_up[ device ] = True
+
+            temp = torch.zeros( (1_000, 1_000), dtype=torch.complex64, device=device )
+            temp = 1
+            del temp
+            temp = None
+        pass
         
         src_dir = os.path.dirname( os.path.abspath(__file__) )
         img_org = cv.imread( f"{src_dir}/image/lenna.png", 0 )
@@ -66,7 +77,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 run_times.append( run_time )
 
                 pct = float( (100.0*cur_idx)/tot_idx )
-                print( f"[ {pct:3.0f} % ] {dn}: P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.), hash = {use_hash}" )
+                print( f"[ {pct:3.0f} % ] {dn}: P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.)" )
             pass # K
 
             x = Ks
