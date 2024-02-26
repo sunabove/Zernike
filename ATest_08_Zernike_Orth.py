@@ -255,7 +255,7 @@ def validte_radial_function_ortho( T, Ks, debug=0 ) :
     print_curr_time()
 pass # -- validte_radial_polynomial
 
-def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], use_hash=0, debug = 0 ) : 
+def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) : 
     print()
 
     fs = fontsize = 16
@@ -274,12 +274,11 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], use_hash=0, debug = 0 ) :
     cur_idx = 0 
 
     for use_gpu in use_gpus : 
-        hash = {} if use_hash else None
         device_no = 0  
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
         dn = device_name = "GPU" if use_gpu else "CPU"
 
-        print( f"device = {device_name}, hash = { hash is not None }" )
+        print( f"device = {device_name}" )
 
         for idx, P in enumerate( Ps )  :
             error_avgs = []
@@ -309,8 +308,8 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], use_hash=0, debug = 0 ) :
                     for q in range( -p, p + 1, 2 ) :
                         for n in range( 0, P + 1 ) :
                             for m in range( -n, n + 1, 2 ) : 
-                                v_pl = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug )
-                                v_ql = Vpq( n, m, rho, theta, device=device, hash=hash, debug=debug )
+                                v_pl = Vpq( p, q, rho, theta, device=device, debug=debug )
+                                v_ql = Vpq( n, m, rho, theta, device=device, debug=debug )
 
                                 sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
                                 sum_integration = sum_arr*dx*dy*(p +1)/pi

@@ -119,59 +119,33 @@ def _pqs_facotrial_numpy( p, q, device ) :
     return R_ps, k 
 pass # _pqs_facotrial_numpy
 
-def _rps( r_ps, rho, p_2s, device=None, hash=None ) :
+def _rps( r_ps, rho, p_2s ) :
     p_2s = int( p_2s )
-    
-    key = f"rps:{p_2s}:{r_ps}"
     
     rho_power = None
     
-    if hash is not None and key in hash :
-        rho_power = hash[ key ] 
-
-        rho_power = rho_power.to( device )
+    if p_2s in [ -2, -1, 0, 1, 2 ] :
+        rho_power = torch.pow( rho, p_2s )
+    else :
+        rho_power = _rps( 1, rho, p_2s//2 )
         
-        return rho_power
-    pass
-
-    if hash is not None and p_2s in hash :
-        rho_power = hash[ p_2s ]
-        
-        rho_power = rho_power.to( device )
-    else : 
-        if p_2s in [ -2, -1, 0, 1, 2 ] :
-            rho_power = torch.pow( rho, p_2s )
+        if p_2s % 2 == 1 : 
+            rho_power = rho_power*rho_power*rho
         else :
-            rho_power = _rps( 1, rho, p_2s//2, device=device, hash=hash )
-            
-            if p_2s % 2 == 1 : 
-                rho_power = rho_power*rho_power*rho
-            else :
-                rho_power = rho_power*rho_power
-            pass
-        pass
-    
-        if hash is not None : 
-            hash[ p_2s ] = rho_power.to( "cpu" )
+            rho_power = rho_power*rho_power
         pass
     pass
-
+    
     if r_ps not in [ 1, 1.0 ] :
         rho_power = r_ps*rho_power
     pass
-    
-    if hash is not None : 
-        hash[ key ] = rho_power.to( "cpu" )
-    pass
 
-    #print( f"rho_power type = {rho_power.dtype} " )
-    
     return rho_power
 pass # _rps
 
 #@profile
 # radial function
-def Rpq(p, q, rho, device, hash, debug=0 ) :
+def Rpq( p, q, rho, device, debug=0 ) :
     q = abs( q )
     
     if abs(q) > p : 
@@ -184,18 +158,8 @@ def Rpq(p, q, rho, device, hash, debug=0 ) :
         return 
     pass
 
-    key = f"rpq:{p}:{q}"
-    
     r_pq_rho = None
     
-    if hash is not None and key in hash :
-        r_pq_rho = hash[ key ]
-        
-        r_pq_rho = r_pq_rho.to( device )
-    
-        return r_pq_rho 
-    pass
-
     if p == 1 and q == 1 :
         r_pq_rho = rho
     elif p == 2 and q == 2 :
@@ -204,7 +168,7 @@ def Rpq(p, q, rho, device, hash, debug=0 ) :
         R_ps, k = _pqs_facotrial( p, q, device=device )
 
         for r_ps, p_2s in zip( R_ps, p - 2*k ) :
-            rps = _rps( r_ps, rho, p_2s, device=device, hash=hash ) 
+            rps = _rps( r_ps, rho, p_2s, device=device, debug=debug ) 
             
             if r_pq_rho is None :
                 r_pq_rho = rps
@@ -214,10 +178,6 @@ def Rpq(p, q, rho, device, hash, debug=0 ) :
         pass 
     pass
     
-    if hash is not None : 
-        hash[ key ] = r_pq_rho.to( "cpu" )
-    pass
-        
     if debug : 
         print( line2 )
         print( f"p = {p}, q={q}, (p - |q|)/2 = {t}" )
@@ -236,25 +196,17 @@ def vpq_key( p, q ) :
 pass # vpq_key
 
 #@profile
-def Vpq( p, q, rho, theta, device, hash, debug=0) :    
+def Vpq( p, q, rho, theta, device, debug=0) :    
     q = int(q)
-    
-    key = vpq_key( p, q )
-    
-    if hash is not None and key in hash :
-        v_pq = hash[ key ]
-        
-        return v_pq.to( device )
-    pass
     
     v_pq = None 
     
     if q < 0 : 
-        v_pq = Vpq( p, abs(q), rho, theta, device=device, hash=hash, debug=debug )
+        v_pq = Vpq( p, abs(q), rho, theta, device=device, debug=debug )
         
         v_pq = torch.conj( v_pq )
     else : 
-        r_pq = Rpq( p, q, rho, device=device, hash=hash, debug=debug )
+        r_pq = Rpq( p, q, rho, device=device, debug=debug )
 
         if q :
             v_pq = r_pq*torch.exp( (1j*q)*theta )
@@ -263,10 +215,6 @@ def Vpq( p, q, rho, theta, device, hash, debug=0) :
         pass
     pass
 
-    if hash :
-        hash[ key ] = v_pq.cpu()
-    pass
-    
     if debug :
         print( f"Vpq({p}, {q}) = ", v_pq )
     pass
@@ -500,7 +448,7 @@ def get_core_count(**options) :
 pass
     
 # 모멘트 계산
-def calc_moments( img, T, resolution, circle_type, device, hash=0, debug=0 ) : 
+def calc_moments( img, T, resolution, circle_type, device, use_cache=0, debug=0 ) : 
     then = time.time()
 
     moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
@@ -511,7 +459,7 @@ def calc_moments( img, T, resolution, circle_type, device, hash=0, debug=0 ) :
     img_rav = img.ravel()
 
     for p, q in pq_list( T ) : 
-        v_pq = Vpq( p, q, rho, theta, device=device, hash=hash, debug=debug ) 
+        v_pq = Vpq( p, q, rho, theta, device=device, debug=debug ) 
         
         moment = torch.dot( v_pq, img_rav )*dx*dy
 
