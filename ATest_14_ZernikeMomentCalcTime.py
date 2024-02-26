@@ -106,7 +106,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 b = fit[1]
                 sign = "+" if b >= 0 else "-"
 
-                text = f"$y = {a:.1f}*log_{'{10}'}(x)$ {sign} {abs(b):.1f}"
+                text = f"$y = {a:.1f}*log_{'{10}'}(x) {sign} {abs(b):.1f}$"
                 
                 chart.plot( x, a*numpy.log10(x) + b, color=color, linestyle="solid" )
                 chart.text( mx, my, text, color=color, fontsize=fs-2 )
@@ -122,7 +122,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
 
     chart.set_title( f"Zernike Moment Run-time" )
     chart.set_xlabel( "Grid Tick Count" )
-    chart.set_ylabel( f"Run-time: log_{'{10}'}(seconds)$")
+    chart.set_ylabel( f"$Run-time: log_{'{10}'}(seconds)$")
 
     chart.set_xticks( Ks )
     chart.set_xticklabels( [ f"${K}K$" for K in Ks ] )  
