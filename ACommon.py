@@ -1,9 +1,9 @@
 # common file
 
-def get_free_mem_bytes( use_gpu, device = 0, verbose = 0 ) :
+def get_free_mem_bytes( use_gpu, device_no = 0, verbose = 0 ) :
     if use_gpu : 
         import torch
-        free_mem, total_mem = torch.cuda.mem_get_info( device )
+        free_mem, total_mem = torch.cuda.mem_get_info( device_no )
         used_mem = total_mem - free_mem
 
         verbose and print( f"GPU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )

@@ -38,8 +38,9 @@ chart_idx = 0
 chart = charts[ chart_idx ] ; chart_idx += 1
 
 markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
-colors = mcolors.TABLEAU_COLORS
+colors  = [ mcolors.TABLEAU_COLORS[key] for key in mcolors.TABLEAU_COLORS ]
 
+chart.grid( axis='x', linestyle="dotted" )
 chart.grid( axis='y', linestyle="dotted" )
 chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.26), fontsize=fs-4, ncols=3 )
 
@@ -57,7 +58,6 @@ sign = "+" if b >= 0 else "-"
 
 chart.plot( x, a*numpy.log10(x) + b, color=color, linestyle="dashed" )
 chart.text( mx, my, f"$y = {a:.1f}*Log(x)$ {sign} {abs(b):.1f}", fontsize=fs-2)
-
 
 src_dir = os.path.dirname( os.path.abspath(__file__) )
 result_figure_file = f"{src_dir}/result/zernike_02_radial_orthogonality.png"
