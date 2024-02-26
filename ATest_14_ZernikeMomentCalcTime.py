@@ -30,6 +30,8 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     cur_idx = 0 
 
     warm_up = { }
+
+    tab_rows = []
     
     for use_gpu in use_gpus :
 
@@ -56,6 +58,11 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
         max_y = None
 
         for idx, P in enumerate( Ps ) :
+            tab_row = []
+            tab_rows.append( tab_row )
+
+            tab_row.append( device_name )
+
             run_times = [ ]
 
             for K in Ks :
@@ -90,7 +97,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 # fitting pologon
                 import numpy
                 fit = numpy.polyfit( numpy.log10(x), numpy.array( y ), 1 )
-                mx = numpy.median( x )
+                mx = numpy.median( x ) + (max(x) - min(x))/10
                 my = fit[0]*numpy.log10( mx ) + fit[1]
                 a = fit[0]
                 b = fit[1]
@@ -100,9 +107,15 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 
                 chart.plot( x, a*numpy.log10(x) + b, color=color, linestyle="solid" )
                 chart.text( mx, my, text, color=color, fontsize=fs-2 )
+
+                tab_row.append( int( P ) )
+                tab_row.append( a )
+                tab_row.append( b )
             pass # fit
 
             chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle )
+
+            tab_row.extend( run_times ) 
 
         pass # P
 
@@ -128,6 +141,21 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     result_figure_file = f"{src_dir}/result/zernike_14_moment_times_{device_name}_{int(max(Ps))}P_{int(max(Ks))}K.png"
     plt.savefig( result_figure_file )
     print( f"\nresult_figure_file = {result_figure_file}" )
+
+    tab_header = [ "Device", "P", "a", "b" ]
+    tab_header.extend( [ f"{int(K)} K" for K in Ks ] )
+
+    print()
+    print( tabulate( tab_rows, headers=tab_header ) )
+    print()
+
+    excelData = []
+    excelData.append( tab_header )
+    excelData.extend( tab_rows )
+    df = pd.DataFrame( excelData )
+    excel_file = f"{src_dir}/result/zernike_14_moment_times_{device_name}_{int(max(Ps))}P_{int(max(Ks))}K.xlsx"
+    df.to_excel( excel_file, index=False, header=False )
+    print( f"\nExcel file = {excel_file}" )
 
 pass # test_plot_zernike_moment_calc_times
 
