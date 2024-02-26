@@ -18,7 +18,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     row_cnt = 1
     col_cnt = 1
 
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(9*col_cnt, 8*row_cnt), tight_layout=1 )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(8*col_cnt, 8*row_cnt), tight_layout=1 )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0 
     chart = charts[ chart_idx ] ; chart_idx += 1
@@ -65,7 +65,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
 
             run_times = [ ]
 
-            for K in Ks :
+            for K in tqdm( Ks, desc="K" ) :
                 cur_idx += 1
 
                 resolution = 1_000*K

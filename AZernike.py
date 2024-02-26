@@ -21,6 +21,8 @@ from datetime import timedelta
 from tabulate import tabulate
 from Profiler import *
 
+from tqdm import tqdm
+
 log.basicConfig(level=log.DEBUG) 
 
 pi = torch.pi
