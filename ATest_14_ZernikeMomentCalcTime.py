@@ -65,8 +65,11 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
 
             run_times = [ ]
 
-            for K in tqdm( Ks, desc="K" ) :
+            pct = float( (100.0*cur_idx)/tot_idx )
+
+            for K in Ks :
                 cur_idx += 1
+                curr_K = K
 
                 resolution = 1_000*K
     
@@ -75,7 +78,10 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
 
                 pct = float( (100.0*cur_idx)/tot_idx )
                 run_time_human = f"{timedelta(seconds=run_time)}".split('.')[0]
-                print( f"[ {pct:3.0f} % ] {dn}: P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}" )
+
+                desc = f"[ {pct:3.0f} % ] {dn}: P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}"
+
+                if 1 : print( desc )
             pass # K
 
             x = Ks
@@ -250,8 +256,10 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
         max_y = max( max_y, max(y) )
         min_y = min( min_y, min(y) )
 
+        x2 = numpy.linspace( min(x), max(x), 100 )
+
         chart.plot( Ks, y, marker=marker, color=color, label=label, linestyle=linestyle )
-        chart.plot( x, fit[0]*numpy.log10(x) + fit[1], color=color, linestyle="dashed" )
+        chart.plot( x2, fit[0]*numpy.log10(x2) + fit[1], color=color, linestyle="dashed" )
 
         # add annotation to log fitting line
         mx = numpy.median( x )
@@ -392,8 +400,10 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
         max_y = max( max_y, max(y) )
         min_y = min( min_y, min(y) )
 
+        x2 = numpy.linspace( min(x), max(x), 100 )
+
         chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle )
-        chart.plot( x, fit[0]*numpy.log10(x) + fit[1], color=color, linestyle="dashed" )
+        chart.plot( x2, fit[0]*numpy.log10(x2) + fit[1], color=color, linestyle="dashed" )
 
         # add annotation to log fitting line
         mx = numpy.median( x )
