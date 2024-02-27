@@ -107,13 +107,13 @@ def test_data_transfer_speed( Ks, debug=0 ) :
 
             torch.cuda.empty_cache()
 
-            speed = float(memory_size/1.0e6)*repeat_cnt/(elapsed)
+            speed = float(memory_size/1.0e9)*repeat_cnt/(elapsed)
 
             memory_sizes.append( memory_size )
             speeds.append( speed )
 
             cur_idx += 1
-            print( f"[{cur_idx/tot_cnt:3.0%}] device fr = {device_fr}, to = {device_to}, k = {K}, speed = {speed:,.4f} (Mb/s), size = {memory_size/1e6:6.2f} Mb, run_time = {elapsed:.6f} (sec.)", flush=1 )
+            print( f"[{cur_idx/tot_cnt:3.0%}] device fr = {device_fr}, to = {device_to}, k = {K}, speed = {speed:,.1f} (Gbps), size = {memory_size/1e6:6.2f} Mb, run_time = {elapsed:.6f} (sec.)", flush=1 )
         pass # K
 
         tab_row.append( sum(speeds)/len(speeds) )
@@ -124,16 +124,16 @@ def test_data_transfer_speed( Ks, debug=0 ) :
         x = Ks 
 
         if idx == 0 : 
-            y2 = torch.log10( torch.tensor( memory_sizes )/1e6 )
-            chart.plot( x, y2, marker=markers[0], color=colors[0], linestyle="dashed", label= f"Memory size(Mb)" ) 
+            y2 = torch.log10( torch.tensor( memory_sizes )/1e9 )
+            chart.plot( x, y2, marker=markers[0], color=colors[0], linestyle="dashed", label= f"Memory size(Gb)" ) 
 
             for txt_idx, [ xi, yi ] in enumerate( zip(x, y2) ) :
-                chart.annotate(f"{memory_sizes[txt_idx]/1e6:.0f}Mb", (xi, yi), textcoords="offset points", xytext=(0, 6), ha='center', fontsize=fs-6 )
+                chart.annotate(f"{memory_sizes[txt_idx]/1e9:.2f}Gb", (xi, yi), textcoords="offset points", xytext=(0, 6), ha='center', fontsize=fs-6 )
             pass
         pass
 
         y1 = torch.log10( torch.tensor( speeds ) )
-        label = f"[{device_fr.upper():<6} -> {device_to.upper():<6}] Speed(Mbps)"
+        label = f"[{device_fr.upper():<6} -> {device_to.upper():<6}] Speed(Gbps)"
         chart.plot( x, y1, marker=markers[1], color=color, linestyle="solid", label=label ) 
 
         chart.set_xticks( x )
