@@ -18,7 +18,7 @@ from datetime import datetime
 from tqdm.notebook import tqdm
 from tabulate import tabulate
 from IPython.display import clear_output
-from Profiler import *
+from AProfiler import *
 
 log.basicConfig(level=log.DEBUG) 
 

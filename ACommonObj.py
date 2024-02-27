@@ -5,7 +5,7 @@ log.basicConfig( format='%(asctime)s, %(levelname)-8s [%(filename)s:%(lineno)04d
 
 import os, glob, inspect, numpy as np
 
-from Profiler import *
+from AProfiler import *
 
 class Common :
 

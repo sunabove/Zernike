@@ -19,7 +19,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from tabulate import tabulate
-from Profiler import *
+from AProfiler import *
 
 from tqdm import tqdm
 

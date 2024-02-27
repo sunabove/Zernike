@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 from datetime import datetime
 from tqdm.notebook import tqdm
 from IPython.display import clear_output
-from Profiler import *
+from AProfiler import *
 
 line = line1 = "*"*60 
 line2 = "\n" + line + ""

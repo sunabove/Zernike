@@ -14,7 +14,7 @@ from glob import glob
 
 from math import factorial, perm, atan2, pi, sqrt, log10
 from time import time, sleep 
-from Profiler import *
+from AProfiler import *
 
 class Zernike :
     def __init__(self, **kwargs) :
