@@ -57,7 +57,11 @@ b = fit[1]
 sign = "+" if b >= 0 else "-"
 
 chart.plot( x, a*numpy.log10(x) + b, color=color, linestyle="dashed" )
+
+chart.bar_label( bar, fmt='%.2f')
+
 chart.text( mx, my, f"$y = {a:.1f}*Log(x)$ {sign} {abs(b):.1f}", fontsize=fs-2)
+chart.annotate(f"{memory_sizes[txt_idx]/1e6:.0f}", (xi, yi), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=fs-4 )
 
 src_dir = os.path.dirname( os.path.abspath(__file__) )
 result_figure_file = f"{src_dir}/result/zernike_02_radial_orthogonality.png"
@@ -76,6 +80,9 @@ Ks = torch.arange( 1, 6 + 1, 1 )
 run_time_human = f"{timedelta(seconds=run_time)}".split('.')[0]
 
 # 테이블 생성
+import pandas as pd
+from tabulate import tabulate
+
 tab_header = [ "Device", "Item" ]
 tab_header.extend( [ f"{x/1_000:1.0f}K" for x in resolutions ] )
 
