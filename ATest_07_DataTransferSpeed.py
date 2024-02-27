@@ -8,7 +8,7 @@ from ACommon import *
 
 print( "Hello ...\n" )
 
-def test_data_copy_speed( Ks, debug=0 ) :
+def test_data_transfer_speed( Ks, debug=0 ) :
 
     fs = fontsize = 16
     plt.rcParams["font.family"] = "sans-serif"
@@ -155,7 +155,7 @@ def test_data_copy_speed( Ks, debug=0 ) :
     chart.legend( loc="lower center", bbox_to_anchor=( 0.5, -0.32 ), fontsize=fs-4, ncols=2 )
     
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/test_070_data_copy_speed.png"
+    result_figure_file = f"{src_dir}/result/test_070_data_transfer_speed.png"
     print( f"Result figure file = {result_figure_file}" )
     plt.savefig( result_figure_file )
     
@@ -175,14 +175,17 @@ def test_data_copy_speed( Ks, debug=0 ) :
     excelData.append( tab_header )
     excelData.extend( tab_rows )
     df = pd.DataFrame( excelData )
-    excel_file = f"{src_dir}/result/test_070_data_copy_speed.xlsx"
-    df.to_excel( excel_file, index=False, header=False, sheet_name='poly orth')
+    excel_file = f"{src_dir}/result/test_070_data_transfer_speed.xlsx"
+    df.to_excel( excel_file, index=False, header=False )
     print( f"Excel file = {excel_file}" )
 
     print( "\nDone." )
 pass # -- test_array_memory
 
 if __name__ == "__main__":
-    test_data_copy_speed( use_gpu=use_gpu, operation=operation, debug=1, verbose=0 )
+    Ks = torch.arange( 1, 10 + 1, 1 )
+    Ks = torch.arange( 3, 12 + 1, 1 )
+
+    test_data_transfer_speed( Ks, debug=1 )
 pass
 
