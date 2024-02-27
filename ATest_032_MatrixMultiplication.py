@@ -1,9 +1,11 @@
 import os, gc, math, psutil
 import torch
 
-from time import *
-from time import perf_counter
+import time
+
 from datetime import timedelta
+from matplotlib import pyplot as plt
+from matplotlib import colors as mcolors
 
 from ACommon import *
 
@@ -17,6 +19,9 @@ def test_memory_multiplication_performance( device_names, debug=1 ) :
     charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0 
     chart = charts[ chart_idx ]
+
+    markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
+    colors  = [ mcolors.TABLEAU_COLORS[key] for key in mcolors.TABLEAU_COLORS ]
     
     for device_name in device_names : 
 
@@ -46,13 +51,13 @@ def test_memory_multiplication_performance( device_names, debug=1 ) :
             
             debug and print( type_detail_str, flush=1 )
 
-            free_mem, total_mem, free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
+            free_mem, total_mem, free_ratio = get_free_mem_bytes( use_gpu, device_no=0, verbose=0 )
             free_mem_prev = free_mem
             print( f"free mem = {free_mem:_} bytes {free_ratio:.0%}", flush=1 )
         
             tick_count = int( math.sqrt( free_mem*.95/data_type_size/3 ) )
 
-            then = perf_counter()
+            then = time.time()
 
             print( f"Tick count = {tick_count:_}" )
 
@@ -78,7 +83,7 @@ def test_memory_multiplication_performance( device_names, debug=1 ) :
 
             if use_gpu : torch.cuda.empty_cache()
 
-            elapsed = perf_counter() - then
+            elapsed = time.time() - then
 
             alloc_sizes.append( alloc_size )
             tick_counts.append( tick_count )
@@ -94,12 +99,12 @@ def test_memory_multiplication_performance( device_names, debug=1 ) :
         tick_counts = torch.tensor( tick_counts )/1_000
         durations = torch.tensor( durations ) 
 
-        linestyle = "solid" if use_gpu else "dotted"
+        ls = linestyle = "dashed" if use_gpu else "solid"
         color = "orange" if use_gpu else "green"
 
-        chart.plot( x, alloc_sizes, marker="D", color=color, linestyle="solid",  label=f"{device_name} Memory (Gb)" )
-        chart.plot( x, tick_counts, marker="s", color=color, linestyle="dashed", label=f"{device_name} Tick Count (K)" )
-        chart.plot( x, durations,   marker="*", color=color, linestyle="dotted", label=f"{device_name} Run-Time (sec.)" )
+        chart.plot( x, alloc_sizes, color=colors[0%len(colors)], marker=markers[0%len(markers)], linestyle=ls,  label=f"{device_name} Memory (Gb)" )
+        chart.plot( x, tick_counts, color=colors[1%len(colors)], marker=markers[1%len(markers)], linestyle=ls, label=f"{device_name} Tick Count (K)" )
+        chart.plot( x, durations,   color=colors[2%len(colors)], marker=markers[2%len(markers)], linestyle=ls, label=f"{device_name} Run-Time (sec.)" )
 
         chart.set_xticks( x )
         chart.set_xticklabels( data_type_strs, fontsize=13 )
