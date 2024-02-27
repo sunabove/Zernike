@@ -1,9 +1,8 @@
-import os, math, psutil
-from time import *
-from time import perf_counter
-from matplotlib import pyplot as plt
-
+import os, math, psutil, time
 import torch
+
+from matplotlib import pyplot as plt
+from matplotlib import colors as mcolors
 
 from ACommon import *
 
@@ -46,7 +45,7 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
 
         if use_gpu : torch.cuda.empty_cache()
 
-        free_mem_bytes, total_mem_bytes, free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 ) 
+        free_mem_bytes, total_mem_bytes, free_ratio = get_free_mem_bytes( use_gpu, device_no=0, verbose=0 ) 
         
         free_mem_bytes_prev = free_mem_bytes
         print( f"free_mem_bytes = {free_mem_bytes:_} bytes {free_ratio:.0%}%", flush=1 )
@@ -67,7 +66,7 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         try : 
             verbose and print( f"grid count = {tick_count:_}, " , end="", flush=1 )
         
-            then = perf_counter()
+            then = time.time()
 
             if len( operation ) < 1 : 
                 a = torch.zeros( (tick_count, tick_count), dtype=data_type, device=device )
@@ -91,7 +90,7 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
                 a = b = c = None
             pass
         
-            elapsed = perf_counter() - then 
+            elapsed = time.time() - then 
             
             if verbose : print( f"Elapsed = {elapsed}, tick_count = {tick_count:_}", flush=1 )
 
@@ -111,14 +110,14 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
 
             if use_gpu : torch.cuda.empty_cache()
 
-            free_mem_bytes, total_mem_bytes,free_ratio = get_free_mem_bytes( use_gpu, device=0, verbose=0 )
+            free_mem_bytes, total_mem_bytes,free_ratio = get_free_mem_bytes( use_gpu, device_no=0, verbose=0 )
             print( f"free_mem_bytes after gc= {free_mem_bytes:_} bytes {free_ratio:.0%}%" , flush=1)
         pass
 
         if debug:   
             error and print( error, flush=1 )
 
-            print( f"tick_count = {tick_count:_}, size = {memory_size/1e9:_.1f} Gb, run-time = {elapsed:.2f} (sec.)", flush=1 )
+            print( f"tick_count = {tick_count:_}, size = {memory_size/1e9:_.1f} Gb, run-time = {elapsed:.6f} (sec.)", flush=1 )
         pass
         
         if True : 
@@ -129,9 +128,9 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
         pass
 
         if True : 
-            duration = 3
+            duration = 1
             print( f"sleep( {duration} )")        
-            sleep( duration )
+            time.sleep( duration )
         pass
         
         debug and print( ) 
@@ -141,36 +140,43 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
     
     y1 = torch.tensor( tick_counts ) / 1_000
     y2 = torch.tensor( memories ) / 1e9
-    y3 = torch.tensor( elapsed_times ) * 10
+    y3 = torch.log10( torch.tensor( elapsed_times ) )
     
-    #y1 = numpy.array( tick_counts )/1e3
-    #y2 = numpy.array( memories )/1e9    
-    #y3 = numpy.array( elapsed_times )
+    maxy = max( torch.max( y1 ), torch.max( y2 ), torch.max( y3 ) )
+    miny = min( torch.min( y1 ), torch.min( y2 ), torch.min( y3 ) )
     
-    ymax = max( torch.max( y1 ), torch.max( y2 ), torch.max( y3 ) )
-    
-    if True : 
-        log10 = int( math.log10( ymax ) )
+    if 1 : 
+        log10 = int( math.log10( maxy ) )
         yunit = pow( 10, log10 )
 
-        ymax = yunit*( int( ymax/yunit + 1 ) + 0.2)
+        maxy = yunit*( int( maxy/yunit + 1 ) + 0.2)
+
+        miny = min( 0, miny )
+
+        if miny < 0 : 
+            miny = math.floor( miny )
+        pass
     pass
     
+    fs = fontsize = 16
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["font.size"] = "16"
+    plt.rcParams["font.size"] = fontsize
 
     row_cnt = 1; col_cnt = 1
     
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 6*row_cnt) )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 6*row_cnt), tight_layout=1 )
     
     charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0
     chart = charts[ chart_idx ]
     chart_idx +=1 
+
+    markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
+    colors  = [ mcolors.TABLEAU_COLORS[key] for key in mcolors.TABLEAU_COLORS ]
     
-    chart.plot( x, y2, marker="D", label="Memory(Gb)" ) 
     chart.plot( x, y1, marker="s", label="Tick count(K)" ) 
-    chart.plot( x, y3, marker="*", label="Rum-time(centi sec.)" ) 
+    chart.plot( x, y2, marker="D", label="Memory(Gb)" ) 
+    chart.plot( x, y3, marker="*", label="$log_{10}$(Rum-time sec.)" ) 
 
     xlabel = device_name.upper()
     
@@ -179,14 +185,16 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
     chart.set_xticks( x )
     chart.set_title( f"{device_name.upper()} Array Memory Max. Size {op_title}" )
     chart.set_xlabel( f"{xlabel} Data Type" ) 
-    chart.set_ylim( 0, ymax )
+    
+    chart.set_ylim( miny, maxy )
+
+    chart.grid( axis='x', linestyle="dotted" )
     chart.grid( axis='y', linestyle="dotted" )
     #chart.legend()
     chart.legend(loc="upper center", ncol=3, fontsize=13 )
     
-    plt.tight_layout()
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/memory_allocation_{use_gpu}_{len(operation)}.png"
+    result_figure_file = f"{src_dir}/result/test_030_memory_allocation_{use_gpu}_{len(operation)}.png"
     print( f"Result figure file = {result_figure_file}" )
     plt.savefig( result_figure_file )
     plt.show(); 
@@ -195,10 +203,6 @@ def test_array_memory_alloc( use_gpu , operation="", debug=0, verbose=0) :
 pass # -- test_array_memory
 
 if __name__ == "__main__":
-    for use_gpu in [ 0, 1 ] : 
-        for operation in [ "", "*" ] : 
-            test_array_memory_alloc( use_gpu=use_gpu, operation=operation, debug=1, verbose=0 )
-        pass
-    pass
+    test_array_memory_alloc( use_gpu=1, operation="", debug=1, verbose=1 )
 pass
 
