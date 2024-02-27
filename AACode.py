@@ -94,7 +94,6 @@ excelData.extend( tab_rows )
 df = pd.DataFrame( excelData )
 df.to_excel( f"{src_dir}/result/zernike_02_radial_orthogonality.xlsx", index=False, header=False, sheet_name='poly orth')
 
-# 로그 피팅
-
-torch.fit
+from IPython.display import clear_output
+clear_output()
 
