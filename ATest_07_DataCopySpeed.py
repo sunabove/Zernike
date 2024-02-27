@@ -109,10 +109,11 @@ def test_data_copy_speed( Ks, debug=0 ) :
             memory_sizes.append( memory_size )
             speeds.append( speed )
 
-            tab_row.append( speed )
-
             print( f"device fr = {device_fr}, to = {device_to}, k = {K}, speed = {speed:,.4f} (Mb/s), size = {memory_size/1e6:6.2f} Mb, run_time = {elapsed:.6f} (sec.)", flush=1 )
         pass # K
+
+        tab_row.append( sum(speeds)/len(speeds) )
+        tab_row.extend( speeds )
 
         color = colors[1:][ idx%(len(colors) - 1) ]
         
@@ -123,7 +124,7 @@ def test_data_copy_speed( Ks, debug=0 ) :
             chart.plot( x, y2, marker=markers[0], color=colors[0], linestyle="dashed", label= f"Memory size(Mb)" ) 
 
             for txt_idx, [ xi, yi ] in enumerate( zip(x, y2) ) :
-                chart.annotate(f"{memory_sizes[txt_idx]/1e6:.0f}Mb", (xi, yi), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=fs-6 )
+                chart.annotate(f"{memory_sizes[txt_idx]/1e6:.0f}Mb", (xi, yi), textcoords="offset points", xytext=(0, 6), ha='center', fontsize=fs-6 )
             pass
         pass
 
@@ -160,10 +161,11 @@ def test_data_copy_speed( Ks, debug=0 ) :
     import pandas as pd
     from tabulate import tabulate
 
-    tab_header = [ "FROM", "TO" ]
+    tab_header = [ "FROM", "TO", "AVG" ]
     tab_header.extend( [ f"{int(k)}K" for k in Ks ] )
 
     print( tabulate( tab_rows, headers=tab_header ) )
+    print()
 
     excelData = []
     excelData.append( tab_header )
