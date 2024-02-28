@@ -143,7 +143,7 @@ def test_data_transfer_speed( Ks, debug=0 ) :
         
     pass # device_fr_to_list
     
-    chart.set_title( f"Data transfer speed between devices" )
+    chart.set_title( f"Data Transfer Speed between Devices" )
     
     chart.set_xlabel( f"Grid Tick Count" )
     chart.set_ylabel( f"$log_{'{10}'}(y)$" )

@@ -181,7 +181,15 @@ def test_array_memory_alloc( use_gpus , operation="", debug=0 ) :
     pass
     
     op_title = "for Multiplication" if operation else ""
-    chart.set_title( f"Array Memory Max. Size {op_title}" )
+    title = f"Array Memory Max. Size {op_title}"
+
+    if len( use_gpus ) == 1 :
+        use_gpu = use_gpus[ 0 ]
+        dn = "GPU" if use_gpu else "CPU"
+        title = f"{dn} {title}"
+    pass
+
+    chart.set_title( title )
 
     if 1 : 
         log10 = int( math.log10( abs( maxy - miny ) ) )
