@@ -18,7 +18,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     row_cnt = 1
     col_cnt = 1
 
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(8*col_cnt, 8*row_cnt), tight_layout=1 )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(8*col_cnt, 6*row_cnt), tight_layout=1 )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0 
     chart = charts[ chart_idx ] ; chart_idx += 1
@@ -108,12 +108,12 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 
                 x2 = numpy.linspace( min(x), max(x), 100 )
                 
-                line_color = colors[ 0 ]
+                color = colors[ idx%len(colors) ]
                 text_color = colors[ idx%len(colors) ]
-                linestyle_fit = "solid"
+                linestyle_fit = "dotted"
                 linewidth = 1.2
 
-                chart.plot( x2, a*numpy.log10(x2) + b, color=line_color, linestyle=linestyle_fit, linewidth=linewidth )
+                chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle=linestyle_fit, linewidth=linewidth )
                 chart.text( mx, my, text, color=text_color, fontsize=fs-2 )
 
                 tab_row.append( int( P ) )
@@ -123,8 +123,8 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
 
             marker = markers[ idx%len(markers) ]
             color = colors[ idx%len(colors) ]
-            linestyle = "dashed" if use_gpu else "dotted"
-            label = f"{dn}: ${P:2d}P$"
+            linestyle = "solid" if use_gpu else "dashed"
+            label = f"{dn}: {P:2d}$P$"
             linewidth = 2
 
             chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle, linewidth=linewidth )
@@ -137,9 +137,16 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     
     pass  # use_gpu
 
-    chart.set_title( f"Zernike Moment Run-time" )
-    chart.set_xlabel( "Grid Tick Count" )
-    chart.set_ylabel( f"$Run-time: log_{'{10}'}(seconds)$")
+    dn = ""
+    if len( use_gpus ) == 1 :
+        use_gpu = use_gpus[0]
+        dn = "GPU" if use_gpu else "CPU"
+        dn += " "
+    pass
+
+    chart.set_title( f"{dn}Zernike Moment Run-time" )
+    chart.set_xlabel( f"Grid Tick Count" )
+    chart.set_ylabel( f"$log_{'{10}'}(seconds)$")
 
     chart.set_xticks( Ks )
     chart.set_xticklabels( [ f"${K}K$" for K in Ks ] )  
@@ -300,7 +307,8 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
     plt.show()
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/zernike_15_moment_times_{P}P.png"
+    file_stem = Path( __file__ ).stem
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{P}P.png"
     plt.savefig( result_figure_file )
     print( f"result_figure_file = {result_figure_file}" )
 
@@ -315,7 +323,10 @@ def test_zernike_moments_calc_times_by_p( use_gpus, Ks, P, debug=0 ) :
     excelData.append( tab_header )
     excelData.extend( tab_rows )
     df = pd.DataFrame( excelData )
-    df.to_excel( f"{src_dir}/result/zernike_15_moment_times_{P}P.xlsx", index=False, header=False )
+    file_stem = Path( __file__ ).stem
+    excel_file = f"{src_dir}/result/{file_stem.lower()}_{P}P.xlsx"
+    df.to_excel( excel_file, index=False, header=False )
+    print( f"Excel file = {excel_file}" )
 
 pass # test_zernike_moments_calc_times_by_p
 
@@ -444,7 +455,8 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
     plt.show()
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/zernike_16_moment_times_{K}K.png"
+    file_stem = Path( __file__ ).stem
+    result_figure_file = f"{src_dir}/result/{file_stem.lower}_{K}K.png"
     plt.savefig( result_figure_file )
     print( f"result_figure_file = {result_figure_file}" )
 
@@ -459,7 +471,9 @@ def test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 ) :
     excelData.append( tab_header )
     excelData.extend( tab_rows )
     df = pd.DataFrame( excelData )
-    df.to_excel( f"{src_dir}/result/zernike_16_moment_times_{K}K.xlsx", index=False, header=False )
+    excel_file = f"{src_dir}/result/{file_stem.lower()}_{K}K.xlsx"
+    df.to_excel( excel_file, index=False, header=False )
+    print( f"Excel file = {excel_file}" )
 
 pass # test_zernike_moments_calc_times_by_k
 
