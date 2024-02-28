@@ -34,7 +34,7 @@ def test_radial_function_validation() :
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.size"] = fontsize
     row_cnt = max_q + 1 ; col_cnt = 1
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 3.9*row_cnt) )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 3.9*row_cnt), tight_layout=1 )
     charts = charts.flatten() if row_cnt*col_cnt > 1 else [ charts ]
 
     use_gpu = 1
@@ -77,8 +77,9 @@ def test_radial_function_validation() :
         chart.legend()
     pass
 
-    plt.tight_layout()
-    plt.savefig( f"./result/zernike_01_radial_function.png" )
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    file_stem = Path( __file__ ).stem.lower()
+    plt.savefig( f"{src_dir}/result/{file_stem.lower}_radial_function.png" )
     plt.show()
 
 pass ## test_radial_function_validation
@@ -93,7 +94,7 @@ def validte_radial_function_ortho( T, Ks, debug=0 ) :
     plt.rcParams["font.size"] = fontsize
 
     row_cnt = 1; col_cnt = 1
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 9*col_cnt, 6*row_cnt) )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 9*col_cnt, 6*row_cnt), tight_layout=1 )
     charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0 
     chart = charts[ chart_idx ]
@@ -231,10 +232,9 @@ def validte_radial_function_ortho( T, Ks, debug=0 ) :
     #chart.legend( fontsize=fs, ncols=2 )
     chart.legend()
 
-    plt.tight_layout()
-    
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/zernike_02_radial_orthogonality.png"
+    file_stem = Path( __file__ ).stem
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}_poly_orth.png"
     plt.savefig( result_figure_file )
     print( f"result_figure_file = {result_figure_file}" )
     
@@ -249,7 +249,9 @@ def validte_radial_function_ortho( T, Ks, debug=0 ) :
     excelData.append( tab_header )
     excelData.extend( tab_rows )
     df = pd.DataFrame( excelData )
-    df.to_excel( f"{src_dir}/result/zernike_02_radial_orthogonality.xlsx", index=False, header=False, sheet_name='poly orth')
+    excel_file = f"{src_dir}/result/{file_stem.lower()}_poly_orth.xlsx"
+    df.to_excel( excel_file, index=False, header=False )
+    print( f"Excel file = {excel_file}" )
 
     print()
     print_curr_time()
@@ -392,7 +394,8 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
     pass
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/zernike_03_function_orthogonality.png"
+    file_stem = Path( __file__ ).stem
+    result_figure_file = f"{src_dir}/result/{file_stem.lower}_func_orth.png"
     plt.savefig( result_figure_file )
     print( f"\nresult_figure_file = {result_figure_file}" ) 
 

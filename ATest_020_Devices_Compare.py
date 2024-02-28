@@ -56,14 +56,16 @@ def test_gpu_specs_compare() :
 
     print( pd.__version__ )
 
-    df = excelData = pd.read_excel( r"./data/NvidiaGPU_Compare.xlsx" ) 
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    file_stem = Path( __file__ )
+    df = excelData = pd.read_excel( f"{src_dir}/result/{file_stem.lower()}_compare.xlsx" ) 
 
     fs = fontsize = 16
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.size"] = fontsize
     markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
     row_cnt = 1; col_cnt = 1
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 4.5*row_cnt) )
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 4.5*row_cnt), tight_layout=1 )
     charts = charts.flatten() if row_cnt*col_cnt > 1 else [ charts ]
 
     chart = charts[0]

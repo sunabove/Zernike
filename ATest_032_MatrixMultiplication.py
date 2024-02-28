@@ -6,6 +6,7 @@ import time
 from datetime import timedelta
 from matplotlib import pyplot as plt
 from matplotlib import colors as mcolors
+from pathlib import Path
 
 from ACommon import *
 
@@ -128,7 +129,8 @@ def test_memory_multiplication_performance( device_names, debug=1 ) :
     plt.tight_layout()
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/array_multiplication_performance.png"
+    file_stem = Path( __file__ ).stem
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}.png"
     print( f"Result figure file = {result_figure_file}" )
     plt.savefig( result_figure_file )
     

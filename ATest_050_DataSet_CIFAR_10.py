@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from torchvision.datasets.utils import download_url
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import ToTensor
+from pathlib import Path
 
 def plot_dataset_cifar_10() :
     if not os.path.isfile( ".download/cifar10.tgz" ) : 
@@ -64,10 +65,12 @@ def plot_dataset_cifar_10() :
         pass
     pass 
 
-    #plt.tight_layout()
-    result_figure_file = f"./result/dataset_overview_cifar-10_{row_cnt}_{col_cnt}.png"
+    plt.show()
+
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    file_stem = Path( __file__ ).stem
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{row_cnt}_{col_cnt}.png"
     print( f"Result figure file = {result_figure_file}" )
     plt.savefig( result_figure_file )
-    plt.show()
 
 pass

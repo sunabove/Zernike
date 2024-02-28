@@ -63,8 +63,11 @@ chart.bar_label( bar, fmt='%.2f')
 chart.text( mx, my, f"$y = {a:.1f}*Log(x)$ {sign} {abs(b):.1f}", fontsize=fs-2)
 chart.annotate(f"{memory_sizes[txt_idx]/1e6:.0f}", (xi, yi), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=fs-4 )
 
+from pathlib import Path
+
 src_dir = os.path.dirname( os.path.abspath(__file__) )
-result_figure_file = f"{src_dir}/result/zernike_02_radial_orthogonality.png"
+file_stem = Path( __file__ ).stem
+result_figure_file = f"{src_dir}/result/{file_stem.lower()}.png"
 plt.savefig( result_figure_file )
 print( f"result_figure_file = {result_figure_file}" )
 
@@ -97,7 +100,8 @@ df.to_excel( f"{src_dir}/result/zernike_02_radial_orthogonality.xlsx", index=Fal
 from IPython.display import clear_output
 clear_output()
 
-from pathlib import Path
+
+
 print( "Path( __file__ ).stem = ", Path( __file__ ).stem) 
 print( "Path( __file__ ).name = ", Path( __file__ ).name)
 

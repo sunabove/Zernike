@@ -3,6 +3,7 @@ import torch
 
 from matplotlib import pyplot as plt
 from matplotlib import colors as mcolors
+from pathlib import Path
 
 from ACommon import *
 
@@ -221,7 +222,8 @@ def test_array_memory_alloc( use_gpus , operation="", debug=0 ) :
     chart.legend()
     
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/test_030_memory_allocation_{len(operation)}.png"
+    file_stem = Path( __file__ ).stem
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{len(operation)}.png"
     print( f"Result figure file = {result_figure_file}" )
     plt.savefig( result_figure_file )
     plt.show(); 

@@ -132,7 +132,8 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
     plt.show()
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/zernike_pyramid_{circle_type}_{K:02d}k_{img_type}.png"
+    file_stem = Path( __file__ ).stem
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{circle_type}_{K:02d}k_{img_type}.png"
     plt.savefig( result_figure_file )
     print( f"result_figure_file = {result_figure_file}" )
 

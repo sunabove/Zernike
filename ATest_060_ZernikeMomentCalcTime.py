@@ -152,7 +152,8 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     plt.show()
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/zernike_14_moment_times_{device_name}_{int(max(Ps))}P_{int(max(Ks))}K.png"
+    file_stem = Path( __file__ ).stem    
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{device_name}_{int(max(Ps))}P_{int(max(Ks))}K.png"
     plt.savefig( result_figure_file )
     print( f"\nresult_figure_file = {result_figure_file}" )
 
@@ -167,7 +168,8 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     excelData.append( tab_header )
     excelData.extend( tab_rows )
     df = pd.DataFrame( excelData )
-    excel_file = f"{src_dir}/result/zernike_14_moment_times_{device_name}_{int(max(Ps))}P_{int(max(Ks))}K.xlsx"
+    file_stem = Path( __file__ ).stem  
+    excel_file = f"{src_dir}/result/{file_stem.lower()}_{device_name}_{int(max(Ps))}P_{int(max(Ks))}K.xlsx"
     df.to_excel( excel_file, index=False, header=False )
     print( f"\nExcel file = {excel_file}" )
 

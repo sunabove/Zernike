@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import skimage as sk
 import cv2 as cv
 
+from pathlib import Path
+
 def plot_dataset_image_restore() :
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
@@ -66,11 +68,14 @@ def plot_dataset_image_restore() :
         chart.set_yticklabels( ytick_labels, fontsize=fs-4 )
     pass 
 
-    result_figure_file = f"./result/dataset_overview_image_restore.png"
+    plt.show()
+    
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    file_stem = Path( __file__ ).stem 
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}.png"
     print()
     print( f"Result figure file = {result_figure_file}" )
-    plt.savefig( result_figure_file )
-    plt.show()
+    plt.savefig( result_figure_file )    
 
 pass
 
