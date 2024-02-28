@@ -97,3 +97,7 @@ df.to_excel( f"{src_dir}/result/zernike_02_radial_orthogonality.xlsx", index=Fal
 from IPython.display import clear_output
 clear_output()
 
+from pathlib import Path
+print( "Path( __file__ ).stem = ", Path( __file__ ).stem) 
+print( "Path( __file__ ).name = ", Path( __file__ ).name)
+

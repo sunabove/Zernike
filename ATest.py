@@ -22,3 +22,16 @@ print( "scipy version = ", scipy.__version__ )
 from scipy.special import factorial
 
 print( "factorial(0) = ", factorial(0) )
+
+import os
+
+src_dir = os.path.dirname( os.path.abspath(__file__) )
+
+print( "os.path.basename = ", os.path.basename( __file__ ) )
+print( "os.path.basename = ", os.path.basename( __file__ ) )
+
+
+from pathlib import Path
+print( "Path( __file__ ).stem = ", Path( __file__ ).stem) 
+print( "Path( __file__ ).name = ", Path( __file__ ).name)
+

@@ -3,6 +3,7 @@ import torch
 
 from matplotlib import pyplot as plt
 from matplotlib import colors as mcolors
+from pathlib import Path
 
 from ACommon import *
 
@@ -155,7 +156,8 @@ def test_data_transfer_speed( Ks, debug=0 ) :
     chart.legend( loc="lower center", bbox_to_anchor=( 0.5, -0.32 ), fontsize=fs-4, ncols=2 )
     
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    result_figure_file = f"{src_dir}/result/test_070_data_transfer_speed.png"
+    file_stem = Path( __file__ ).stem
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}.png"
     print( f"Result figure file = {result_figure_file}" )
     plt.savefig( result_figure_file )
     
@@ -175,7 +177,7 @@ def test_data_transfer_speed( Ks, debug=0 ) :
     excelData.append( tab_header )
     excelData.extend( tab_rows )
     df = pd.DataFrame( excelData )
-    excel_file = f"{src_dir}/result/test_070_data_transfer_speed.xlsx"
+    excel_file = f"{src_dir}/result/{file_stem.lower()}.xlsx"
     df.to_excel( excel_file, index=False, header=False )
     print( f"Excel file = {excel_file}" )
 
