@@ -171,10 +171,13 @@ def test_array_memory_alloc( use_gpus , operation="", debug=0 ) :
         
         ls = linestyle = "solid" if use_gpu else "dashed"
         dn = "GPU" if use_gpu else "CPU"
-        
-        chart.plot( x, y1, color=colors[0%len(colors)], marker=markers[0%len(markers)], linestyle=ls, label=f"{dn}: Tick count(K)" ) 
-        chart.plot( x, y2, color=colors[1%len(colors)], marker=markers[1%len(markers)], linestyle=ls, label=f"{dn}: Memory(Gb)" ) 
-        chart.plot( x, y3, color=colors[2%len(colors)], marker=markers[2%len(markers)], linestyle=ls, label=f"{dn}: $log_{'{10}'}$(Rum-time sec.)" ) 
+        midx = 0
+        chart.plot( x, y1, color=colors[midx%len(colors)], marker=markers[midx%len(markers)], linestyle=ls, label=f"{dn}: Grid Tick count(K)" ) 
+        midx += 1
+        chart.plot( x, y2, color=colors[midx%len(colors)], marker=markers[midx%len(markers)], linestyle=ls, label=f"{dn}: Memory(Gb)" ) 
+        midx += 1
+        chart.plot( x, y3, color=colors[midx%len(colors)], marker=markers[midx%len(markers)], linestyle=ls, label=f"{dn}: $log_{'{10}'}$(Rum-time sec.)" ) 
+        midx += 1
         
         chart.set_xticks( x )
         chart.set_xlabel( f"Data Type" ) 

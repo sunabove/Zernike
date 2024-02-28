@@ -99,12 +99,18 @@ def test_memory_multiplication_performance( device_names, debug=1 ) :
         tick_counts = torch.tensor( tick_counts )/1_000
         durations = torch.tensor( durations ) 
 
-        ls = linestyle = "dashed" if use_gpu else "solid"
-        color = "orange" if use_gpu else "green"
-
-        chart.plot( x, alloc_sizes, color=colors[0%len(colors)], marker=markers[0%len(markers)], linestyle=ls,  label=f"{device_name} Memory (Gb)" )
-        chart.plot( x, tick_counts, color=colors[1%len(colors)], marker=markers[1%len(markers)], linestyle=ls, label=f"{device_name} Tick Count (K)" )
-        chart.plot( x, durations,   color=colors[2%len(colors)], marker=markers[2%len(markers)], linestyle=ls, label=f"{device_name} Run-Time (sec.)" )
+        ls = linestyle = "solid" if use_gpu else "dashed"
+        
+        midx = 0 
+        chart.plot( x, tick_counts, color=colors[midx%len(colors)], marker=markers[midx%len(markers)], linestyle=ls, label=f"{device_name} Grid Tick Count (K)" )
+        midx += 1
+        chart.plot( x, durations,   color=colors[midx%len(colors)], marker=markers[midx%len(markers)], linestyle=ls, label=f"{device_name} Run-Time (sec.)" )
+        midx += 1
+        
+        if 0 : 
+            chart.plot( x, alloc_sizes, color=colors[midx%len(colors)], marker=markers[midx%len(markers)], linestyle=ls,  label=f"{device_name} Memory (Gb)" )
+            midx += 1
+        pass
 
         chart.set_xticks( x )
         chart.set_xticklabels( data_type_strs, fontsize=13 )
