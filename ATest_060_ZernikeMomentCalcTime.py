@@ -159,11 +159,11 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
         fas = numpy.polyfit( numpy.array( Ps[1:] ), numpy.array( fit_data[ "as" ][1:] ), 1 )
         fbs = numpy.polyfit( numpy.array( Ps[1:] ), numpy.array( fit_data[ "bs" ][1:] ), 1 )
 
-        label= f"$log_{'{10}'}(y) = ({fas[0]:.3f}*P {fas[1]:+.2f})*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$" 
+        label= f"$y = ({fas[0]:.3f}*P {fas[1]:+.2f})*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$" 
         color = colors[ idx%len(colors) ]
 
         x = Ks
-        xi = x[1] + 0.2
+        xi = x[1] + 0.1
         yi = max_y - abs(max_y)*(idx)/10
 
         chart.annotate( label, (xi, yi), color=color, textcoords="offset points", xytext=(0, 0), ha='left', fontsize=fs-4 )
