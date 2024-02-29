@@ -17,18 +17,27 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
     
     rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
     
-    pg_title_imgs = [] 
+    pq_title_imgs = [] 
     
     total_cnt = row_cnt*col_cnt
     idx = 0
     
-    p = 0
+    for p in range( 0, 2*col_cnt + 1, 1 ) : 
+        if idx >= total_cnt :
+            break
+        pass
 
-    while idx < total_cnt : 
         q = - p 
 
-        while idx < total_cnt and q <= p : 
-            if (p - q)%2 ==  0 :
+        for q in range( -p, p + 1, 2 ) : 
+            c = (p + q)//2
+            r = p - c
+
+            if c >= col_cnt or r >= row_cnt :
+                continue
+            elif idx >= total_cnt :
+                break
+            elif idx < total_cnt :
                 title = f"$Z({p}, {q})$"
 
                 print( f"p = {p:3d}, q = {q:3d}, img type = {img_type}" )
@@ -42,7 +51,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
 
                     title = f"$Im(Z({p}, {q}))$"
                 elif "abs" in img_type : 
-                    z_img = torch.absolute( v_pl )
+                    z_img = torch.abs( v_pl )
 
                     title = f"$|Z({p}, {q})|$"
                 else :
@@ -51,11 +60,16 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
                     title = f"$Re(Z({p}, {q}))$"
                 pass 
 
+                if 1 : # z values normailization to min(-1) and max(1)
+                    z_img[0] = 1
+                    z_img[-1] = -1
+                pass
+                
                 img = torch.zeros( (h, w), dtype=torch.float, device=device )
                 img_rav = img.ravel()
                 img_rav[ kidx ] = z_img
 
-                pg_title_imgs.append( [ ( p, q ), title, img ] )
+                pq_title_imgs.append( [ ( p, q ), title, img ] )
 
                 if debug : 
                     print( f"rho size : {rho.size()}" )
@@ -66,13 +80,9 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
                 pass
                 
                 idx += 1
-            pass
-        
-            q += 1  
-        pass
-    
-        p += 1
-    pass
+            pass 
+        pass # q
+    pass # p
 
     print( "\nPlotting ...")
 
@@ -83,15 +93,16 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 2.5*col_cnt, 2.5*row_cnt), tight_layout=tight_layout )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     
-    for ( p, q ), title, img in enumerate( pg_title_imgs ) : 
-        c = (p + q)/2
+    cmap = "Spectral" # "jet"
+    for ( p, q ), title, img in pq_title_imgs : 
+        c = (p + q)//2
         r = p - c
 
         chart = charts[ col_cnt*r + c ]
 
         img = img.cpu()
                 
-        pos = chart.imshow( img, cmap="Spectral" )
+        pos = chart.imshow( img, cmap=cmap )
 
         chart.set_title( f"{title}", fontsize=fs+4)
 

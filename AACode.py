@@ -91,15 +91,16 @@ tab_header.extend( [ f"{x/1_000:1.0f}K" for x in resolutions ] )
 
 print( tabulate( tab_rows, headers=tab_header ) )
 
+
 excelData = []
 excelData.append( tab_header )
 excelData.extend( tab_rows )
 df = pd.DataFrame( excelData )
 df.to_excel( f"{src_dir}/result/zernike_02_radial_orthogonality.xlsx", index=False, header=False, sheet_name='poly orth')
 
+
 from IPython.display import clear_output
 clear_output()
-
 
 
 print( "Path( __file__ ).stem = ", Path( __file__ ).stem) 
