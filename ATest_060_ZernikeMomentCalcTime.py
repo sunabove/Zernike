@@ -32,12 +32,17 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     warm_up = { }
 
     tab_rows = []
+
+    fit_datas = {}
     
     for use_gpu in use_gpus :
 
         device_no = 0
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
         dn = device_name = "GPU" if use_gpu else "CPU"
+
+        fit_data = { "as" : [], "bs" : [] }
+        fit_datas[ device_name ] = fit_data
 
         if not device in warm_up :
             # warm up device by assing temporary memory
@@ -102,6 +107,10 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 my = fit[0]*numpy.log10( mx ) + fit[1]
                 a = fit[0]
                 b = fit[1]
+
+                fit_data[ "as" ].append( a )
+                fit_data[ "bs" ].append( b )
+                
                 sign = "+" if b >= 0 else "-"
 
                 text = f"$y = {a:.1f}*log_{'{10}'}(x) {sign} {abs(b):.1f}$"
@@ -144,6 +153,22 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
         dn += " "
     pass
 
+    for idx, key in enumerate( fit_datas ) :
+        fit_data = fit_datas[ key ]
+
+        fas = numpy.polyfit( numpy.array( Ps ), numpy.array( fit_data[ "as" ] ), 1 )
+        fbs = numpy.polyfit( numpy.array( Ps ), numpy.array( fit_data[ "bs" ] ), 1 )
+
+        label= f"$log_{'{10}'}(y) = ({fas[0]:.3f}*P {fas[1]:+.2f})*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$" 
+        color = colors[ idx%len(colors) ]
+
+        x = Ks
+        xi = min(x) 
+        yi = max_y - abs(max_y)*(idx + 1)/10
+
+        chart.annotate( label, (xi, yi), color=color, textcoords="offset points", xytext=(1, 0), ha='left', fontsize=fs-4 )
+    pass
+
     chart.set_title( f"{dn}Zernike Moment Run-time" )
     chart.set_xlabel( f"Grid Tick Count" )
     chart.set_ylabel( f"$log_{'{10}'}(seconds)$")
@@ -155,6 +180,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     chart.grid( axis='y', linestyle="dotted" )
 
     chart.legend( fontsize=fs-4 )
+    chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.36), fontsize=fs-4, ncols=3 )
 
     plt.show()
 
