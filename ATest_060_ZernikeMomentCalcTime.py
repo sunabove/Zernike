@@ -156,10 +156,10 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     for idx, key in enumerate( fit_datas ) :
         fit_data = fit_datas[ key ]
 
-        fas = numpy.polyfit( numpy.array( Ps[1:] ), numpy.array( fit_data[ "as" ][1:] ), 1 )
+        fa_mean = numpy.mean( fit_data[ "as" ][1:] )
         fbs = numpy.polyfit( numpy.array( Ps[1:] ), numpy.array( fit_data[ "bs" ][1:] ), 1 )
 
-        label= f"$y = ({fas[0]:.3f}*P {fas[1]:+.2f})*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$" 
+        label= f"$y = {fa_mean:.3f}*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$" 
         color = colors[ idx%len(colors) ]
 
         x = Ks

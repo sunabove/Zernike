@@ -17,13 +17,12 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
     
     rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
     
-    imgs = []
-    titles = []
+    pg_title_imgs = [] 
     
     total_cnt = row_cnt*col_cnt
+    idx = 0
     
-    p = 0 
-    idx = 0 
+    p = 0
 
     while idx < total_cnt : 
         q = - p 
@@ -52,13 +51,11 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
                     title = f"$Re(Z({p}, {q}))$"
                 pass 
 
-                titles.append( title )
-                
                 img = torch.zeros( (h, w), dtype=torch.float, device=device )
                 img_rav = img.ravel()
                 img_rav[ kidx ] = z_img
 
-                imgs.append( img )
+                pg_title_imgs.append( [ ( p, q ), title, img ] )
 
                 if debug : 
                     print( f"rho size : {rho.size()}" )
@@ -86,14 +83,17 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 2.5*col_cnt, 2.5*row_cnt), tight_layout=tight_layout )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     
-    for idx, img in enumerate( imgs ) : 
-        chart = charts[ idx ]
+    for ( p, q ), title, img in enumerate( pg_title_imgs ) : 
+        c = (p + q)/2
+        r = p - c
+
+        chart = charts[ col_cnt*r + c ]
 
         img = img.cpu()
                 
         pos = chart.imshow( img, cmap="Spectral" )
 
-        chart.set_title( f"{titles[idx]}", fontsize=fs+4)
+        chart.set_title( f"{title}", fontsize=fs+4)
 
         chart.set_xticks( torch.arange( 0, res + 1, res//4 ) )
         chart.set_yticks( torch.arange( 0, res + 1, res//4 ) )
@@ -103,7 +103,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
             chart.set_yticklabels( [] ) 
         pass
 
-        if idx == 0 : 
+        if p == 0 and q == 0 : 
             fig.colorbar( pos, ax=chart, format=lambda x, _: f"{x:.1f}" )
 
             chart.set_xlim( 0, res )
