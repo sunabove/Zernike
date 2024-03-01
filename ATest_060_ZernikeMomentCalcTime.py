@@ -538,6 +538,7 @@ if __name__ == "__main__" :
     elif 1 :
         Ps = torch.arange( 5, 30 + 1, 5 )
         Ks = torch.arange( 1,  5 + 1, 1 )
+        Ks = torch.arange( 1,  6 + 1, 1 )
 
         use_gpus  = [ 1 ] 
         use_caches = [ 1 ]
