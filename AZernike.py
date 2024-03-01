@@ -213,10 +213,10 @@ def get_cache_device( curr_device, resolution ) :
 
         target_mem = resolution*resolution*8
 
-        for idx in range( gpu_cnt -1, -1, -1 ) :
+        for idx in range( gpu_cnt -1, 0, -1 ) :
             free_mem, total_mem = torch.cuda.mem_get_info( idx )
 
-            if idx ==0 and free_mem > target_mem*4 :
+            if idx == 0 and free_mem > target_mem*4 :
                 device_no = idx
                 break
             if free_mem > target_mem : 
@@ -239,6 +239,16 @@ pass # Vpq_file_path
 
 def vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=0 ) :
     v_pq = None
+
+    if q < 0 :
+        v_pq = vpq_load_from_cache( p, abs(q), resolution, circle_type, device, cache, debug=debug )
+
+        if v_pq is not None:
+            v_pq = torch.conj( v_pq )
+
+            return v_pq
+        pass
+    pass
 
     if cache is None :
         return v_pq
@@ -263,7 +273,12 @@ pass # Vpq_load_cache
 
 def vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug=0 ) :
 
-    if cache is not None :
+    if cache is not None and q < 0 : 
+        v_pq = torch.conj( v_pq )
+        
+        vpq_save_to_cache( v_pq, p, abs(q), resolution, circle_type, device, cache, debug=debug )
+    elif cache is not None :
+
         if not p in cache :
             cache[p] = { }
         pass
