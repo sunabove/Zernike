@@ -26,7 +26,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
     markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
     colors  = [ mcolors.TABLEAU_COLORS[key] for key in mcolors.TABLEAU_COLORS ]
 
-    tot_idx = len( use_gpus )*len( Ps )* len( Ks )
+    tot_idx = len( use_gpus )*len( use_caches )*len( Ps )*len( Ks )
     cur_idx = 0 
 
     warm_up = { }
@@ -98,7 +98,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
                     torch.cuda.empty_cache()
 
-                    desc = f"[ {pct:3.0f} % ] {dn}: P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}"
+                    desc = f"[ {pct:3.0f} % ] {dn}: Cache = {use_cache}, P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}"
 
                     if 1 : print( desc )
                 pass # K
