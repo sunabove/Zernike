@@ -233,7 +233,7 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
     v_pq = None
     
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{resolution:06d}_P{p:+03d}_Q{q:+03d}.pt"
+    cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{resolution:05d}_P{p:+03d}_Q{q:+03d}.pt"
     
     if cache is not None and os.path.exists( cache_file ) :
         v_pq = torch.load( cache_file, map_location=device, weights_only=1 )
@@ -471,7 +471,7 @@ def pq_list( T ) :
 
     for p in range( 0, T + 1 ) : 
         for q in range( -p, p + 1, 2 ) :
-            pqs.append( [p, q] )        
+            pqs.append( [p, q] )
         pass
     pass
 
