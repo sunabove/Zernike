@@ -184,10 +184,9 @@ def Rpq( p, q, rho, device, debug=0 ) :
         pass 
     pass
     
-    if debug : 
+    if 0 and debug : 
         print( line2 )
-        print( f"p = {p}, q={q}, (p - |q|)/2 = {t}" )
-        print( "s = ", s )
+        print( f"p = {p}, q={q}" )
         print( "R_ps = ", R_ps ) 
         print( "R_pq_rho = ", r_pq_rho )    
         #print( "R_sum = ", R_sum )
@@ -207,11 +206,11 @@ def gpu_count( ) :
     return len( gpus )
 pass
 
-def cache_device( device ) : 
+def cache_device( curr_device ) : 
     # GPU를 사용하는 경우에는 마지막 GPU를 캐시 장치로 사용
     # CPU인 경우에는 CPU를 캐시 장치로 사용한다.
 
-    if "cuda" in f"{device}" :
+    if "cuda" in f"{curr_device}" :
         device_no = len( GPUtil.getGPUs() ) - 1
         return torch.device( f"cuda:{device_no}" )
     else :
@@ -220,9 +219,12 @@ def cache_device( device ) :
 pass
 
 #@profile
-def Vpq( p, q, rho, theta, device, resolution, circle_type, cache=None, debug=0) :
+def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, debug=0) :
 
-    if cache and p in cache and q in cache[p] : 
+    if debug :
+        print( f"V p = {p}, q = {q}, circle_type = {circle_type}, K = {resolution/1000}, cache = {cache != None}" )
+
+    if cache is not None and p in cache and q in cache[p] : 
         v_pq = cache[p][q]
 
         return v_pq.to( device )
@@ -231,21 +233,23 @@ def Vpq( p, q, rho, theta, device, resolution, circle_type, cache=None, debug=0)
     v_pq = None
     
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    cache_file = f"{src_dir}/pyramid/v_{circle_type}C_{resolution:_06d}R_{p:03d}P_{q:03d}Q.pt"
+    cache_file = f"{src_dir}/pyramid/v_{circle_type}_C_{resolution:06d}_R_{p:04d}_P_{q:04d}_Q.pt"
     
     if os.path.exists( cache_file ) :
         v_pq = torch.load( cache_file, map_location=device, weights_only=1 )
+
+        print( f"zernike cache file load = {cache_file}" )
     pass
 
     if v_pq is None : 
         q = int(q)
         
         if q < 0 : 
-            v_pq = Vpq( p, abs(q), rho, theta, device=device, cache=cache, debug=debug )
+            v_pq = Vpq( p, abs(q), rho, theta, resolution, circle_type, device=device, cache=cache, debug=debug )
             
             v_pq = torch.conj( v_pq )
         else : 
-            r_pq = Rpq( p, q, rho, device=device, debug=debug )
+            r_pq = Rpq( p, q, rho, device=device, debug=0 )
 
             if q :
                 v_pq = r_pq*torch.exp( (1j*q)*theta )
@@ -255,15 +259,16 @@ def Vpq( p, q, rho, theta, device, resolution, circle_type, cache=None, debug=0)
         pass
     pass
 
-    if cache :
+    if cache is not None :
         if not p in cache :
             cache[p] = { }
         pass
 
-        cache[p][q] = v_pq.to( cache_device() )
+        cache[p][q] = v_pq.to( cache_device( device ) )
 
         # save to file
-        if not os.path.exists( cache_file ) :
+        if os.path.exists( cache_file ) == False :
+            print( f"zernike cache file save = {cache_file}" )
             torch.save( v_pq, cache_file )
         pass
     pass

@@ -1,7 +1,7 @@
 from AZernike import *
 
 # 저니크 피라미드 생성 테스트
-def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tight_layout=0, debug=0 ) : 
+def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, cache=None, tight_layout=0, debug=0 ) : 
     print_curr_time()
     print( "\nZernike Pyramid Creation Validation\n" )
     
@@ -13,11 +13,9 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
     h = resolution
     w = h
 
-    cache = {}
-    
     print( f"use_gpu = {use_gpu}, circle_type = {circle_type}, K = {K:_}, cache = {cache != None}" )
     
-    rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
+    rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=0 )
     
     pq_title_imgs = [] 
     
@@ -44,7 +42,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
 
                 print( f"p = {p:3d}, q = {q:3d}, img type = {img_type}" )
                             
-                v_pl = Vpq( p, q, rho, theta, resolution=resolution, circle_type=circle_type, device=device, cache=cache, debug=debug )
+                v_pl = Vpq( p, q, rho, theta, resolution, circle_type, device=device, cache=cache, debug=debug )
 
                 v_pl = v_pl + 0j
                 
@@ -156,13 +154,15 @@ pass #create_zernike_pyramid
 
 if __name__ == "__main__" :
     use_gpu = 1
-    use_hash = 1
+    debug = 0
 
-    row_cnt = 7
-    col_cnt = 4
+    col_cnt = 5 # 4
+    row_cnt = 5 # 4 6 7
 
     circle_type = "inner"
     img_type = "real"
 
-    test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu=use_gpu, use_hash=use_hash )
+    cache = {}
+
+    test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, cache=cache, use_gpu=use_gpu, debug=debug )
 pass
