@@ -538,10 +538,13 @@ if __name__ == "__main__" :
     elif 1 :
         Ps = torch.arange( 5, 30 + 1, 5 )
         Ks = torch.arange( 1,  6 + 1, 1 )
-
+        
         use_gpus  = [ 1 ] 
+        use_caches = [ 1 ]
 
-        test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 )
+        debug = 1
+
+        test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=debug )
 
         print( "Done." )
     pass

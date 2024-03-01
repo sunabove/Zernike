@@ -206,12 +206,28 @@ def gpu_count( ) :
     return len( gpus )
 pass
 
-def cache_device( curr_device ) : 
+def cache_device( curr_device, resolution ) : 
     # GPU를 사용하는 경우에는 마지막 GPU를 캐시 장치로 사용
     # CPU인 경우에는 CPU를 캐시 장치로 사용한다.
 
     if "cuda" in f"{curr_device}" :
-        device_no = len( GPUtil.getGPUs() ) - 1
+        gpus = GPUtil.getGPUs()
+
+        gpu_cnt = len( gpus )
+
+        device_no = gpu_cnt - 1
+
+        target_mem = resolution*resolution*8
+
+        for idx in range( gpu_cnt -1, 0, -1 ) :
+            free_mem, total_mem = torch.cuda.mem_get_info( idx )
+
+            if free_mem > target_mem : 
+                device_no = idx
+                break
+            pass
+        pass
+
         return torch.device( f"cuda:{device_no}" )
     else :
         return torch.device( "cpu" )
@@ -266,7 +282,7 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
             cache[p] = { }
         pass
 
-        cache[p][q] = v_pq.to( cache_device( device ) )
+        cache[p][q] = v_pq.to( cache_device( device, resolution ) )
 
         # save to file
         if os.path.exists( cache_file ) == False :
