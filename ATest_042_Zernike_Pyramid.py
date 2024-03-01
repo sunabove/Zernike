@@ -1,7 +1,7 @@
 from AZernike import *
 
 # 저니크 피라미드 생성 테스트
-def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, cache=None, tight_layout=0, debug=0 ) : 
+def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_cache=0, tight_layout=0, debug=0 ) : 
     print_curr_time()
     print( "\nZernike Pyramid Creation Validation\n" )
     
@@ -12,6 +12,8 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, cach
     res = resolution = 1_000*K
     h = resolution
     w = h
+
+    cache = {} if use_cache else None 
 
     print( f"use_gpu = {use_gpu}, circle_type = {circle_type}, K = {K:_}, cache = {cache != None}" )
     
