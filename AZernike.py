@@ -278,7 +278,7 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
         pass
     pass
 
-    if debug :
+    if 0 and debug :
         print( f"Vpq({p}, {q}) = ", v_pq )
     pass
 
@@ -518,7 +518,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
 
     img = cv.resize( img, ( int(resolution), int( resolution) ), interpolation=cv.INTER_AREA )
 
-    if debug : 
+    if 0 and debug : 
         print( "img shape= ", img.shape ) 
         print( line )
     pass
@@ -529,7 +529,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
 
     rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=0 )
     
-    if debug : print( f"rho shape = {rho.shape}" )
+    if 0 and debug : print( f"rho shape = {rho.shape}" )
     
     img_rav = img.ravel()
 
