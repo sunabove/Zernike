@@ -235,7 +235,7 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
     src_dir = os.path.dirname( os.path.abspath(__file__) )
     cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{resolution:06d}_P{p:+03d}_Q{q:+03d}.pt"
     
-    if os.path.exists( cache_file ) :
+    if cache is not None and os.path.exists( cache_file ) :
         v_pq = torch.load( cache_file, map_location=device, weights_only=1 )
 
         print( f"zernike cache file load = {cache_file}" )
@@ -251,7 +251,7 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
         else : 
             r_pq = Rpq( p, q, rho, device=device, debug=0 )
 
-            if q :
+            if q != 0 :
                 v_pq = r_pq*torch.exp( (1j*q)*theta )
             else :
                 v_pq = r_pq + 0j

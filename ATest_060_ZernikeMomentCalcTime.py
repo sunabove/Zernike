@@ -1,14 +1,14 @@
 from AZernike import *
 
-def _get_moment_calc_time( img, P, resolution, device, circle_type="outer", debug=0) :
+def _get_moment_calc_time( img, P, resolution, device, circle_type="outer", cache=None, debug=0) :
     
-    moments, run_time = calc_moments(img, P, resolution, circle_type=circle_type, device=device, debug=debug )
+    moments, run_time = calc_moments(img, P, resolution, circle_type, device=device, cache=cache, debug=debug )
     
     return run_time
 pass # _test_moment_calc_time
 
 # 저니크 모멘트 함수 실험 
-def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) : 
+def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) : 
 
     # 서브 챠트 생성 
     fs = fontsize = 16
@@ -34,6 +34,8 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     tab_rows = []
 
     fit_datas = {}
+
+    circle_type = "outer"
     
     for use_gpu in use_gpus :
 
@@ -41,106 +43,113 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
         dn = device_name = "GPU" if use_gpu else "CPU"
 
-        fit_data = { "as" : [], "bs" : [] }
-        fit_datas[ device_name ] = fit_data
+        for use_cache in use_caches : 
 
-        if not device in warm_up :
-            # warm up device by assing temporary memory
-            warm_up[ device ] = True
+            fit_data = { "as" : [], "bs" : [] }
+            fit_datas[ device_name ] = fit_data
 
-            temp = torch.zeros( (1_000, 1_000), dtype=torch.complex64, device=device )
-            temp = 1
-            del temp
-            temp = None
-        pass
-        
-        src_dir = os.path.dirname( os.path.abspath(__file__) )
-        img = cv.imread( f"{src_dir}/image/lenna.png", 0 )
+            if not device in warm_up :
+                # warm up device by assing temporary memory
+                warm_up[ device ] = True
 
-        if debug : print( "img shape= ", img.shape )
+                temp = torch.zeros( (1_000, 1_000), dtype=torch.complex64, device=device )
+                temp = 1
+                del temp
+                temp = None
+            pass
+            
+            src_dir = os.path.dirname( os.path.abspath(__file__) )
+            img = cv.imread( f"{src_dir}/image/lenna.png", 0 )
 
-        min_y = None
-        max_y = None
+            if debug : print( "img shape= ", img.shape )
 
-        for idx, P in enumerate( Ps ) :
-            tab_row = []
-            tab_rows.append( tab_row )
+            min_y = None
+            max_y = None
 
-            tab_row.append( device_name )
+            for idx, P in enumerate( Ps ) :
+                tab_row = []
+                tab_rows.append( tab_row )
 
-            run_times = [ ]
+                tab_row.append( device_name )
+                tab_row.append( "CACHE" if use_cache else "NOCACH" )
 
-            pct = float( (100.0*cur_idx)/tot_idx )
-
-            for K in Ks :
-                cur_idx += 1
-                curr_K = K
-
-                resolution = 1_000*K
-
-                run_time = _get_moment_calc_time( img, P, resolution, device=device, debug=debug )
-                run_times.append( run_time )
+                run_times = [ ]
 
                 pct = float( (100.0*cur_idx)/tot_idx )
-                run_time_human = f"{timedelta(seconds=run_time)}".split('.')[0]
 
-                desc = f"[ {pct:3.0f} % ] {dn}: P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}"
+                for K in Ks :
+                    cur_idx += 1
+                    curr_K = K
 
-                if 1 : print( desc )
-            pass # K
+                    cache = { } if use_cache else None 
 
-            x = Ks
-            y = torch.log10( torch.tensor( run_times ) )
+                    resolution = 1_000*K
 
-            if idx == 0 :
-                min_y = torch.min( y )
-                max_y = torch.max( y )
-            else : 
-                min_y = min( min_y, torch.min( y ) )
-                max_y = max( max_y, torch.max( y ) )
-            pass
+                    run_time = _get_moment_calc_time( img, P, resolution, device=device, circle_type=circle_type, cache=cache, debug=debug )
+                    run_times.append( run_time )
 
-            if True : # fitting pologon
-                import numpy
-                fit = numpy.polyfit( numpy.log10(x), numpy.array( y ), 1 )
-                mx = numpy.median( x ) + (max(x) - min(x))*.12
-                my = fit[0]*numpy.log10( mx ) + fit[1]
-                a = fit[0]
-                b = fit[1]
+                    pct = float( (100.0*cur_idx)/tot_idx )
+                    run_time_human = f"{timedelta(seconds=run_time)}".split('.')[0]
 
-                fit_data[ "as" ].append( a )
-                fit_data[ "bs" ].append( b )
-                
-                sign = "+" if b >= 0 else "-"
+                    desc = f"[ {pct:3.0f} % ] {dn}: P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}"
 
-                text = f"$y = {a:.1f}*log_{'{10}'}(x) {sign} {abs(b):.1f}$"
-                
-                x2 = numpy.linspace( min(x), max(x), 100 )
-                
+                    if 1 : print( desc )
+                pass # K
+
+                x = Ks
+                y = torch.log10( torch.tensor( run_times ) )
+
+                if idx == 0 :
+                    min_y = torch.min( y )
+                    max_y = torch.max( y )
+                else : 
+                    min_y = min( min_y, torch.min( y ) )
+                    max_y = max( max_y, torch.max( y ) )
+                pass
+
+                if True : # fitting pologon
+                    import numpy
+                    fit = numpy.polyfit( numpy.log10(x), numpy.array( y ), 1 )
+                    mx = numpy.median( x ) + (max(x) - min(x))*.12
+                    my = fit[0]*numpy.log10( mx ) + fit[1]
+                    a = fit[0]
+                    b = fit[1]
+
+                    fit_data[ "as" ].append( a )
+                    fit_data[ "bs" ].append( b )
+                    
+                    sign = "+" if b >= 0 else "-"
+
+                    text = f"$y = {a:.1f}*log_{'{10}'}(x) {sign} {abs(b):.1f}$"
+                    
+                    x2 = numpy.linspace( min(x), max(x), 100 )
+                    
+                    color = colors[ idx%len(colors) ]
+                    text_color = colors[ idx%len(colors) ]
+                    linestyle_fit = "dotted"
+                    linewidth = 1.2
+
+                    chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle=linestyle_fit, linewidth=linewidth )
+                    chart.text( mx, my, text, color=text_color, fontsize=fs-2 )
+
+                    tab_row.append( int( P ) )
+                    tab_row.append( a )
+                    tab_row.append( b )
+                    
+                pass # fit polygon
+
+                marker = markers[ idx%len(markers) ]
                 color = colors[ idx%len(colors) ]
-                text_color = colors[ idx%len(colors) ]
-                linestyle_fit = "dotted"
-                linewidth = 1.2
+                linestyle = "solid" if use_gpu else "dashed"
+                label = f"{dn}: {P:2d}$P$"
+                linewidth = 2
 
-                chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle=linestyle_fit, linewidth=linewidth )
-                chart.text( mx, my, text, color=text_color, fontsize=fs-2 )
+                chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle, linewidth=linewidth )
 
-                tab_row.append( int( P ) )
-                tab_row.append( a )
-                tab_row.append( b )
-            pass # fit polygon
+                tab_row.extend( run_times )
+            pass # P
 
-            marker = markers[ idx%len(markers) ]
-            color = colors[ idx%len(colors) ]
-            linestyle = "solid" if use_gpu else "dashed"
-            label = f"{dn}: {P:2d}$P$"
-            linewidth = 2
-
-            chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle, linewidth=linewidth )
-
-            tab_row.extend( run_times ) 
-
-        pass # P
+        pass # use_cache
 
         print()
     
@@ -191,7 +200,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
     plt.savefig( result_figure_file )
     print( f"\nresult_figure_file = {result_figure_file}" )
 
-    tab_header = [ "Device", "P", "a", "b" ]
+    tab_header = [ "Device", "CACHE", "P", "a", "b" ]
     tab_header.extend( [ f"{int(K)} K" for K in Ks ] )
 
     print()
@@ -520,16 +529,13 @@ if __name__ == "__main__" :
 
         print( "Done")
     elif 1 :
-        use_gpus  = [ 1, 0 ]
-
-        K  = 6
         Ps = torch.arange( 5, 30 + 1, 5 )
+        Ks = torch.arange( 1,  6 + 1, 1 )
 
-        K  = 2
-        Ps = torch.arange( 5, 20 + 1, 5 )
+        use_gpus  = [ 1 ] 
 
-        test_zernike_moments_calc_times_by_k( use_gpus, K, Ps, debug=0 )
+        test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 )
 
-        print( "Done")
+        print( "Done." )
     pass
 pass
