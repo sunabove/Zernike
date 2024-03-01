@@ -60,14 +60,14 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
                     title = f"$Re(Z({p}, {q}))$"
                 pass 
 
-                if 1 : # z values normailization to min(-1) and max(1)
-                    z_img[0] = 1
-                    z_img[-1] = -1
-                pass
-                
                 img = torch.zeros( (h, w), dtype=torch.float, device=device )
                 img_rav = img.ravel()
                 img_rav[ kidx ] = z_img
+                
+                if 1 : # z values normailization to min(-1) and max(1)
+                    img_rav[0]  =  1
+                    img_rav[-1] = -1
+                pass
 
                 pq_title_imgs.append( [ ( p, q ), title, img ] )
 
