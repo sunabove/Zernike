@@ -213,9 +213,12 @@ def get_cache_device( curr_device, resolution ) :
 
         target_mem = resolution*resolution*8
 
-        for idx in range( gpu_cnt -1, 0, -1 ) :
+        for idx in range( gpu_cnt -1, -1, -1 ) :
             free_mem, total_mem = torch.cuda.mem_get_info( idx )
 
+            if idx ==0 and free_mem > target_mem*4 :
+                device_no = idx
+                break
             if free_mem > target_mem : 
                 device_no = idx
                 break
