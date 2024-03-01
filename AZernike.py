@@ -201,23 +201,70 @@ def vpq_key( p, q ) :
     return f"v:{p}:{q}"
 pass # vpq_key
 
-#@profile
-def Vpq( p, q, rho, theta, device, debug=0) :    
-    q = int(q)
-    
-    v_pq = None 
-    
-    if q < 0 : 
-        v_pq = Vpq( p, abs(q), rho, theta, device=device, debug=debug )
-        
-        v_pq = torch.conj( v_pq )
-    else : 
-        r_pq = Rpq( p, q, rho, device=device, debug=debug )
+def gpu_count( ) :
+    gpus = GPUtil.getGPUs()
 
-        if q :
-            v_pq = r_pq*torch.exp( (1j*q)*theta )
-        else :
-            v_pq = r_pq + 0j
+    return len( gpus )
+pass
+
+def cache_device( device ) : 
+    # GPU를 사용하는 경우에는 마지막 GPU를 캐시 장치로 사용
+    # CPU인 경우에는 CPU를 캐시 장치로 사용한다.
+
+    if "cuda" in f"{device}" :
+        device_no = len( GPUtil.getGPUs() ) - 1
+        return torch.device( f"cuda:{device_no}" )
+    else :
+        return torch.device( "cpu" )
+    pass
+pass
+
+#@profile
+def Vpq( p, q, rho, theta, device, resolution, circle_type, cache=None, debug=0) :
+
+    if cache and p in cache and q in cache[p] : 
+        v_pq = cache[p][q]
+
+        return v_pq.to( device )
+    pass
+
+    v_pq = None
+    
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    cache_file = f"{src_dir}/pyramid/v_{circle_type}C_{resolution:_06d}R_{p:03d}P_{q:03d}Q.pt"
+    
+    if os.path.exists( cache_file ) :
+        v_pq = torch.load( cache_file, map_location=device, weights_only=1 )
+    pass
+
+    if v_pq is None : 
+        q = int(q)
+        
+        if q < 0 : 
+            v_pq = Vpq( p, abs(q), rho, theta, device=device, cache=cache, debug=debug )
+            
+            v_pq = torch.conj( v_pq )
+        else : 
+            r_pq = Rpq( p, q, rho, device=device, debug=debug )
+
+            if q :
+                v_pq = r_pq*torch.exp( (1j*q)*theta )
+            else :
+                v_pq = r_pq
+            pass
+        pass
+    pass
+
+    if cache :
+        if not p in cache :
+            cache[p] = {}
+        pass
+
+        cache[p][q] = v_pq.to( cache_device() )
+
+        # save to file
+        if not os.path.exists( cache_file ) :
+            torch.save( v_pq, cache_file )
         pass
     pass
 
@@ -388,7 +435,9 @@ def print_gpu_info() :
     print( " GPU Details ".center( len(line), "*") ) 
 
     gpus = GPUtil.getGPUs()
+    
     list_gpus = []
+
     for gpu in gpus:
         # get the GPU id
         gpu_id = gpu.id

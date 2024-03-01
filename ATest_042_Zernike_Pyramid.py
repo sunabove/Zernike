@@ -13,7 +13,9 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
     h = resolution
     w = h
 
-    print( f"use_gpu = {use_gpu}, circle_type = {circle_type}, resolution = {resolution:_}" )
+    cache = {}
+    
+    print( f"use_gpu = {use_gpu}, circle_type = {circle_type}, K = {K:_}, cache = {cache != None}" )
     
     rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
     
@@ -42,7 +44,9 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, tigh
 
                 print( f"p = {p:3d}, q = {q:3d}, img type = {img_type}" )
                             
-                v_pl = Vpq( p, q, rho, theta, device=device, debug=debug )
+                v_pl = Vpq( p, q, rho, theta, resolution=resolution, circle_type=circle_type, device=device, cache=cache, debug=debug )
+
+                v_pl = v_pl + 0j
                 
                 z_img = None # zernike image
                 

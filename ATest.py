@@ -9,6 +9,8 @@ use_gpu = 1
 device_name = "cuda" if use_gpu else "cpu"
 device = torch.device( device_name)
 
+print( "device type = ", type( device ) )
+
 a = torch.rand( (2, 2), dtype=torch.cdouble, device=device )
 b = a.to( device )
 c = a.cpu()
