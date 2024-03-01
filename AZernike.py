@@ -221,7 +221,7 @@ pass
 #@profile
 def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, debug=0) :
 
-    if debug :
+    if 0 and debug :
         print( f"V p = {p}, q = {q}, circle_type = {circle_type}, K = {resolution/1000}, cache = {cache != None}" )
 
     if cache is not None and p in cache and q in cache[p] : 
@@ -238,7 +238,9 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
     if cache is not None and os.path.exists( cache_file ) :
         v_pq = torch.load( cache_file, map_location=device, weights_only=1 )
 
-        print( f"zernike cache file load = {cache_file}" )
+        if debug :
+            print( f"--- zernike cache file load = {cache_file}" )
+        pass
     pass
 
     if v_pq is None : 
@@ -268,8 +270,11 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
 
         # save to file
         if os.path.exists( cache_file ) == False :
-            print( f"zernike cache file save = {cache_file}" )
             torch.save( v_pq, cache_file )
+
+            if debug: 
+                print( f"--- zernike cache file save = {cache_file}" )
+            pass
         pass
     pass
 
@@ -522,7 +527,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
 
     moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
 
-    rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
+    rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=0 )
     
     if debug : print( f"rho shape = {rho.shape}" )
     
