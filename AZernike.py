@@ -257,7 +257,7 @@ def Vpq( p, q, rho, theta, device, resolution, circle_type, cache=None, debug=0)
 
     if cache :
         if not p in cache :
-            cache[p] = {}
+            cache[p] = { }
         pass
 
         cache[p][q] = v_pq.to( cache_device() )
