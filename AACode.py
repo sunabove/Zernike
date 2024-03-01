@@ -4,8 +4,7 @@ import torch
 
 print( "source dirname = ", os.path.dirname( os.path.abspath(__file__) ) )
 
-total_mem, used_mem, free_mem = map( int, 
-    os.popen('free -b').readlines()[-1].split()[1:] )
+total_mem, used_mem, free_mem = map( int, os.popen('free -b').readlines()[-1].split()[1:] )
 
 print( f"CPU mem : total = {total_mem:_}, free = {free_mem:_}, used = {used_mem:_} " )
 
@@ -76,6 +75,8 @@ device_no = 0
 hash = {} if use_gpu else None
 device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
 
+torch.cuda.empty_cache()
+
 kidx = torch.where( rho_square <= 1.0 )
 
 Ks = torch.arange( 1, 6 + 1, 1 )
@@ -90,7 +91,6 @@ tab_header = [ "Device", "Item" ]
 tab_header.extend( [ f"{x/1_000:1.0f}K" for x in resolutions ] )
 
 print( tabulate( tab_rows, headers=tab_header ) )
-
 
 excelData = []
 excelData.append( tab_header )

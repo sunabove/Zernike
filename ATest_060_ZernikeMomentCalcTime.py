@@ -91,6 +91,13 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     pct = float( (100.0*cur_idx)/tot_idx )
                     run_time_human = f"{timedelta(seconds=run_time)}".split('.')[0]
 
+                    if cache is not None :
+                        del cache
+                        cache = None
+                    pass
+
+                    torch.cuda.empty_cache()
+
                     desc = f"[ {pct:3.0f} % ] {dn}: P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}"
 
                     if 1 : print( desc )
