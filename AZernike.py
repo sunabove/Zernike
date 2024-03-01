@@ -228,22 +228,24 @@ def get_cache_device( curr_device, resolution ) :
     pass
 pass
 
-#@profile
-def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, debug=0) :
+def Vpq_file_path( p, q, resolution, circle_type ) :
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{int(resolution):04d}_P{p:+03d}_Q{q:+03d}.pth"
+    return cache_file
+pass # Vpq_file_path
 
-    if 0 and debug :
-        print( f"V p = {p}, q = {q}, circle_type = {circle_type}, K = {resolution/1000}, cache = {cache != None}" )
+def vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=0 ) :
+    v_pq = None
 
-    if cache is not None and p in cache and q in cache[p] : 
+    if cache is None :
+        return v_pq
+    elif cache is not None and p in cache and q in cache[p] : 
         v_pq = cache[p][q]
 
         return v_pq.to( device )
     pass
-
-    v_pq = None
     
-    src_dir = os.path.dirname( os.path.abspath(__file__) )
-    cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{int(resolution):04d}_P{p:+03d}_Q{q:+03d}.pth"
+    cache_file = Vpq_file_path( p, q, resolution, circle_type )
     
     if cache is not None and os.path.exists( cache_file ) :
         if debug :
@@ -253,7 +255,53 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
         v_pq = torch.load( cache_file, map_location=device, weights_only=1 )
     pass
 
-    if v_pq is None : 
+    return v_pq
+pass # Vpq_load_cache
+
+def vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug=0 ) :
+
+    if cache is not None :
+        if not p in cache :
+            cache[p] = { }
+        pass
+
+        cache_device = get_cache_device( device, resolution )
+
+        if debug :
+            print( f"V p = {p:3d}, q = {q:3d}, resolution = {resolution}, cache_device = {cache_device}" )
+        pass
+
+        cache[p][q] = v_pq.to( cache_device )
+
+        # save to file
+
+        cache_file = Vpq_file_path( p, q, resolution, circle_type )
+
+        if os.path.exists( cache_file ) == False :
+            torch.save( v_pq, cache_file )
+
+            if debug: 
+                print( f"--- zernike cache file save = {cache_file}" )
+            pass
+        pass
+    pass
+pass # Vpq_save_cache
+
+#@profile
+def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, debug=0) :
+
+    if 0 and debug :
+        print( f"V p = {p}, q = {q}, circle_type = {circle_type}, K = {resolution/1000}, cache = {cache != None}" )
+
+    v_pq = None
+
+    if cache is not None :
+        v_pq = vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=debug) 
+    pass
+
+    if v_pq is not None :
+        return v_pq
+    elif v_pq is None : 
         q = int(q)
         
         if q < 0 : 
@@ -272,26 +320,7 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
     pass
 
     if cache is not None :
-        if not p in cache :
-            cache[p] = { }
-        pass
-
-        cache_device = get_cache_device( device, resolution )
-
-        if debug :
-            print( f"V p = {p:3d}, q = {q:3d}, resolution = {resolution}, cache_device = {cache_device}" )
-        pass
-
-        cache[p][q] = v_pq.to( cache_device )
-
-        # save to file
-        if os.path.exists( cache_file ) == False :
-            torch.save( v_pq, cache_file )
-
-            if debug: 
-                print( f"--- zernike cache file save = {cache_file}" )
-            pass
-        pass
+        vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug=debug) 
     pass
 
     if 0 and debug :
