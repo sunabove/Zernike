@@ -46,8 +46,6 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
                             
                 v_pl = Vpq( p, q, rho, theta, resolution, circle_type, device=device, cache=cache, debug=debug )
 
-                v_pl = v_pl + 0j
-                
                 z_img = None # zernike image
                 
                 if "im" in img_type : 

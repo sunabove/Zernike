@@ -254,7 +254,7 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
             if q :
                 v_pq = r_pq*torch.exp( (1j*q)*theta )
             else :
-                v_pq = r_pq
+                v_pq = r_pq + 0j
             pass
         pass
     pass
@@ -508,7 +508,7 @@ def get_core_count(**options) :
 pass
     
 # 모멘트 계산
-def calc_moments( img, T, resolution, circle_type, device, use_cache=0, debug=0 ) : 
+def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 ) : 
     then = time.time()
 
     img = cv.resize( img, ( int(resolution), int( resolution) ), interpolation=cv.INTER_AREA )
@@ -529,7 +529,7 @@ def calc_moments( img, T, resolution, circle_type, device, use_cache=0, debug=0 
     img_rav = img.ravel()
 
     for p, q in pq_list( T ) : 
-        v_pq = Vpq( p, q, rho, theta, device=device, debug=debug ) 
+        v_pq = Vpq( p, q, rho, theta, resolution, circle_type, device=device, cache=cache, debug=debug ) 
         
         moment = torch.dot( v_pq, img_rav )*dx*dy
 

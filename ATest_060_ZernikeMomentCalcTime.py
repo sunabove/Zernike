@@ -77,7 +77,7 @@ def test_zernike_moments_calc_times( use_gpus, Ps, Ks, debug=0 ) :
                 curr_K = K
 
                 resolution = 1_000*K
-    
+
                 run_time = _get_moment_calc_time( img, P, resolution, device=device, debug=debug )
                 run_times.append( run_time )
 
