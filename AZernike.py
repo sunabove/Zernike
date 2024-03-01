@@ -200,13 +200,7 @@ def vpq_key( p, q ) :
     return f"v:{p}:{q}"
 pass # vpq_key
 
-def gpu_count( ) :
-    gpus = GPUtil.getGPUs()
-
-    return len( gpus )
-pass
-
-def cache_device( curr_device, resolution ) : 
+def get_cache_device( curr_device, resolution ) : 
     # GPU를 사용하는 경우에는 마지막 GPU를 캐시 장치로 사용
     # CPU인 경우에는 CPU를 캐시 장치로 사용한다.
 
@@ -249,7 +243,7 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
     v_pq = None
     
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{resolution:05d}_P{p:+03d}_Q{q:+03d}.pth"
+    cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{int(resolution):04d}_P{p:+03d}_Q{q:+03d}.pth"
     
     if cache is not None and os.path.exists( cache_file ) :
         if debug :
@@ -282,7 +276,13 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
             cache[p] = { }
         pass
 
-        cache[p][q] = v_pq.to( cache_device( device, resolution ) )
+        cache_device = get_cache_device( device, resolution )
+
+        if debug :
+            print( f"V p = {p:3d}, q = {q:3d}, resolution = {resolution}, cache_device = {cache_device}" )
+        pass
+
+        cache[p][q] = v_pq.to( cache_device )
 
         # save to file
         if os.path.exists( cache_file ) == False :
