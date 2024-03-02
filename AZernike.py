@@ -259,52 +259,69 @@ def Vpq_file_path( p, q, resolution, circle_type ) :
     return cache_file
 pass # Vpq_file_path
 
-def vpq_load_from_cache( p, q, grid, device, cache, debug=0 ) :
-    resolution = grid.resolution
-    circle_type = grid.circle_type
+def load_vpq_cache( P, resolution, circle_type, device=None, debug=0) :
+    cache = { }
+
+    grid = rho_theta( resolution, circle_type, device=device, debug=0 )
+
+    for p, q in pq_list( P ) :
+        v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=debug)
+
+        if v_pq is None :
+            v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug ) 
+
+            _vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug=debug ) 
+        pass
+    pass
+
+    return cache
+pass # load_vpq_cache
+
+def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=0 ) : 
 
     v_pq = None
 
-    if q < 0 :
-        v_pq = vpq_load_from_cache( p, abs(q), grid, device, cache, debug=debug )
+    if cache is None :
+        v_pq = None
+    elif q < 0 :
+        v_pq = _vpq_load_from_cache( p, abs(q), resolution, circle_type, device, cache, debug=debug )
 
         if v_pq is not None:
             v_pq = torch.conj( v_pq )
-
-            return v_pq
         pass
-    pass
+    else : 
+        if p in cache and q in cache[p] : 
+            v_pq = cache[p][q]
 
-    if cache is None :
-        return v_pq
-    elif cache is not None and p in cache and q in cache[p] : 
-        v_pq = cache[p][q]
+            v_pq = v_pq.to( device )
+        else :
+            cache_file = Vpq_file_path( p, q, resolution, circle_type )
+            
+            if os.path.exists( cache_file ) :
+                if debug :
+                    print( f"--- zernike cache file load = {cache_file}" )
+                pass
 
-        return v_pq.to( device )
-    pass
-    
-    cache_file = Vpq_file_path( p, q, resolution, circle_type )
-    
-    if cache is not None and os.path.exists( cache_file ) :
-        if debug :
-            print( f"--- zernike cache file load = {cache_file}" )
+                v_pq = torch.load( cache_file, map_location=device, weights_only=1 )
+
+                if not p in cache :
+                    cache[p] = {}
+                pass
+
+                cache[p][q] = v_pq
+            pass
         pass
-
-        v_pq = torch.load( cache_file, map_location=device, weights_only=1 )
     pass
 
     return v_pq
 pass # Vpq_load_cache
 
-def vpq_save_to_cache( v_pq, p, q, grid, device, cache, debug=0 ) :
-
-    resolution = grid.resolution
-    circle_type = grid.circle_type
+def _vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug=0 ) :
 
     if cache is not None and q < 0 : 
         v_pq = torch.conj( v_pq )
         
-        vpq_save_to_cache( v_pq, p, abs(q), grid, device, cache, debug=debug )
+        _vpq_save_to_cache( v_pq, p, abs(q), resolution, circle_type, device, cache, debug=debug )
     elif cache is not None :
 
         if not p in cache :
@@ -347,7 +364,7 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
     v_pq = None
 
     if cache is not None :
-        v_pq = vpq_load_from_cache( p, q, grid, device, cache, debug=debug) 
+        v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=debug) 
     pass
 
     if v_pq is not None :
@@ -371,7 +388,7 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
     pass
 
     if cache is not None :
-        vpq_save_to_cache( v_pq, p, q, grid, device, cache, debug=debug) 
+        _vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug=debug) 
     pass
 
     if 0 and debug :
