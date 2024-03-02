@@ -97,7 +97,9 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
                     if cache is not None and "cuda" in f"{device}" :
                         # clear gpu cache only
-                        
+
+                        if 1 : print( f"clearing gpu cache resolution = {resolution}" )
+
                         a = cache["GPU"][resolution]
 
                         del cache["GPU"][resolution]
