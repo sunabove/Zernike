@@ -233,7 +233,8 @@ pass
 
 def Vpq_file_path( p, q, resolution, circle_type ) :
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{int(resolution):04d}_P{p:+03d}_Q{q:+03d}.pth"
+    cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{int(resolution):04d}_P{p:03d}_Q{q:03d}.pth"
+    
     return cache_file
 pass # Vpq_file_path
 
@@ -306,7 +307,12 @@ def vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug
 pass # Vpq_save_cache
 
 #@profile
-def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, debug=0) :
+def Vpq( p, q, grid, device=None, cache=None, debug=0) :
+
+    rho = grid.rho
+    theta = grid.theta
+    resolution = grid.resolution
+    circle_type = grid.circle_type
 
     if 0 and debug :
         print( f"V p = {p}, q = {q}, circle_type = {circle_type}, K = {resolution/1000}, cache = {cache != None}" )
@@ -347,6 +353,27 @@ def Vpq( p, q, rho, theta, resolution, circle_type, device=None, cache=None, deb
 
     return v_pq
 pass
+
+class Grid :
+
+    def __init__(self):
+        self.rho = None
+        self.theta = None
+
+        self.x = None
+        self.y = None 
+
+        self.dx = None 
+        self.dy = None
+
+        self.kidx = None 
+        self.area = None
+
+        self.resolution = None
+        self.circle_type = None
+    pass
+
+pass # Grid
 
 #@profile
 def rho_theta( resolution, circle_type, device, debug=0 ) :
@@ -416,7 +443,22 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     rho = torch.sqrt( rho_square )
     theta = torch.arctan2( y, x )
     
-    return rho, theta, x, y, dx, dy, kidx, area
+    grid = Grid()
+
+    grid.rho = rho
+    grid.theta = theta
+    grid.x = x
+    grid.y = y
+    grid.dx = dx
+    grid.dy = dy
+    grid.kidx = kidx
+    grid.area = area
+
+    grid.resolution = resolution
+    grid.circle_type = circle_type
+    
+    #return rho, theta, x, y, dx, dy, kidx, area
+    return grid
 pass # rho_theta
 
 def print_curr_time() :
@@ -590,16 +632,16 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
 
     moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
 
-    rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=0 )
+    grid = rho_theta( resolution, circle_type, device=device, debug=0 )
     
-    if 0 and debug : print( f"rho shape = {rho.shape}" )
+    if 0 and debug : print( f"rho shape = {grid.rho.shape}" )
     
     img_rav = img.ravel()
 
     for p, q in pq_list( T ) : 
-        v_pq = Vpq( p, q, rho, theta, resolution, circle_type, device=device, cache=cache, debug=debug ) 
+        v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug ) 
         
-        moment = torch.dot( v_pq, img_rav )*dx*dy
+        moment = torch.dot( v_pq, img_rav )*grid.dx*grid.dy
 
         moment = torch.conj( moment )
 
