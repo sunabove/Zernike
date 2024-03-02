@@ -280,7 +280,7 @@ def load_vpq_cache( P, resolution, circle_type, device=None, debug=0) :
         if v_pq is None :
             v_pq = Vpq( p, q, grid, device=device, cache=None, debug=debug ) 
 
-            _vpq_save_file( v_pq, p, q, resolution, circle_type, device, pct=pct, debug=debug ) 
+            _vpq_save_file( v_pq, p, q, resolution, circle_type, pct=pct, debug=debug ) 
 
             v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
         pass
