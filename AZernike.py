@@ -262,13 +262,15 @@ pass # Vpq_file_path
 def load_vpq_cache( P, resolution, circle_type, device=None, debug=0) :
     cache = { }
 
+    if debug : print( f"Load vpq cache P = {P:02d}, resolution = {resolution}, circle_type = {circle_type}" )
+
     grid = rho_theta( resolution, circle_type, device=device, debug=0 )
 
     for p, q in pq_list( P ) :
         v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=debug)
 
         if v_pq is None :
-            v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug ) 
+            v_pq = Vpq( p, q, grid, device=device, cache=None, debug=debug ) 
 
             _vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug=debug ) 
         pass
@@ -292,20 +294,21 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=0 
     else : 
         if p in cache and q in cache[p] : 
             v_pq = cache[p][q]
-
-            v_pq = v_pq.to( device )
         else :
             cache_file = Vpq_file_path( p, q, resolution, circle_type )
             
             if os.path.exists( cache_file ) :
+                
+                cache_device = get_cache_device( device, resolution )
+                
                 if debug :
-                    print( f"--- zernike cache file load = {cache_file}" )
+                    print( f"--- zernike cache file load = {cache_file}, cache_device = {cache_device}" )
                 pass
 
-                v_pq = torch.load( cache_file, map_location=device, weights_only=1 )
+                v_pq = torch.load( cache_file, map_location=cache_device, weights_only=1 )
 
                 if not p in cache :
-                    cache[p] = {}
+                    cache[p] = { }
                 pass
 
                 cache[p][q] = v_pq
@@ -313,7 +316,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=0 
         pass
     pass
 
-    return v_pq
+    return v_pq.to( device )
 pass # Vpq_load_cache
 
 def _vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug=0 ) :
@@ -364,12 +367,8 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
     v_pq = None
 
     if cache is not None :
-        v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=debug) 
-    pass
-
-    if v_pq is not None :
-        return v_pq
-    elif v_pq is None : 
+        v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=debug)
+    else : 
         q = int(q)
         
         if q < 0 : 
@@ -385,10 +384,6 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
                 v_pq = r_pq + 0j
             pass
         pass
-    pass
-
-    if cache is not None :
-        _vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug=debug) 
     pass
 
     if 0 and debug :
