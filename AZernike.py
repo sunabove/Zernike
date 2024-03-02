@@ -349,7 +349,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 cache[dn][resolution][p][q] = v_pq.to( cache_device )
 
                 pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
-                print( f"*** {pct_desc} zernike cache CPU load , cache_device = {cache_device} ***" )
+                print( f"*** {pct_desc} zernike cache CPU load: p = {p}, q = {q}, cache_device = {cache_device} ***" )
                 True
             pass
         pass
