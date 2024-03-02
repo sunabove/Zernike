@@ -13,7 +13,13 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
     h = resolution
     w = h
 
-    cache = {} if use_cache else None 
+    T = 2*col_cnt 
+
+    cache = None
+
+    if use_cache :
+        cache = load_vpq_cache( T, resolution, circle_type, device=device, debug=debug)
+    pass
 
     print( f"use_gpu = {use_gpu}, circle_type = {circle_type}, K = {K:_}, cache = {cache != None}" )
     
@@ -24,7 +30,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
     total_cnt = row_cnt*col_cnt
     idx = 0
     
-    for p in range( 0, 2*col_cnt + 1, 1 ) : 
+    for p in range( 0, T + 1, 1 ) : 
         if idx >= total_cnt :
             break
         pass
@@ -73,7 +79,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
 
                 pq_title_imgs.append( [ ( p, q ), title, img ] )
 
-                if debug : 
+                if 0 and debug : 
                     print( f"rho size : {grid.rho.size()}" )
                     print( f"v_pl size : {v_pl.size()}" )
                     print( f"z_img size : {z_img.size()}" )
@@ -154,7 +160,7 @@ pass #create_zernike_pyramid
 
 if __name__ == "__main__" :
     use_gpu = 1
-    debug = 0
+    debug = 1
 
     col_cnt = 5 # 4
     row_cnt = 5 # 4 6 7
@@ -162,7 +168,7 @@ if __name__ == "__main__" :
     circle_type = "inner"
     img_type = "real"
 
-    cache = {}
+    use_cache = 1
 
-    test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, cache=cache, use_gpu=use_gpu, debug=debug )
+    test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_cache=use_cache, use_gpu=use_gpu, debug=debug )
 pass
