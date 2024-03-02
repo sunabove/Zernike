@@ -83,7 +83,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     cur_idx += 1
                     curr_K = K
 
-                    resolution = 1_000*K
+                    resolution = int( 1_000*K )
 
                     if cache is not None :
                         load_vpq_cache( P, resolution, circle_type, cache, device=device, debug=debug)

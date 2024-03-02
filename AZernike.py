@@ -298,6 +298,8 @@ pass # load_vpq_cache
 
 def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None, debug=0 ) : 
 
+    resolution = int( resolution )
+
     v_pq = None
 
     if cache is None :
@@ -315,7 +317,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
             cache[dn] = { }
         pass
 
-        if resolution not in cache[ dn ] :
+        if resolution not in cache[dn] :
             cache[dn][resolution] = { }
         pass
 
@@ -346,7 +348,9 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 cache_device = get_cache_device( device, resolution )
                 cache[dn][resolution][p][q] = v_pq.to( cache_device )
 
-                print( f"--- {pct_desc} zernike cache CPU load , cache_device = {cache_device}" )
+                pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
+                print( f"*** {pct_desc} zernike cache CPU load , cache_device = {cache_device} ***" )
+                True
             pass
         pass
 
@@ -361,7 +365,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
 
                 if "GPU" in dn : 
                     cache_device = get_cache_device( device, resolution )
-                    cache[dn][resolution][p][q] = v_pq.to( cache_device )
+                    cache["GPU"][resolution][p][q] = v_pq.to( cache_device )
                 pass
                 
                 if debug :
