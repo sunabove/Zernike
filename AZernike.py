@@ -273,7 +273,7 @@ def load_vpq_cache( P, resolution, circle_type, device=None, debug=0) :
     tot_cnt = len( pqs )
 
     for idx, [ p, q ] in enumerate( pqs ) :
-        pct = idx/tot_cnt
+        pct = (idx + 1)/tot_cnt
 
         v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
 
