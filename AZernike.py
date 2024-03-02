@@ -268,11 +268,11 @@ def load_vpq_cache( P, resolution, circle_type, device=None, debug=0) :
 
     grid = rho_theta( resolution, circle_type, device=device, debug=0 )
 
-    pqs = pq_list( P )
+    pq_list = get_pq_list( P )
 
-    tot_cnt = len( pqs )
+    tot_cnt = len( pq_list )
 
-    for idx, [ p, q ] in enumerate( pqs ) :
+    for idx, [ p, q ] in enumerate( pq_list ) :
         pct = (idx + 1)/tot_cnt
 
         v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
@@ -333,7 +333,11 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
         pass
     pass
 
-    return v_pq.to( device )
+    if v_pq is not None :
+        return v_pq.to( device )
+    else :
+        return v_pq
+    pass
 pass # Vpq_load_cache
 
 def _vpq_save_to_cache_and_file( v_pq, p, q, resolution, circle_type, device, cache, pct=None, debug=0 ) :
@@ -610,7 +614,7 @@ def print_gpu_info() :
     print( tabulate( list_gpus, headers=("id", "name", "load", "free memory", "used memory", "total memory", "temperature" )) )
 pass # -- print_gpu_info 
 
-def pq_list( T ) :
+def get_pq_list( T ) :
     pqs = []
 
     for p in range( 0, T + 1 ) : 
@@ -672,7 +676,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     
     img_rav = img.ravel()
 
-    for p, q in pq_list( T ) : 
+    for p, q in get_pq_list( T ) : 
         v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug ) 
         
         moment = torch.dot( v_pq, img_rav )*grid.dx*grid.dy
@@ -703,7 +707,7 @@ def restore_image(moments, rho, theta, **options) :
     
     img = np.zeros_like( rho, np.complex_ )
     
-    pqs = pq_list( T )
+    pqs = get_pq_list( T )
     
     area = 2 # outer type image area in unit_circle
     if "circle_type" in options and "inner" in options["circle_type"] :
