@@ -280,7 +280,9 @@ def load_vpq_cache( P, resolution, circle_type, device=None, debug=0) :
         if v_pq is None :
             v_pq = Vpq( p, q, grid, device=device, cache=None, debug=debug ) 
 
-            _vpq_save_to_cache_and_file( v_pq, p, q, resolution, circle_type, device, cache, pct=pct, debug=debug ) 
+            _vpq_save_file( v_pq, p, q, resolution, circle_type, device, pct=pct, debug=debug ) 
+
+            v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
         pass
     pass
 
@@ -338,29 +340,15 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
     else :
         return v_pq
     pass
-pass # Vpq_load_cache
+pass # _vpq_load_from_cache
 
-def _vpq_save_to_cache_and_file( v_pq, p, q, resolution, circle_type, device, cache, pct=None, debug=0 ) :
+def _vpq_save_file( v_pq, p, q, resolution, circle_type, pct=None, debug=0 ) :
 
-    if cache is None :
-        pass
-    elif q < 0 : 
+    if q < 0 : 
         v_pq = torch.conj( v_pq )
         
-        _vpq_save_to_cache_and_file( v_pq, p, abs(q), resolution, circle_type, device, cache, debug=debug )
+        _vpq_save_file( v_pq, p, abs(q), resolution, circle_type, debug=debug )
     else :
-        if not p in cache :
-            cache[p] = { }
-        pass
-
-        cache_device = get_cache_device( device, resolution )
-
-        if debug :
-            print( f"V p = {p:3d}, q = {q:3d}, resolution = {resolution}, cache_device = {cache_device}" )
-        pass
-
-        cache[p][q] = v_pq.to( cache_device )
-
         # save to file
         cache_file = Vpq_file_path( p, q, resolution, circle_type )
         torch.save( v_pq, cache_file )
@@ -371,7 +359,7 @@ def _vpq_save_to_cache_and_file( v_pq, p, q, resolution, circle_type, device, ca
             print( f"--- {pct_desc} zernike cache file save = {cache_file}" )
         pass
     pass
-pass # Vpq_save_cache
+pass # _vpq_save_file
 
 #@profile
 def Vpq( p, q, grid, device=None, cache=None, debug=0) :
