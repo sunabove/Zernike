@@ -342,6 +342,11 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
 
             if q in cache["CPU"][resolution][p] :
                 v_pq = cache["CPU"][resolution][p][q]
+
+                cache_device = get_cache_device( device, resolution )
+                cache[dn][resolution][p][q] = v_pq.to( cache_device )
+
+                print( f"--- {pct_desc} zernike cache CPU load , cache_device = {cache_device}" )
             pass
         pass
 
@@ -362,7 +367,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
 
-                    print( f"--- {pct_desc} zernike cache file load = {cache_file}, cache_device = {cache_device}" )
+                    print( f"--- {pct_desc} zernike cache FILE load = {cache_file}, cache_device = {cache_device}" )
                 pass
                 
             pass
