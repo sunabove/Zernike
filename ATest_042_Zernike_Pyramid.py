@@ -17,7 +17,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
 
     print( f"use_gpu = {use_gpu}, circle_type = {circle_type}, K = {K:_}, cache = {cache != None}" )
     
-    rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=0 )
+    grid = rho_theta( resolution, circle_type, device=device, debug=0 )
     
     pq_title_imgs = [] 
     
@@ -44,7 +44,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
 
                 print( f"p = {p:3d}, q = {q:3d}, img type = {img_type}" )
                             
-                v_pl = Vpq( p, q, rho, theta, resolution, circle_type, device=device, cache=cache, debug=debug )
+                v_pl = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
 
                 z_img = None # zernike image
                 
@@ -64,7 +64,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
 
                 img = torch.zeros( (h, w), dtype=torch.float, device=device )
                 img_rav = img.ravel()
-                img_rav[ kidx ] = z_img
+                img_rav[ grid.kidx ] = z_img
                 
                 if 1 : # z values normailization to min(-1) and max(1)
                     img_rav[0]  =  1
@@ -74,7 +74,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
                 pq_title_imgs.append( [ ( p, q ), title, img ] )
 
                 if debug : 
-                    print( f"rho size : {rho.size()}" )
+                    print( f"rho size : {grid.rho.size()}" )
                     print( f"v_pl size : {v_pl.size()}" )
                     print( f"z_img size : {z_img.size()}" )
                     print( f"img size : {img.size()}" )
