@@ -262,7 +262,7 @@ pass # Vpq_file_path
 def load_vpq_cache( P, resolution, circle_type, device=None, debug=0) :
     cache = { }
 
-    if debug : print( f"Loading vpq cache P = {P:02d}, resolution = {resolution}, circle_type = {circle_type}" )
+    if 1 or debug : print( f"--- Loading vpq cache P = {P:02d}, resolution = {resolution}, circle_type = {circle_type}" )
 
     then = time.time()
 
@@ -288,10 +288,10 @@ def load_vpq_cache( P, resolution, circle_type, device=None, debug=0) :
 
     elapsed = time.time() - then
 
-    if debug : 
+    if 1 or debug : 
         elapsed_human = f"{timedelta(seconds=elapsed)}".split('.')[0]
 
-        print( f"Loading done. {elapsed:.2f} (secs.) {elapsed_human}" )
+        print( f"--- Loading done. {elapsed:.2f} (secs.) {elapsed_human}" )
     pass
 
     return cache
@@ -310,9 +310,25 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
             v_pq = torch.conj( v_pq )
         pass
     else : 
-        if p in cache and q in cache[p] : 
-            v_pq = cache[p][q]
-        else :
+        dn = device_name = "GPU" if "cuda" in f"{device}" else "CPU"
+
+        if device_name not in cache : 
+            cache[dn] = { }
+        pass
+
+        if resolution not in cache[ dn ] :
+            cache[dn][resolution] = { }
+        pass
+
+        if p not in cache[dn][resolution] :
+            cache[dn][resolution][p] = { }
+        pass
+
+        if q in cache[dn][resolution][p] : 
+            v_pq = cache[dn][resolution][p][q]
+        pass
+
+        if v_pq is None :
             cache_file = Vpq_file_path( p, q, resolution, circle_type )
             
             if os.path.exists( cache_file ) :
@@ -326,11 +342,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
 
                 v_pq = torch.load( cache_file, map_location=cache_device, weights_only=1 )
 
-                if not p in cache :
-                    cache[p] = { }
-                pass
-
-                cache[p][q] = v_pq
+                cache[dn][resolution][p][q] = v_pq
             pass
         pass
     pass
