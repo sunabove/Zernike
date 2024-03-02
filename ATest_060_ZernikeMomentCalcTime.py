@@ -86,7 +86,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     cache = None
 
                     if use_cache :
-                        cache = load_vpq_cache( P, resolution, circle_type, device=None, debug=debug)
+                        cache = load_vpq_cache( P, resolution, circle_type, device=device, debug=debug)
                     pass
 
                     run_time = _get_moment_calc_time( img, P, resolution, device=device, circle_type=circle_type, cache=cache, debug=debug )
