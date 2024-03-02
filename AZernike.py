@@ -35,6 +35,27 @@ line3 = line2 + "\n"
 
 print( f"Packages imported." )
 
+class Grid :
+
+    def __init__(self):
+        self.rho = None
+        self.theta = None
+
+        self.x = None
+        self.y = None 
+
+        self.dx = None 
+        self.dy = None
+
+        self.kidx = None 
+        self.area = None
+
+        self.resolution = None
+        self.circle_type = None
+    pass
+
+pass # Grid
+
 ray_inited = False 
 
 def ray_init() :
@@ -234,15 +255,18 @@ pass
 def Vpq_file_path( p, q, resolution, circle_type ) :
     src_dir = os.path.dirname( os.path.abspath(__file__) )
     cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{int(resolution):04d}_P{p:03d}_Q{q:03d}.pth"
-    
+
     return cache_file
 pass # Vpq_file_path
 
-def vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=0 ) :
+def vpq_load_from_cache( p, q, grid, device, cache, debug=0 ) :
+    resolution = grid.resolution
+    circle_type = grid.circle_type
+
     v_pq = None
 
     if q < 0 :
-        v_pq = vpq_load_from_cache( p, abs(q), resolution, circle_type, device, cache, debug=debug )
+        v_pq = vpq_load_from_cache( p, abs(q), grid, device, cache, debug=debug )
 
         if v_pq is not None:
             v_pq = torch.conj( v_pq )
@@ -272,12 +296,15 @@ def vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=0 )
     return v_pq
 pass # Vpq_load_cache
 
-def vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug=0 ) :
+def vpq_save_to_cache( v_pq, p, q, grid, device, cache, debug=0 ) :
+
+    resolution = grid.resolution
+    circle_type = grid.circle_type
 
     if cache is not None and q < 0 : 
         v_pq = torch.conj( v_pq )
         
-        vpq_save_to_cache( v_pq, p, abs(q), resolution, circle_type, device, cache, debug=debug )
+        vpq_save_to_cache( v_pq, p, abs(q), grid, device, cache, debug=debug )
     elif cache is not None :
 
         if not p in cache :
@@ -320,7 +347,7 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
     v_pq = None
 
     if cache is not None :
-        v_pq = vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=debug) 
+        v_pq = vpq_load_from_cache( p, q, grid, device, cache, debug=debug) 
     pass
 
     if v_pq is not None :
@@ -329,7 +356,7 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
         q = int(q)
         
         if q < 0 : 
-            v_pq = Vpq( p, abs(q), rho, theta, resolution, circle_type, device=device, cache=cache, debug=debug )
+            v_pq = Vpq( p, abs(q), grid, device=device, cache=cache, debug=debug )
             
             v_pq = torch.conj( v_pq )
         else : 
@@ -344,7 +371,7 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
     pass
 
     if cache is not None :
-        vpq_save_to_cache( v_pq, p, q, resolution, circle_type, device, cache, debug=debug) 
+        vpq_save_to_cache( v_pq, p, q, grid, device, cache, debug=debug) 
     pass
 
     if 0 and debug :
@@ -353,27 +380,6 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
 
     return v_pq
 pass
-
-class Grid :
-
-    def __init__(self):
-        self.rho = None
-        self.theta = None
-
-        self.x = None
-        self.y = None 
-
-        self.dx = None 
-        self.dy = None
-
-        self.kidx = None 
-        self.area = None
-
-        self.resolution = None
-        self.circle_type = None
-    pass
-
-pass # Grid
 
 #@profile
 def rho_theta( resolution, circle_type, device, debug=0 ) :
