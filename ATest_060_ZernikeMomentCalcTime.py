@@ -66,6 +66,8 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
             min_y = None
             max_y = None
 
+            cache = { } if use_cache else None 
+
             for idx, P in enumerate( Ps ) :
                 tab_row = []
                 tab_rows.append( tab_row )
@@ -83,10 +85,8 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
                     resolution = 1_000*K
 
-                    cache = None
-
-                    if use_cache :
-                        cache = load_vpq_cache( P, resolution, circle_type, device=device, debug=debug)
+                    if cache is not None :
+                        load_vpq_cache( P, resolution, circle_type, cache, device=device, debug=debug)
                     pass
 
                     run_time = _get_moment_calc_time( img, P, resolution, device=device, circle_type=circle_type, cache=cache, debug=debug )
@@ -95,9 +95,13 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     pct = float( (100.0*cur_idx)/tot_idx )
                     run_time_human = f"{timedelta(seconds=run_time)}".split('.')[0]
 
-                    if cache is not None :
-                        del cache
-                        cache = None
+                    if cache is not None and "cuda" in f"{device}" :
+                        # clear gpu cache only
+                        
+                        a = cache["GPU"][resolution]
+
+                        del cache["GPU"][resolution]
+                        a = None
 
                         torch.cuda.empty_cache()
                     pass

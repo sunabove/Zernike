@@ -259,8 +259,7 @@ def Vpq_file_path( p, q, resolution, circle_type ) :
     return cache_file
 pass # Vpq_file_path
 
-def load_vpq_cache( P, resolution, circle_type, device=None, debug=0) :
-    cache = { }
+def load_vpq_cache( P, resolution, circle_type, cache, device=None, debug=0) : 
 
     if 1 or debug : print( f"--- Loading vpq cache P = {P:02d}, resolution = {resolution}, circle_type = {circle_type}" )
 
@@ -328,21 +327,44 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
             v_pq = cache[dn][resolution][p][q]
         pass
 
+        if v_pq is None and "GPU" in device_name :
+            if "CPU" not in cache :
+                cache["CPU"] = { }
+            pass
+
+            if resolution not in cache["CPU"] :
+                cache["CPU"][resolution] = { }
+            pass
+
+            if p not in cache["CPU"][resolution] :
+                cache["CPU"][resolution][p] = { }
+            pass
+
+            if q in cache["CPU"][resolution][p] :
+                v_pq = cache["CPU"][resolution][p][q]
+            pass
+        pass
+
         if v_pq is None :
             cache_file = Vpq_file_path( p, q, resolution, circle_type )
             
             if os.path.exists( cache_file ) :
-                cache_device = get_cache_device( device, resolution )
+                cache_device = torch.device("cpu")
+                v_pq = torch.load( cache_file, map_location=cache_device, weights_only=1 )
+
+                cache["CPU"][resolution][p][q] = v_pq
+
+                if "GPU" in dn : 
+                    cache_device = get_cache_device( device, resolution )
+                    cache[dn][resolution][p][q] = v_pq.to( cache_device )
+                pass
                 
                 if debug :
-                    pct_desc = f"[{pct:05.1%}]" if pct is not None else ""
+                    pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
 
                     print( f"--- {pct_desc} zernike cache file load = {cache_file}, cache_device = {cache_device}" )
                 pass
-
-                v_pq = torch.load( cache_file, map_location=cache_device, weights_only=1 )
-
-                cache[dn][resolution][p][q] = v_pq
+                
             pass
         pass
     pass
