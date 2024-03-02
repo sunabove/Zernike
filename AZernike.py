@@ -254,7 +254,7 @@ pass
 
 def Vpq_file_path( p, q, resolution, circle_type ) :
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{int(resolution):04d}_P{p:03d}_Q{q:03d}.pth"
+    cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{int(resolution):04d}_P{p:02d}_Q{q:02d}.pth"
 
     return cache_file
 pass # Vpq_file_path
