@@ -261,7 +261,7 @@ pass # Vpq_file_path
 
 def load_vpq_cache( P, resolution, circle_type, cache, device=None, debug=0) : 
 
-    if 1 or debug : print( f"--- Loading vpq cache P = {P:02d}, resolution = {resolution}, circle_type = {circle_type}" )
+    if 1 or debug : print( f"--- Loading vpq cache P = {P:2d}, resolution = {resolution}, circle_type = {circle_type}" )
 
     then = time.time()
 
@@ -348,9 +348,11 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 cache_device = get_cache_device( device, resolution )
                 cache[dn][resolution][p][q] = v_pq.to( cache_device )
 
-                pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
-                print( f"*** {pct_desc} zernike cache CPU load: p = {p}, q = {q}, cache_device = {cache_device} ***" )
-                True
+                if debug :
+                    pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
+                    print( f"*** {pct_desc} zernike cache CPU load: p = {p}, q = {q}, cache_device = {cache_device} ***" )
+                    True
+                pass
             pass
         pass
 
