@@ -150,19 +150,23 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     fit_data[ "as" ].append( a )
                     fit_data[ "bs" ].append( b )
                     
-                    sign = "+" if b >= 0 else "-"
+                    plot_fit_line = 0 
 
-                    fit_text = f"$y = {a:.1f}*log_{'{10}'}(x) {sign} {abs(b):.1f}$"
-                    
-                    x2 = numpy.linspace( min(x), max(x), 100 )
-                    
-                    color = colors[ idx%len(colors) ]
-                    text_color = colors[ idx%len(colors) ]
-                    linestyle = "dotted"
-                    linewidth = 1.2
+                    if plot_fit_line : 
+                        sign = "+" if b >= 0 else "-"
 
-                    chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle=linestyle, linewidth=linewidth )
-                    # chart.text( mx, my, fit_text, color=text_color, fontsize=fs-2 )
+                        fit_text = f"$y = {a:.1f}*log_{'{10}'}(x) {sign} {abs(b):.1f}$"
+                        
+                        x2 = numpy.linspace( min(x), max(x), 100 )
+                        
+                        color = colors[ idx%len(colors) ]
+                        text_color = colors[ idx%len(colors) ]
+                        linestyle = "dotted"
+                        linewidth = 1.2
+                    
+                        chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle=linestyle, linewidth=linewidth )
+                        # chart.text( mx, my, fit_text, color=text_color, fontsize=fs-2 )
+                    pass
 
                     tab_row.append( int( P ) )
                     tab_row.append( a )

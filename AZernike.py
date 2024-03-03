@@ -736,7 +736,21 @@ def get_core_count(**options) :
 
     return core_count
 pass
-    
+
+def get_device_list( device ) :
+    # make device list
+    device_list = [ ]
+
+    if "cuda" in f"{device}" :
+        device_cnt = len( GPUtil.getGPUs() )
+        for device_no in range( device_cnt ) :
+            device_list.append( torch.device( f"cuda:{device_no}" ) )
+        pass
+    else :
+        device_list.append( torch.device("cpu") )
+    pass
+pass # get_device_list
+
 # 모멘트 계산
 def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 ) : 
     then = time.time()
@@ -748,20 +762,8 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         print( line )
     pass
 
-    # make device list
-    cache_device_list = [ ]
-
-    if "cuda" in f"{device}" :
-        device_cnt = len( GPUtil.getGPUs() )
-        for device_no in range( device_cnt ) :
-            cache_device_list.append( torch.device( f"cuda:{device_no}" ) )
-        pass
-    else :
-        cache_device_list.append( torch.device("cpu") )
-    pass
-
-    cache_imgs = { } 
-    for cache_device in cache_device_list :
+    cache_imgs = { }
+    for cache_device in get_device_list( device ) :
         cache_img = torch.tensor( img, dtype=torch.complex64, device=cache_device )
         cache_img = cache_img.ravel()
         cache_imgs[ cache_device ] = cache_img
@@ -793,7 +795,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     return moments, run_time
 pass # calc_moments
 
-def restore_image( moments, grid, use_gpu, cache, debug=0) :
+def restore_image( moments, grid, device, cache, debug=0) :
     
     then = time.time()
     
@@ -805,7 +807,9 @@ def restore_image( moments, grid, use_gpu, cache, debug=0) :
     T = moments.shape[0] - 1 
 
     for p, q in get_pq_list( T ) :
-        v_pq, cache_device = Vpq( p, q, grid, ** options )
+        v_pq, cache_device = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
+
+        v_pq = v_pq.to( device )
 
         img += ((p+1)/area)*moments[p, q]*v_pq
     pass 

@@ -31,6 +31,8 @@ def test_image_restore(img_org, Ks, Ps, debug=0) :
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0 
 
+    chart = charts[ chart_idx ] ; chart_idx += 1
+
     for kidx, K in enumerate( Ks ) : 
         print( line2 )
 
@@ -49,37 +51,31 @@ def test_image_restore(img_org, Ks, Ps, debug=0) :
             then = time.time()
 
             moments, run_time = calc_moments(img, P, resolution, circle_type, device=device, cache=cache, debug=debug )
-            img_restored, psnr_run_time = restore_image(moments, grid, use_gpu, cache, debug=debug)
+            img_restored, restore_run_time = restore_image(moments, grid, device, cache, debug=debug)
             
             img_real = img_restored.real
 
             psnr = calc_psnr( img, img_real )
-            rmse = calc_rmse( img, img_real )
-            
-            img_info = { "title" : f"K={K}, P={P}, PSNR={psnr:.2f}", "img" : t_img, "psnr" : psnr, "K" : K, "P" : P }
-            img_info[ "mad" ] = mad
-            img_info[ "moment_run_time" ] = moment_run_time 
-            img_info[ "psnr_rum_time" ] = psnr_run_time 
-            
-            img_infos.append( img_info ) 
+            rmse = calc_rmse( img, img_real ) 
 
             elapsed = time.time() - then
 
-            print( f"K = {K}, T = {T}, Elapsed = {elapsed:.2f}(sec.)" )
-        pass
+            print( f"K = {K}, P = {P}, elapsed = {elapsed:.2f}(sec.)" )
+        pass # P
+    pass # K
 
-    pass
+    plt.show() 
 
-    def plot_psnr( chart, Ts, psnrs, mads ) :
+    def plot_psnr( chart, Ts, psnrs, rmses ) :
         chart.plot( Ts, psnrs, marker="D", label=f"PSNR(K={K})", color="tab:orange" )
-        chart.plot( Ts, mads, marker="s", label=f"MAD(K={K})", color="tab:blue" )
+        chart.plot( Ts, rmses, marker="s", label=f"MAD(K={K})", color="tab:blue" )
         
         chart.set_title( f"PSNR(K={K})" )
         chart.set_xlabel( f"T" )
         chart.legend()
     pass
     
-    for img_info in img_infos : 
+    for img_info in [] : 
         t_img = img_info[ "img" ]
         title = img_info[ "title" ]
         
@@ -115,19 +111,5 @@ def test_image_restore(img_org, Ks, Ps, debug=0) :
         
         K_prev = K
     pass
-
-    if K is not None and len(Ks) > 0 and len( psnrs ) > 0 : 
-        chart = charts[ chart_idx ] ; chart_idx += 1
-        
-        plot_psnr( chart, Ts, psnrs, mads )
-    pass
-
-    # draw empty chart
-    for chart_idx in range( chart_idx, len(charts) ) :
-        chart = charts[ chart_idx ]
-        chart.plot( [0,0], [0,0] )
-        chart.set_axis_off()
-    pass
-
-    plt.show() 
+ 
 pass # test image restore
