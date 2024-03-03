@@ -315,13 +315,14 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
     resolution = int( resolution )
 
     v_pq = None
-    cache_device = None
+    target_device = None
 
     if q < 0 :
         v_pq, cache_device = _vpq_load_from_cache( p, abs(q), resolution, circle_type, device, cache, pct=pct, debug=debug )
 
         if v_pq is not None:
             v_pq = torch.conj( v_pq ) 
+            target_device = cache_device
         pass
     else : 
         dn = device_name = "GPU" if "cuda" in f"{device}" else "CPU"
@@ -361,6 +362,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 cache_device = get_cache_device( device, resolution )
                 v_pq = v_pq.to( cache_device )
                 cache[dn][resolution][p][q] = [ v_pq, cache_device ]
+                target_device = cache_device
 
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
@@ -382,6 +384,8 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                     cache_device = get_cache_device( device, resolution )
                     v_pq = v_pq.to( cache_device )
                     cache["GPU"][resolution][p][q] = [ v_pq, cache_device ]
+
+                    target_device = cache_device
                 pass
                 
                 if debug :
@@ -394,7 +398,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
         pass
     pass
 
-    return v_pq, cache_device
+    return v_pq, target_device
 pass # _vpq_load_from_cache
 
 def _vpq_save_file( v_pq, p, q, resolution, circle_type, pct=None, debug=0 ) :
