@@ -17,6 +17,10 @@ def test_image_restore(img_org, Ks, Ps, debug=0) :
         load_vpq_cache( max(Ps), Ks, circle_type, cache, device=torch.device("cpu"), debug=debug)
     pass
 
+    if use_gpu :
+        warm_up_gpus( debug=1 )
+    pass
+
     # 서브 챠트 생성 
     col_cnt = 5
     

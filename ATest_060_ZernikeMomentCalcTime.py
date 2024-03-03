@@ -43,8 +43,8 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
         dn = device_name = "GPU" if use_gpu else "CPU"
 
-        if use_gpus :
-            warm_up_gpus( debug=debug )
+        if use_gpu :
+            warm_up_gpus( debug=1 )
         pass
 
         for use_cache in use_caches : 
