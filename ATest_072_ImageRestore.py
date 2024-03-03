@@ -36,21 +36,21 @@ def test_image_restore(img_org, Ks, Ps, debug=0) :
 
         img = cv.resize( img_org, (resolution, resolution), interpolation=cv.INTER_AREA )
 
-        if cache is not None and use_gpu :
-            # zernike cache load on gpu
-            load_vpq_cache( P, K, circle_type, cache, device=torch.device("cuda:0"), debug=debug)
-        pass
-        
         for pidx, P in enumerate( Ps ) : 
+            if cache is not None and use_gpu :
+                # zernike cache load on gpu
+                load_vpq_cache( P, K, circle_type, cache, device=torch.device("cuda:0"), debug=debug)
+            pass
+        
             then = time.time()
 
             moments, run_time = calc_moments(img, P, resolution, circle_type, device=device, cache=cache, debug=debug )
             img_restored, psnr_run_time = restore_image(moments, grid, use_gpu, cache, debug=debug)
             
-            t_img = img_restored.real
+            img_real = img_restored.real
 
-            psnr = calc_psnr( img, t_img, **options )
-            mad = calc_mad( img, t_img, **options )
+            psnr = calc_psnr( img, img_real )
+            rmse = calc_rmse( img, img_real )
             
             img_info = { "title" : f"K={K}, P={P}, PSNR={psnr:.2f}", "img" : t_img, "psnr" : psnr, "K" : K, "P" : P }
             img_info[ "mad" ] = mad
@@ -64,9 +64,7 @@ def test_image_restore(img_org, Ks, Ps, debug=0) :
             print( f"K = {K}, T = {T}, Elapsed = {elapsed:.2f}(sec.)" )
         pass
 
-    pass 
-
-    
+    pass
 
     def plot_psnr( chart, Ts, psnrs, mads ) :
         chart.plot( Ts, psnrs, marker="D", label=f"PSNR(K={K})", color="tab:orange" )
