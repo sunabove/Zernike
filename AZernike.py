@@ -735,11 +735,11 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         moments[ p, q ] = moment
     pass
 
+    run_time = time.time() - then
+
     if 0 :
         print( "Moments = ", moments )
     pass
-
-    run_time = time.time() - then
 
     return moments, run_time
 pass # calc_moments

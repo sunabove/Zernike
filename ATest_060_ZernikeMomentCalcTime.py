@@ -167,8 +167,12 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                 linestyle = "dashed" if use_cache else "solid"
                 
                 label = f"{dn}: {P:2d}$P$"
-                if use_cache :
-                    label = f"{dn}-CACHE: {P:2d}$P$"
+                if len( use_caches ) > 1 :
+                    if use_cache :
+                        label = f"{dn}-CACHE: {P:2d}$P$"
+                    else :
+                        label = f"{dn}-NOCACHE: {P:2d}$P$"
+                    pass
                 pass
 
                 linewidth = 2
