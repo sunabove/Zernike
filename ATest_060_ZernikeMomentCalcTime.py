@@ -43,6 +43,10 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
         dn = device_name = "GPU" if use_gpu else "CPU"
 
+        if use_gpus :
+            warm_up_gpus( debug=debug )
+        pass
+
         for use_cache in use_caches : 
 
             fit_data = { "as" : [], "bs" : [] }
@@ -219,7 +223,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
     chart.grid( axis='y', linestyle="dotted" )
 
     chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.36), fontsize=fs-4, ncols=3 )
-    leg_1 = chart.legend( loc="upper left", fontsize=fs-4 )
+    leg_1 = chart.legend( loc="upper left", fontsize=fs-5 )
 
     if 1 : 
 
@@ -244,7 +248,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
             lines.append( line )
         pass
 
-        chart.legend( handles=legends, loc="lower right", fontsize=fs-4 )
+        chart.legend( handles=legends, loc="lower right", fontsize=fs-5 )
         #leg_2 = chart.legend( lines, legends, fontsize=fs-4 )
 
         chart.add_artist(leg_1)

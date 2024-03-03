@@ -261,6 +261,24 @@ def Vpq_file_path( p, q, resolution, circle_type ) :
     return cache_file
 pass # Vpq_file_path
 
+def warm_up_gpus( debug=0 ) :
+    if debug : print( "Warm up gpu devices ..." , end="", flush=1 )
+
+    for device_no in range( len( GPUtil.getGPUs() ) ) : 
+        device = torch.device( f"cuda:{device_no}" )
+
+        temp = torch.zeros( (4000, 4000), dtype=torch.complex64, device=device )
+        temp = 1
+
+        del temp
+        temp = None
+
+        torch.cuda.empty_cache()
+    pass
+
+    if debug : print( " Done." , flush=1 )
+pass # warm_up_gpus
+
 def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) : 
 
     if is_scalar( Ks ) :
@@ -775,7 +793,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     return moments, run_time
 pass # calc_moments
 
-def restore_image( moments, grid, use_gpu, use_cache, debutg=0) :
+def restore_image( moments, grid, use_gpu, cache, debug=0) :
     
     then = time.time()
     
@@ -787,7 +805,7 @@ def restore_image( moments, grid, use_gpu, use_cache, debutg=0) :
     T = moments.shape[0] - 1 
 
     for p, q in get_pq_list( T ) :
-        v_pq = Vpq( p, q, grid, ** options )
+        v_pq, cache_device = Vpq( p, q, grid, ** options )
 
         img += ((p+1)/area)*moments[p, q]*v_pq
     pass 
