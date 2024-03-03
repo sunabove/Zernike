@@ -231,7 +231,7 @@ def get_cache_device( curr_device, resolution ) :
 
         gpu_cnt = len( gpus )
 
-        target_mem = resolution*resolution*8
+        target_mem = resolution*resolution*8*6
 
         device_no = gpu_cnt - 1
 
@@ -240,7 +240,7 @@ def get_cache_device( curr_device, resolution ) :
         for idx in range( 0, gpu_cnt ) :
             free_mem, total_mem = torch.cuda.mem_get_info( idx )
 
-            if free_mem > target_mem*10 :
+            if free_mem > target_mem :
                 if ( pre_free_mem is None ) or ( free_mem > pre_free_mem ):
                     pre_free_mem = free_mem 
                     device_no = idx
@@ -723,7 +723,7 @@ pass
 def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 ) : 
     then = time.time()
 
-    img = cv.resize( img, ( int(resolution), int( resolution) ), interpolation=cv.INTER_AREA )
+    img = cv.resize( img, ( int(resolution), int(resolution) ), interpolation=cv.INTER_AREA )
 
     if 0 and debug : 
         print( "img shape= ", img.shape ) 
