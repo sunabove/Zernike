@@ -361,8 +361,8 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
 
                 cache_device = get_cache_device( device, resolution )
                 v_pq = v_pq.to( cache_device )
-                cache[dn][resolution][p][q] = [ v_pq, cache_device ]
                 target_device = cache_device
+                cache[dn][resolution][p][q] = [ v_pq, cache_device ]
 
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
