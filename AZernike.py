@@ -386,7 +386,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
 
-                    print( f"--- {pct_desc} zernike cache load {cache_file} => {cache_device} : p = {p:3d}, q = {q:3d}" )
+                    print( f"--- {pct_desc} zernike cache load FILE => {cache_device} : {cache_file} p = {p:3d}, q = {q:3d}" )
                 pass
                 
             pass
