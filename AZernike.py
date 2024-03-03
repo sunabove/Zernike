@@ -381,7 +381,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 if "GPU" in dn : 
                     cache_device = get_cache_device( device, resolution )
                     v_pq = v_pq.to( cache_device )
-                    
+
                     cache["GPU"][resolution][p][q] = [ v_pq, cache_device ] 
                 pass
                 
@@ -736,14 +736,15 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
 
     moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
 
-    grid = rho_theta( resolution, circle_type, device=cache_device, debug=0 )
+    grid = rho_theta( resolution, circle_type, device=device, debug=0 )
     
     for p, q in get_pq_list( T ) : 
         v_pq, cache_device = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
 
         cache_img = cache_imgs[ cache_device ]
         
-        moment = torch.dot( v_pq, cache_img )*grid.dx*grid.dy
+        moment = torch.dot( v_pq, cache_img )
+        moment = moment*grid.dx*grid.dy
 
         moment = torch.conj( moment )
 

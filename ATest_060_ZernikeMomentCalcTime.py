@@ -596,6 +596,8 @@ if __name__ == "__main__" :
 
         use_gpus  = [ 1 ] 
         use_caches = [ 1 ]
+        
+        use_caches = [ 0 ]
 
         debug = 1
 
