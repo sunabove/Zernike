@@ -68,6 +68,10 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
             cache = { } if use_cache else None 
 
+            if cache is not None :
+                load_vpq_cache( max(Ps), Ks, circle_type, cache, device=torch.device("cpu"), debug=debug)
+            pass    
+
             for idx, P in enumerate( Ps ) :
                 tab_row = []
                 tab_rows.append( tab_row )
@@ -84,10 +88,6 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     curr_K = K
 
                     resolution = int( 1_000*K )
-
-                    if cache is not None :
-                        load_vpq_cache( P, resolution, circle_type, cache, device=device, debug=debug)
-                    pass
 
                     run_time = _get_moment_calc_time( img, P, resolution, device=device, circle_type=circle_type, cache=cache, debug=debug )
                     run_times.append( run_time )

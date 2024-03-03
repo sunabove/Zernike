@@ -259,31 +259,36 @@ def Vpq_file_path( p, q, resolution, circle_type ) :
     return cache_file
 pass # Vpq_file_path
 
-def load_vpq_cache( P, resolution, circle_type, cache, device=None, debug=0) : 
+def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) : 
 
-    if 1 or debug : print( f"--- Loading vpq cache P = {P:2d}, resolution = {resolution}, circle_type = {circle_type}" )
+    if 1 or debug : print( f"--- Loading vpq cache P = {P:2d}, MaxK = {max(Ks)}, circle_type = {circle_type}" )
 
     then = time.time()
 
-    grid = rho_theta( resolution, circle_type, device=device, debug=0 )
+    for K in Ks :
 
-    pq_list = get_pq_list( P )
+        resolution = int( 1000*K )
 
-    tot_cnt = len( pq_list )
+        grid = rho_theta( resolution, circle_type, device=device, debug=0 )
 
-    for idx, [ p, q ] in enumerate( pq_list ) :
-        pct = (idx + 1)/tot_cnt
+        pq_list = get_pq_list( P )
 
-        v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
+        tot_cnt = len( pq_list )
 
-        if v_pq is None :
-            v_pq = Vpq( p, q, grid, device=device, cache=None, debug=debug ) 
-
-            _vpq_save_file( v_pq, p, q, resolution, circle_type, pct=pct, debug=debug ) 
+        for idx, [ p, q ] in enumerate( pq_list ) :
+            pct = (idx + 1)/tot_cnt
 
             v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
+
+            if v_pq is None :
+                v_pq = Vpq( p, q, grid, device=device, cache=None, debug=debug ) 
+
+                _vpq_save_file( v_pq, p, q, resolution, circle_type, pct=pct, debug=debug ) 
+
+                v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
+            pass
         pass
-    pass
+    pass # K
 
     elapsed = time.time() - then
 
@@ -350,7 +355,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
 
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
-                    print( f"*** {pct_desc} zernike cache CPU load: p = {p}, q = {q}, cache_device = {cache_device} ***" )
+                    print( f"*** {pct_desc} zernike cache CPU => GPU load: p = {p}, q = {q}, device = {cache_device} ***" )
                     True
                 pass
             pass
@@ -373,7 +378,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
 
-                    print( f"--- {pct_desc} zernike cache FILE load = {cache_file}, cache_device = {cache_device}" )
+                    print( f"--- {pct_desc} zernike cache FILE load = {cache_file}, device = {cache_device}" )
                 pass
                 
             pass
