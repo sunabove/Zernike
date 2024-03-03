@@ -236,7 +236,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
             lines.append( line )
         pass
 
-        chart.legend( handles=legends, loc="upper left" fontsize=fs-4 )
+        chart.legend( handles=legends, loc="upper left", fontsize=fs-4 )
         #leg_2 = chart.legend( lines, legends, fontsize=fs-4 )
 
         chart.add_artist(leg_1)
