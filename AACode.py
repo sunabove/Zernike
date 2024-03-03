@@ -71,8 +71,9 @@ plt.savefig( result_figure_file )
 print( f"result_figure_file = {result_figure_file}" )
 
 use_gpu = 1
+use_cache = 1
 device_no = 0 
-hash = {} if use_gpu else None
+cache = {} if use_cache else None
 device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
 
 torch.cuda.empty_cache()

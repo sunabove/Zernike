@@ -1,85 +1,63 @@
 from AZernike import *
 
-def test_image_restore(img_input, Ks, Ts, **options) :
+def test_image_restore(img_org, Ks, Ps, debug=0) :
     print( line2 )
-    print( f"use_gpu = { options['use_gpu'] }, use_hash={ options['use_hash'] }, use_thread = { options['use_thread'] }" )
-
-    #{ "name" : "lena",         "img" : rgb2gray( io.imread( 'image/lenna.png' ) ) } , 
     
-    use_gpu = get_option( "use_gpu", **options )
+    use_gpu = 1
+    use_cache = 1
 
-    img_infos = { }
-
-    for K in Ks : 
-        print( line2 )
-        
-        options[ "hash" ] = {}
-
-        circle_type = "outer"
-
-        rho, theta, x, y, dx, dy, k, area = rho_theta( 1000*K, circle_type, **options ) 
-
-        img = cv.resize( img_input, (int(K*1_000), int(K*1_000)), interpolation=cv.INTER_AREA )
-        
-        np = cupy if use_gpu else numpy
-        
-        if use_gpu :
-            img = cupy.asarray( img )
-        pass
-
-        # image scaled
-        img_infos.append( { "title" : f"Origianl Image (K={K})", "img" : img, "K" : K } )
-
-        for T in Ts : 
-            then = perf_counter()
-
-            moments, moment_run_time = calc_moments(T, img, rho, theta, dx, dy, **options )
-            img_restored, psnr_run_time = restore_image(moments, rho, theta, **options )
-            
-            t_img = img_restored.real
-            psnr = calc_psnr( img, t_img, **options )
-            mad = calc_mad( img, t_img, **options )
-            
-            img_info = { "title" : f"K={K}, T={T}, PSNR={psnr:.2f}", "img" : t_img, "psnr" : psnr, "K" : K, "T" : T }
-            img_info[ "mad" ] = mad
-            img_info[ "moment_run_time" ] = moment_run_time 
-            img_info[ "psnr_rum_time" ] = psnr_run_time 
-            
-            img_infos.append( img_info ) 
-
-            elapsed = perf_counter() - then
-
-            print( f"K = {K}, T = {T}, Elapsed = {elapsed:.2f}(sec.)" )
-        pass
-        
-        if "hash" in options : 
-            del options[ "hash" ]
-        pass
-    pass 
+    device_no = 0 
+    cache = {} if use_cache else None
+    device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
 
     # 서브 챠트 생성 
-    col_cnt = len(Ks) if len(Ks) > len(Ts) else len(Ts)
-    col_cnt += 2 
-
-    max_col_cnt = 5
-    if col_cnt > max_col_cnt :
-        col_cnt = max_col_cnt
-
-    row_cnt = len( img_infos ) // col_cnt
-    if col_cnt*row_cnt < len( img_infos ) + len(Ks) :
-        row_cnt += 1
-    pass
+    col_cnt = 5
+    
+    row_cnt = int( ( len( Ps ) + 1 + 0.5) / col_cnt )*len(Ks) 
 
     w = 2.5
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=1 )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     chart_idx = 0 
 
-    K_prev = None 
-    psnrs = []
-    mads = []
-    K = None
+    for kidx, K in enumerate( Ks ) : 
+        print( line2 )
+
+        circle_type = "outer"
+
+        resolution = int( 1000*K )
+
+        grid = rho_theta( resolution, circle_type, device, debug=debug ) 
+
+        img = cv.resize( img_org, (resolution, resolution), interpolation=cv.INTER_AREA )
+        
+        for pidx, P in enumerate( Ps ) : 
+            then = time.time()
+
+            moments, moment_run_time = calc_moments(P, img, rho, theta, dx, dy, **options )
+            img_restored, psnr_run_time = restore_image(moments, rho, theta, **options )
+            
+            t_img = img_restored.real
+            
+            psnr = calc_psnr( img, t_img, **options )
+            mad = calc_mad( img, t_img, **options )
+            
+            img_info = { "title" : f"K={K}, P={P}, PSNR={psnr:.2f}", "img" : t_img, "psnr" : psnr, "K" : K, "P" : P }
+            img_info[ "mad" ] = mad
+            img_info[ "moment_run_time" ] = moment_run_time 
+            img_info[ "psnr_rum_time" ] = psnr_run_time 
+            
+            img_infos.append( img_info ) 
+
+            elapsed = time.time() - then
+
+            print( f"K = {K}, T = {T}, Elapsed = {elapsed:.2f}(sec.)" )
+        pass
+
+    pass 
+
     
+
     def plot_psnr( chart, Ts, psnrs, mads ) :
         chart.plot( Ts, psnrs, marker="D", label=f"PSNR(K={K})", color="tab:orange" )
         chart.plot( Ts, mads, marker="s", label=f"MAD(K={K})", color="tab:blue" )

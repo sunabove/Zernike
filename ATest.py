@@ -1,3 +1,5 @@
+print( "int(0.5) = ", int(0.5) )
+
 # pytorch imaginary number test
 
 import numpy

@@ -231,7 +231,7 @@ def get_cache_device( curr_device, resolution ) :
 
         gpu_cnt = len( gpus )
 
-        target_mem = resolution*resolution*8*6
+        target_mem = resolution*resolution*8*10
 
         device_no = gpu_cnt - 1
 
@@ -775,27 +775,20 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     return moments, run_time
 pass # calc_moments
 
-def restore_image(moments, rho, theta, **options) : 
-    use_thread = get_option( "use_thread", **options )
-    use_gpu = get_option( "use_gpu", **options )
-    np = cupy if use_gpu else numpy
+def restore_image( moments, grid, use_gpu, use_cache, debutg=0) :
     
+    then = time.time()
     
-    then = perf_counter()
-    
-    s = T = moments.shape[0] - 1 
-    
-    img = np.zeros_like( rho, np.complex_ )
-    
-    pqs = get_pq_list( T )
-    
-    area = 2 # outer type image area in unit_circle
-    if "circle_type" in options and "inner" in options["circle_type"] :
-        area = pi
-    pass        
-    
-    for p, q in pqs :
-        v_pq = Vpq( p, q, rho, theta, ** options )
+    rho = grid.rho
+    area = grid.area
+
+    img = torch.zeros_like( rho, dtype=torch.complex64 )
+
+    T = moments.shape[0] - 1 
+
+    for p, q in get_pq_list( T ) :
+        v_pq = Vpq( p, q, grid, ** options )
+
         img += ((p+1)/area)*moments[p, q]*v_pq
     pass 
 
@@ -803,48 +796,33 @@ def restore_image(moments, rho, theta, **options) :
     
     img = img.reshape( s, s )
     
-    run_time = perf_counter() - then
+    run_time = time.time() - then
     
     return img , run_time
 pass ## restore_image
 
-def calc_psnr(img_org, img_restored, **options ) : 
-    use_thread = get_option( "use_thread", **options )
-    use_gpu = get_option( "use_gpu", **options )
-    
-    #print( f"calc_psnr use_gpu = {use_gpu}" )
-        
-    np = cupy if use_gpu else numpy
-    
+def calc_psnr(img_org, img_restored ) :
     img_diff = img_org - img_restored
 
-    #gmax = np.max( img_org ) # 최대값 
+    mse = torch.sum( img_diff*img_diff ) / img_diff.size
+
     gmax = 255
-    
-    mse = np.sum( np.square( img_diff ) ) / img_diff.size
-    psnr = 10*math.log10(gmax*gmax/mse)
+
+    psnr = 10*torch.log10( gmax*gmax/mse )
     
     return psnr
 pass # calc_psnr
 
-# Mean of Absolute Differnce
-def calc_mad(img_org, img_restored, **options ) : 
-    use_thread = get_option( "use_thread", **options )
-    use_gpu = get_option( "use_gpu", **options )
+# root mean squre error
+def calc_rmse(img_org, img_restored, **options ) :  
     
     #print( f"calc_psnr use_gpu = {use_gpu}" )
         
-    np = cupy if use_gpu else numpy
-    
-    img_diff = img_org - img_restored
+    img_diff = img_org - img_restored 
 
-    mad = np.sum( np.absolute( img_diff ) ) / img_diff.size 
+    rmse = torch.sum( img_diff*img_diff ) / img_diff.size 
     
-    if use_gpu : 
-        mad = cupy.asnumpy( mad )
-    pass
-    
-    return mad
+    return rmse
 pass # calc_mad
 
 def get_moments_disp(moments, **options ) :
