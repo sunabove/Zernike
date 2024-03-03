@@ -230,19 +230,20 @@ def get_cache_device( curr_device, resolution ) :
 
         gpu_cnt = len( gpus )
 
-        device_no = gpu_cnt - 1
-
         target_mem = resolution*resolution*8
 
-        for idx in range( gpu_cnt -1, -1, -1 ) :
+        device_no = gpu_cnt - 1
+
+        pre_free_mem = None
+
+        for idx in range( 0, gpu_cnt ) :
             free_mem, total_mem = torch.cuda.mem_get_info( idx )
 
-            if idx == 0 and free_mem > target_mem*10 :
-                device_no = idx
-                break
-            if free_mem > target_mem : 
-                device_no = idx
-                break
+            if free_mem > target_mem*10 :
+                if ( pre_free_mem is None ) or ( free_mem > pre_free_mem ):
+                    pre_free_mem = free_mem 
+                    device_no = idx
+                pass
             pass
         pass
 
@@ -284,14 +285,14 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
         for [ p, q ] in pq_list :
             pct = (idx + 1)/tot_cnt
 
-            v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
+            v_pq, cache_device = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
 
             if v_pq is None :
-                v_pq = Vpq( p, q, grid, device=device, cache=None, debug=debug ) 
+                v_pq, cache_device = Vpq( p, q, grid, device=device, cache=None, debug=debug ) 
 
                 _vpq_save_file( v_pq, p, q, resolution, circle_type, pct=pct, debug=debug ) 
 
-                v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
+                v_pq, cache_device = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
             pass
 
             idx += 1
@@ -314,14 +315,13 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
     resolution = int( resolution )
 
     v_pq = None
+    cache_device = None
 
-    if cache is None :
-        v_pq = None
-    elif q < 0 :
-        v_pq = _vpq_load_from_cache( p, abs(q), resolution, circle_type, device, cache, pct=pct, debug=debug )
+    if q < 0 :
+        v_pq, cache_device = _vpq_load_from_cache( p, abs(q), resolution, circle_type, device, cache, pct=pct, debug=debug )
 
         if v_pq is not None:
-            v_pq = torch.conj( v_pq )
+            v_pq = torch.conj( v_pq ) 
         pass
     else : 
         dn = device_name = "GPU" if "cuda" in f"{device}" else "CPU"
@@ -356,10 +356,11 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
             pass
 
             if q in cache["CPU"][resolution][p] :
-                v_pq = cache["CPU"][resolution][p][q]
+                v_pq, cache_device = cache["CPU"][resolution][p][q]
 
                 cache_device = get_cache_device( device, resolution )
-                cache[dn][resolution][p][q] = v_pq.to( cache_device )
+                v_pq = v_pq.to( cache_device )
+                cache[dn][resolution][p][q] = [ v_pq, cache_device ]
 
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
@@ -375,11 +376,12 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 cache_device = torch.device("cpu")
                 v_pq = torch.load( cache_file, map_location=cache_device, weights_only=1 )
 
-                cache["CPU"][resolution][p][q] = v_pq
+                cache["CPU"][resolution][p][q] = [ v_pq, cache_device ]
 
                 if "GPU" in dn : 
                     cache_device = get_cache_device( device, resolution )
-                    cache["GPU"][resolution][p][q] = v_pq.to( cache_device )
+                    v_pq = v_pq.to( cache_device )
+                    cache["GPU"][resolution][p][q] = [ v_pq, cache_device ]
                 pass
                 
                 if debug :
@@ -392,11 +394,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
         pass
     pass
 
-    if v_pq is not None :
-        return v_pq.to( device )
-    else :
-        return v_pq
-    pass
+    return v_pq, cache_device
 pass # _vpq_load_from_cache
 
 def _vpq_save_file( v_pq, p, q, resolution, circle_type, pct=None, debug=0 ) :
@@ -430,9 +428,10 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
         print( f"V p = {p}, q = {q}, circle_type = {circle_type}, K = {resolution/1000}, cache = {cache != None}" )
 
     v_pq = None
+    cache_device = device
 
     if cache is not None :
-        v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=debug)
+        v_pq, cache_device = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=debug)
     else : 
         q = int(q)
         
@@ -455,7 +454,7 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
         print( f"Vpq({p}, {q}) = ", v_pq )
     pass
 
-    return v_pq
+    return v_pq, cache_device
 pass
 
 #@profile
@@ -715,24 +714,40 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         print( line )
     pass
 
-    img = torch.tensor( img, dtype=torch.complex64, device=device )
+    # make device list
+    cache_device_list = [ ]
+
+    if "cuda" in f"{device}" :
+        device_cnt = len( GPUtil.getGPUs() )
+        for device_no in range( device_cnt ) :
+            cache_device_list.append( torch.device( f"cuda:{device_no}" ) )
+        pass
+    else :
+        cache_device_list.append( torch.device("cpu") )
+    pass
+
+    cache_imgs = { } 
+    for cache_device in cache_device_list :
+        cache_img = torch.tensor( img, dtype=torch.complex64, device=cache_device )
+        cache_imgs[ cache_device ] = cache_img.ravel()
+    pass
 
     moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
 
-    grid = rho_theta( resolution, circle_type, device=device, debug=0 )
-    
-    if 0 and debug : print( f"rho shape = {grid.rho.shape}" )
+    grid = rho_theta( resolution, circle_type, device=cache_device, debug=0 )
     
     img_rav = img.ravel()
 
     for p, q in get_pq_list( T ) : 
-        v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug ) 
+        v_pq, cache_device = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
+
+        cache_img = cache_imgs[ cache_device ]
         
-        moment = torch.dot( v_pq, img_rav )*grid.dx*grid.dy
+        moment = torch.dot( v_pq, cache_img )*grid.dx*grid.dy
 
         moment = torch.conj( moment )
 
-        moments[ p, q ] = moment
+        moments[ p, q ] = moment.to( device )
     pass
 
     run_time = time.time() - then
