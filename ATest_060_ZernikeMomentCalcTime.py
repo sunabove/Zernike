@@ -595,9 +595,8 @@ if __name__ == "__main__" :
         Ks = torch.arange( 1,  2 + 1, 1 )
 
         use_gpus  = [ 1 ] 
-        use_caches = [ 1 ]
-        
         use_caches = [ 0 ]
+        use_caches = [ 1 ]
 
         debug = 1
 

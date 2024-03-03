@@ -23,6 +23,7 @@ from tabulate import tabulate
 from AProfiler import *
 
 from tqdm import tqdm
+from tqdm import tqdm_notebook
 from pathlib import Path
 
 log.basicConfig(level=log.DEBUG) 
@@ -276,13 +277,12 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
 
     idx = 0 
 
-    for K in Ks :
-
+    for K in tqdm_notebook( Ks, desc="K" ) :
         resolution = int( 1000*K )
 
         grid = rho_theta( resolution, circle_type, device=device, debug=0 )
 
-        for [ p, q ] in pq_list :
+        for [ p, q ] in tqdm_notebook( pq_list, desc=f"K={K}: pq" ) :
             pct = (idx + 1)/tot_cnt
 
             v_pq, cache_device = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
