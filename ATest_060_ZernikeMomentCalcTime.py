@@ -48,7 +48,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
             fit_data = { "as" : [], "bs" : [] }
             cache_label = ""
             if len( use_caches ) > 1 :
-                cache_label = ":CACHE" if use_cache else ":NOCACHE"
+                cache_label = ":CACHE" if use_cache else ":NOCAC"
             pass
 
             fit_datas[ f"{device_name}{cache_label}" ] = fit_data
@@ -83,7 +83,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                 tab_rows.append( tab_row )
 
                 tab_row.append( device_name )
-                tab_row.append( "CACHE" if use_cache else "NOCACH" )
+                tab_row.append( "CACHE" if use_cache else "NOCAC" )
 
                 run_times = [ ]
 
@@ -175,7 +175,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     if use_cache :
                         label = f"{dn}-CACHE: {P:2d}$P$"
                     else :
-                        label = f"{dn}-NOCACHE: {P:2d}$P$"
+                        label = f"{dn}-NOCAC: {P:2d}$P$"
                     pass
                 pass
 
@@ -213,7 +213,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
     chart.grid( axis='y', linestyle="dotted" )
 
     chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.36), fontsize=fs-4, ncols=3 )
-    leg_1 = chart.legend( fontsize=fs-4 )
+    leg_1 = chart.legend( loc="upper left", fontsize=fs-4 )
 
     if 1 : 
 
@@ -236,7 +236,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
             lines.append( line )
         pass
 
-        chart.legend( handles=legends, loc="upper left", fontsize=fs-4 )
+        chart.legend( handles=legends, loc="lower right", fontsize=fs-4 )
         #leg_2 = chart.legend( lines, legends, fontsize=fs-4 )
 
         chart.add_artist(leg_1)
