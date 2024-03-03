@@ -46,7 +46,8 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
         for use_cache in use_caches : 
 
             fit_data = { "as" : [], "bs" : [] }
-            fit_datas[ f"{device_name}:{use_cache}" ] = fit_data
+            cache_label = ":CACHE" if use_cache else ""
+            fit_datas[ f"{device_name}{cache_label}" ] = fit_data
 
             if not device in warm_up :
                 # warm up device by assing temporary memory
@@ -143,7 +144,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     
                     sign = "+" if b >= 0 else "-"
 
-                    text = f"$y = {a:.1f}*log_{'{10}'}(x) {sign} {abs(b):.1f}$"
+                    fit_text = f"$y = {a:.1f}*log_{'{10}'}(x) {sign} {abs(b):.1f}$"
                     
                     x2 = numpy.linspace( min(x), max(x), 100 )
                     
@@ -153,7 +154,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     linewidth = 1.2
 
                     chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle=linestyle, linewidth=linewidth )
-                    chart.text( mx, my, text, color=text_color, fontsize=fs-2 )
+                    chart.text( mx, my, fit_text, color=text_color, fontsize=fs-2 )
 
                     tab_row.append( int( P ) )
                     tab_row.append( a )
@@ -192,22 +193,6 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
         dn += " "
     pass
 
-    for idx, key in enumerate( fit_datas ) :
-        fit_data = fit_datas[ key ]
-
-        fa_mean = numpy.mean( fit_data[ "as" ][1:] )
-        fbs = numpy.polyfit( numpy.array( Ps[1:] ), numpy.array( fit_data[ "bs" ][1:] ), 1 )
-
-        label= f"$y = {fa_mean:.3f}*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$" 
-        color = colors[ idx%len(colors) ]
-
-        x = Ks
-        xi = x[1] + 0.1
-        yi = max_y - abs(max_y)*(idx)/10
-
-        chart.annotate( label, (xi, yi), color=color, textcoords="offset points", xytext=(0, 0), ha='left', fontsize=fs-4 )
-    pass
-
     chart.set_title( f"{dn}Zernike Moment Run-time" )
 
     chart.set_xlabel( f"Grid Tick Count" )
@@ -221,6 +206,24 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
     chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.36), fontsize=fs-4, ncols=3 )
     chart.legend( fontsize=fs-4 )
+
+    if 0 : 
+        for idx, key in enumerate( fit_datas ) :
+            fit_data = fit_datas[ key ]
+
+            fa_mean = numpy.mean( fit_data[ "as" ][1:] )
+            fbs = numpy.polyfit( numpy.array( Ps[1:] ), numpy.array( fit_data[ "bs" ][1:] ), 1 )
+
+            label= f"$y = {fa_mean:.3f}*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$" 
+            color = colors[ idx%len(colors) ]
+
+            x = Ks
+            xi = x[1] + 0.1
+            yi = max_y - abs(max_y)*(idx)/10
+
+            chart.annotate( label, (xi, yi), color=color, textcoords="offset points", xytext=(0, 0), ha='left', fontsize=fs-4 )
+        pass
+    pass
 
     plt.show()
 
