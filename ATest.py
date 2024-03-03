@@ -1,5 +1,10 @@
 # pytorch imaginary number test
 
+import numpy
+import torch
+
+Ks = torch.arange( 1,  6 + 1, 1 )
+print( "is_scalar = ", num( Ks[0] ) )
 
 print( [""] * 4 )
 
