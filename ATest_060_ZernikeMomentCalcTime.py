@@ -211,7 +211,9 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
     chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.36), fontsize=fs-4, ncols=3 )
     leg_1 = chart.legend( fontsize=fs-4 )
 
-    if 0 : 
+    if 1 : 
+
+        import matplotlib.patches as mpatches
 
         legends = [ ]
         lines = [ ]
@@ -222,15 +224,16 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
             fa_mean = numpy.mean( fit_data[ "as" ][1:] )
             fbs = numpy.polyfit( numpy.array( Ps[1:] ), numpy.array( fit_data[ "bs" ][1:] ), 1 )
 
-            legend = f"{key}: $y = {fa_mean:.3f}*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$"            
+            label = f"{key}: $y = {fa_mean:.3f}*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$"
+            legend = mpatches.Patch( label=label )
             legends.append( legend )
 
             line = chart.plot( [ min(Ks) ] , [ miny ] )
             lines.append( line )
         pass
 
-        line = chart.plot( "" )
-        leg_2 = chart.legend( lines, legends, fontsize=fs-4 )
+        chart.legend( handles=legends, fontsize=fs-4 )
+        #leg_2 = chart.legend( lines, legends, fontsize=fs-4 )
 
         chart.add_artist(leg_1)
     pass
