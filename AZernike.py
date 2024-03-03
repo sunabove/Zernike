@@ -265,7 +265,7 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
         Ks = [ Ks ]
     pass
 
-    if 1 or debug : print( f"--- Loading vpq cache P = {P:2d}, MaxK = {max(Ks)}, circle_type = {circle_type}" )
+    if 1 or debug : print( f"--- Loading vpq cache P = {P:2d}, MaxK = {max(Ks)}, circle_type = {circle_type}, device = {device}" )
 
     then = time.time()
 

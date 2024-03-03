@@ -46,7 +46,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
         for use_cache in use_caches : 
 
             fit_data = { "as" : [], "bs" : [] }
-            fit_datas[ device_name ] = fit_data
+            fit_datas[ f"{device_name}:{use_cache}" ] = fit_data
 
             if not device in warm_up :
                 # warm up device by assing temporary memory
@@ -149,10 +149,10 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     
                     color = colors[ idx%len(colors) ]
                     text_color = colors[ idx%len(colors) ]
-                    linestyle_fit = "dotted"
+                    linestyle = "dotted"
                     linewidth = 1.2
 
-                    chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle=linestyle_fit, linewidth=linewidth )
+                    chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle=linestyle, linewidth=linewidth )
                     chart.text( mx, my, text, color=text_color, fontsize=fs-2 )
 
                     tab_row.append( int( P ) )
@@ -163,14 +163,21 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
                 marker = markers[ idx%len(markers) ]
                 color = colors[ idx%len(colors) ]
-                linestyle = "solid" if use_gpu else "dashed"
+                linestyle = "dashed" if use_cache else "solid"
+                
                 label = f"{dn}: {P:2d}$P$"
+                if use_cache :
+                    label = f"{dn}-CACHE: {P:2d}$P$"
+                pass
+
                 linewidth = 2
 
                 chart.plot( x, y, marker=marker, color=color, label=label, linestyle=linestyle, linewidth=linewidth )
 
                 tab_row.extend( run_times )
             pass # P
+
+            print()
 
         pass # use_cache
 
