@@ -749,6 +749,8 @@ def get_device_list( device ) :
     else :
         device_list.append( torch.device("cpu") )
     pass
+
+    return device_list
 pass # get_device_list
 
 # 모멘트 계산
