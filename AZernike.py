@@ -363,8 +363,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
 
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
-                    print( f"*** {pct_desc} zernike cache load CPU => {cache_device} : p = {p:3d}, q = {q:3d} ***" )
-                    True
+                    print( f"*** {pct_desc} zernike cache load CPU => {cache_device} : resolution = {resolution}, p = {p:3d}, q = {q:3d} ***" )
                 pass
             pass
         pass
@@ -386,7 +385,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
 
-                    print( f"--- {pct_desc} zernike cache load FILE => {cache_device} : {cache_file} : resolution={resolution}, p = {p:3d}, q = {q:3d}" )
+                    print( f"--- {pct_desc} zernike cache load FILE => {cache_device} : {cache_file} : resolution = {resolution}, p = {p:3d}, q = {q:3d}" )
                 pass
                 
             pass
@@ -622,7 +621,11 @@ pass # -- max_gpu_memory
 
 # 배열 여부 체크 
 def is_array( data ) :
-    return isinstance( data, (list, tuple, numpy.ndarray, torch.Tensor) )
+    if isinstance( data, torch.Tensor ) :
+        return ( data.ndim > 0 )
+    else :
+        return isinstance( data, (list, tuple, numpy.ndarray ) )
+    pass
 pass # is_array
 
 # 스칼라 여부 체크 

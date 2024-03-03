@@ -3,8 +3,23 @@
 import numpy
 import torch
 
+# 배열 여부 체크 
+def is_array( data ) :
+    if isinstance( data, torch.Tensor ) :
+        return ( data.ndim > 0 )
+    else :
+        return isinstance( data, (list, tuple, numpy.ndarray ) )
+    pass
+pass # is_array
+
+# 스칼라 여부 체크 
+def is_scalar( data ) :
+    return not is_array( data, )
+pass # is_scalar
+
 Ks = torch.arange( 1,  6 + 1, 1 )
-print( "is_scalar = ", num( Ks[0] ) )
+print( f"type Ks[0] = {type(Ks[0])}" )
+print( f"is_scalar = {is_scalar(Ks[0])}" )
 
 print( [""] * 4 )
 
