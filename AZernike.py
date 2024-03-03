@@ -265,17 +265,19 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
 
     then = time.time()
 
+    pq_list = get_pq_list( P )
+
+    tot_cnt = len( pq_list )*len(Ks)
+
+    idx = 0 
+
     for K in Ks :
 
         resolution = int( 1000*K )
 
         grid = rho_theta( resolution, circle_type, device=device, debug=0 )
 
-        pq_list = get_pq_list( P )
-
-        tot_cnt = len( pq_list )
-
-        for idx, [ p, q ] in enumerate( pq_list ) :
+        for [ p, q ] in pq_list :
             pct = (idx + 1)/tot_cnt
 
             v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
@@ -287,6 +289,8 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
 
                 v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
             pass
+
+            idx += 1
         pass
     pass # K
 
