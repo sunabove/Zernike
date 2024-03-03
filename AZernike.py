@@ -261,6 +261,10 @@ pass # Vpq_file_path
 
 def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) : 
 
+    if numpy.isscalar( Ks ) :
+        Ks = [ Ks ]
+    pass
+
     if 1 or debug : print( f"--- Loading vpq cache P = {P:2d}, MaxK = {max(Ks)}, circle_type = {circle_type}" )
 
     then = time.time()
@@ -359,7 +363,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
 
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
-                    print( f"*** {pct_desc} zernike cache CPU => GPU load: p = {p}, q = {q}, device = {cache_device} ***" )
+                    print( f"*** {pct_desc} zernike cache load CPU => {cache_device} : p = {p:3d}, q = {q:3d} ***" )
                     True
                 pass
             pass
@@ -382,7 +386,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
 
-                    print( f"--- {pct_desc} zernike cache FILE load = {cache_file}, device = {cache_device}" )
+                    print( f"--- {pct_desc} zernike cache load {cache_file} => {cache_device} : p = {p:3d}, q = {q:3d}" )
                 pass
                 
             pass
