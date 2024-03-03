@@ -729,15 +729,14 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     cache_imgs = { } 
     for cache_device in cache_device_list :
         cache_img = torch.tensor( img, dtype=torch.complex64, device=cache_device )
-        cache_imgs[ cache_device ] = cache_img.ravel()
+        cache_img = cache_img.ravel()
+        cache_imgs[ cache_device ] = cache_img
     pass
 
     moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
 
     grid = rho_theta( resolution, circle_type, device=cache_device, debug=0 )
     
-    img_rav = img.ravel()
-
     for p, q in get_pq_list( T ) : 
         v_pq, cache_device = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
 
