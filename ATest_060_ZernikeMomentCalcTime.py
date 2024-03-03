@@ -158,7 +158,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     linewidth = 1.2
 
                     chart.plot( x2, a*numpy.log10(x2) + b, color=color, linestyle=linestyle, linewidth=linewidth )
-                    chart.text( mx, my, fit_text, color=text_color, fontsize=fs-2 )
+                    # chart.text( mx, my, fit_text, color=text_color, fontsize=fs-2 )
 
                     tab_row.append( int( P ) )
                     tab_row.append( a )
