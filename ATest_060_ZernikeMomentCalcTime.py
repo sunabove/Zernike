@@ -594,11 +594,13 @@ if __name__ == "__main__" :
         Ps = torch.arange( 5, 10 + 1, 5 )
         Ks = torch.arange( 1,  2 + 1, 1 )
 
-        use_gpus  = [ 1 ] 
-        use_caches = [ 0 ]
-        use_caches = [ 1 ]
+        Ps = torch.arange( 5, 30 + 1, 5 )
+        Ks = torch.arange( 1,  6 + 1, 1 )
 
-        debug = 1
+        use_gpus  = [ 1 ] 
+        use_caches = [ 0, 1 ]
+
+        debug = 0
 
         test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=debug )
 

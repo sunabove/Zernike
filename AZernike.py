@@ -2,7 +2,7 @@
 
 print( f"Hello... Good morning!\n" )
 
-import os, time, math, logging as log, cv2 as cv
+import sys, os, time, math, logging as log, cv2 as cv
 import psutil, GPUtil, pandas as pd
 import torch
 import numpy, scipy
@@ -277,6 +277,8 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
 
     idx = 0 
 
+    pct_txt = ""
+
     for K in Ks :
         resolution = int( 1000*K )
 
@@ -284,6 +286,11 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
 
         for [ p, q ] in pq_list :
             pct = (idx + 1)/tot_cnt
+
+            if not debug and not is_jupyter() :
+                pct_txt = f"{pct:3.2%}"
+                print( pct_txt, end="", flush=1 )
+            pass
 
             v_pq, cache_device = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
 
@@ -293,6 +300,10 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
                 _vpq_save_file( v_pq, p, q, resolution, circle_type, pct=pct, debug=debug ) 
 
                 v_pq, cache_device = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
+            pass
+
+            if not debug and not is_jupyter() :
+                print( "\b"*len(pct_txt), end="", flush=1 )
             pass
 
             idx += 1
@@ -632,6 +643,10 @@ pass # is_array
 def is_scalar( data ) :
     return not is_array( data, )
 pass # is_scalar
+
+def is_jupyter():
+    return 'ipykernel' in sys.modules
+pass # is_jupyter
 
 def print_gpu_info() :
     print( " GPU Details ".center( len(line), "*") ) 
