@@ -277,7 +277,7 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
 
     idx = 0 
 
-    for K in tqdm_notebook( Ks, desc="K" ) :
+    for K in tqdm_notebook( Ks, desc="Loading zernike cache" ) :
         resolution = int( 1000*K )
 
         grid = rho_theta( resolution, circle_type, device=device, debug=0 )
