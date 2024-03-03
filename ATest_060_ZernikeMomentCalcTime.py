@@ -168,7 +168,13 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
                 marker = markers[ idx%len(markers) ]
                 color = colors[ idx%len(colors) ]
-                linestyle = "dashed" if use_cache else "solid"
+                linestyle = "solid" if use_gpu else "dashed"
+
+                if len( use_caches ) > 1 : 
+                    linestyle = "dashed" if use_cache else "solid"
+                pass
+
+                fit_data[ "linestyle" ] = linestyle
                 
                 label = f"{dn}: {P:2d}$P$"
                 if len( use_caches ) > 1 :
@@ -224,12 +230,14 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
         for idx, key in enumerate( fit_datas ) :
             fit_data = fit_datas[ key ]
-
+            
             fa_mean = numpy.mean( fit_data[ "as" ][1:] )
             fbs = numpy.polyfit( numpy.array( Ps[1:] ), numpy.array( fit_data[ "bs" ][1:] ), 1 )
 
             label = f"{key}: $y = {fa_mean:.3f}*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$"
-            legend = mpatches.Patch( label=label )
+            linestyle = fit_data[ "linestyle" ]
+
+            legend = mpatches.Patch( label=label, linestyle=linestyle )
             legends.append( legend )
 
             line = chart.plot( [ min(Ks) ] , [ miny ] )
