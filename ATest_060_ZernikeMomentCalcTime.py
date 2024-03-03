@@ -64,8 +64,8 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
             if debug : print( "img shape= ", img.shape )
 
-            min_y = None
-            max_y = None
+            miny = None
+            maxy = None
 
             cache = { } if use_cache else None 
 
@@ -124,11 +124,11 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                 y = torch.log10( torch.tensor( run_times ) )
 
                 if idx == 0 :
-                    min_y = torch.min( y )
-                    max_y = torch.max( y )
+                    miny = torch.min( y )
+                    maxy = torch.max( y )
                 else : 
-                    min_y = min( min_y, torch.min( y ) )
-                    max_y = max( max_y, torch.max( y ) )
+                    miny = min( miny, torch.min( y ) )
+                    maxy = max( maxy, torch.max( y ) )
                 pass
 
                 if True : # fitting pologon
@@ -209,24 +209,30 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
     chart.grid( axis='y', linestyle="dotted" )
 
     chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.36), fontsize=fs-4, ncols=3 )
-    chart.legend( fontsize=fs-4 )
+    leg_1 = chart.legend( fontsize=fs-4 )
 
     if 0 : 
+
+        legends = [ ]
+        lines = [ ]
+
         for idx, key in enumerate( fit_datas ) :
             fit_data = fit_datas[ key ]
 
             fa_mean = numpy.mean( fit_data[ "as" ][1:] )
             fbs = numpy.polyfit( numpy.array( Ps[1:] ), numpy.array( fit_data[ "bs" ][1:] ), 1 )
 
-            label= f"$y = {fa_mean:.3f}*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$" 
-            color = colors[ idx%len(colors) ]
+            legend = f"{key}: $y = {fa_mean:.3f}*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$"            
+            legends.append( legend )
 
-            x = Ks
-            xi = x[1] + 0.1
-            yi = max_y - abs(max_y)*(idx)/10
-
-            chart.annotate( label, (xi, yi), color=color, textcoords="offset points", xytext=(0, 0), ha='left', fontsize=fs-4 )
+            line = chart.plot( [ min(Ks) ] , [ miny ] )
+            lines.append( line )
         pass
+
+        line = chart.plot( "" )
+        leg_2 = chart.legend( lines, legends, fontsize=fs-4 )
+
+        chart.add_artist(leg_1)
     pass
 
     plt.show()
