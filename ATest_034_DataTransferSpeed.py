@@ -117,8 +117,8 @@ def test_data_transfer_speed( Ks, debug=0 ) :
             print( f"[{cur_idx/tot_cnt:3.0%}] device fr = {device_fr}, to = {device_to}, k = {K}, speed = {speed:,.1f} (Gbps), size = {memory_size/1e6:6.2f} Mb, run_time = {elapsed:.6f} (sec.)", flush=1 )
         pass # K
 
-        avg = sum(speeds)/len(speeds)
-        tab_row.append( avg )
+        spd_avg = sum(speeds)/len(speeds)
+        tab_row.append( spd_avg )
         tab_row.extend( speeds )
 
         color = colors[1:][ idx%(len(colors) - 1) ]
