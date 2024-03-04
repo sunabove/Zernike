@@ -187,8 +187,8 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     linestyle = "dashed" if use_cache else "solid"
                 pass
 
-                fit_data[ "linestyle" ] = linestyle
                 fit_data[ "color" ] = color
+                fit_data[ "linestyle" ] = linestyle
                 
                 label = ""
                 if use_cache :
