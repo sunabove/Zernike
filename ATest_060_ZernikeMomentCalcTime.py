@@ -181,10 +181,10 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                 
                 if len( use_gpus ) > 1 :
                     color = colors[ gidx%len(colors) ]
-                    linestyle = "solid" if use_gpu else "dashed"
+                    linestyle = "solid" if use_gpu else "dotted"
                 elif len( use_caches ) > 1 : 
                     color = colors[ cidx%len(colors) ]
-                    linestyle = "dashed" if use_cache else "solid"
+                    linestyle = "solid" if use_cache else "dotted"
                 pass
 
                 fit_data[ "color" ] = color
@@ -241,8 +241,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
     chart.grid( axis='x', linestyle="dotted" )
     chart.grid( axis='y', linestyle="dotted" )
 
-    chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.36), fontsize=fs-4, ncols=3 )
-    main_legend = chart.legend( loc="upper left", fontsize=fs-5 )
+    main_legend = chart.legend( loc="upper left", labelcolor='linecolor', fontsize=fs-5 )
 
     if 1 :
         import matplotlib.patches as mpatches
@@ -255,15 +254,16 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
             fas = numpy.polyfit( numpy.array( Ps ), numpy.array( fit_data[ "as" ] ), 1 )
             fbs = numpy.polyfit( numpy.array( Ps ), numpy.array( fit_data[ "bs" ] ), 1 )
 
-            label = f"{key}: $y = ({fas[0]:.3f}*P {fas[1]:+.2f})*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$"
+            label = f"{key}: $y = ({fas[1]:+.2f} {fas[0]:+.3f}*P)*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$"
             linestyle = fit_data[ "linestyle" ]
             color = fit_data[ "color" ]
+            labelcolor = color
 
             legend = mpatches.Patch( label=label, linestyle=linestyle, color=color )
             sub_legends.append( legend )
         pass
 
-        chart.legend( handles=sub_legends, loc="lower right", fontsize=fs-5 )
+        chart.legend( handles=sub_legends, loc="lower right", labelcolor="linecolor", fontsize=fs-5 )
 
         chart.add_artist( main_legend )
     pass
