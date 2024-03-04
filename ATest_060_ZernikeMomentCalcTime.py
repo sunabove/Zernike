@@ -36,8 +36,13 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
     fit_datas = {}
 
     circle_type = "outer"
+
+    miny = None
+    maxy = None
+
+    x = Ks
     
-    for use_gpu in use_gpus :
+    for gidx, use_gpu in enumerate( use_gpus ) :
 
         device_no = 0
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
@@ -47,7 +52,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
             warm_up_gpus( debug=1 )
         pass
 
-        for use_cache in use_caches : 
+        for cidx, use_cache in enumerate( use_caches ): 
 
             fit_data = { "as" : [], "bs" : [] }
             cache_label = ""
@@ -72,9 +77,6 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
             if debug : print( "img shape= ", img.shape )
 
-            miny = None
-            maxy = None
-
             cache = { } if use_cache else None 
 
             if cache is not None :
@@ -82,7 +84,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                 load_vpq_cache( max(Ps), Ks, circle_type, cache, device=torch.device("cpu"), debug=debug)
             pass    
 
-            for idx, P in enumerate( Ps ) :
+            for pidx, P in enumerate( Ps ) :
                 tab_row = []
                 tab_rows.append( tab_row )
 
@@ -128,10 +130,9 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     if 1 : print( desc )
                 pass # K
 
-                x = Ks
                 y = torch.log10( torch.tensor( run_times ) )
 
-                if idx == 0 :
+                if miny is None or maxy is None :
                     miny = torch.min( y )
                     maxy = torch.max( y )
                 else : 
@@ -139,7 +140,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     maxy = max( maxy, torch.max( y ) )
                 pass
 
-                if True : # fitting pologon
+                if True : # fitting line
                     import numpy
                     fit = numpy.polyfit( numpy.log10(x), numpy.array( y ), 1 )
                     mx = numpy.median( x ) + (max(x) - min(x))*.12
@@ -159,8 +160,8 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                         
                         x2 = numpy.linspace( min(x), max(x), 100 )
                         
-                        color = colors[ idx%len(colors) ]
-                        text_color = colors[ idx%len(colors) ]
+                        color = colors[ pidx%len(colors) ]
+                        text_color = colors[ pidx%len(colors) ]
                         linestyle = "dotted"
                         linewidth = 1.2
                     
@@ -172,11 +173,16 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     tab_row.append( a )
                     tab_row.append( b )
                     
-                pass # fit polygon
+                pass # fitting line
 
-                marker = markers[ idx%len(markers) ]
-                color = colors[ idx%len(colors) ]
-                linestyle = "solid" if use_gpu else "dashed"
+                marker = markers[ pidx%len(markers) ]
+                color = colors[ pidx%len(colors) ]
+                linestyle = "solid" 
+                
+                if len( use_gpus ) > 1 :
+                    color = colors[ gidx%len(colors) ]
+                    linestyle = "solid" if use_gpu else "dashed"
+                pass
 
                 if len( use_caches ) > 1 : 
                     linestyle = "dashed" if use_cache else "solid"
@@ -185,13 +191,11 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                 fit_data[ "linestyle" ] = linestyle
                 fit_data[ "color" ] = color
                 
-                label = f"{dn}: {P:2d}$P$"
-                if len( use_caches ) > 1 :
-                    if use_cache :
-                        label = f"{dn}-CACHE: {P:2d}$P$"
-                    else :
-                        label = f"{dn}-NOCAC: {P:2d}$P$"
-                    pass
+                label = ""
+                if use_cache :
+                    label = f"{dn}-CACHE: {P:2d}$P$"
+                else :
+                    label = f"{dn}-NOCAC: {P:2d}$P$"
                 pass
 
                 linewidth = 2
@@ -204,13 +208,17 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                 
             pass # P
 
-            print()
+            # add empty legend to distinguis legend groups
+            if len( use_caches ) > 1 and ( cidx < len( use_caches ) - 1 ) :
+                chart.plot( [min(x)], [miny], linewidth=0, label=" ")
+            pass
+        pass # use_cache 
 
-        pass # use_cache
-
-        print()
-    
-    pass  # use_gpu
+        # add empty legend to distinguis legend groups
+        if len( use_gpus ) > 1 and ( gidx < len( use_gpus ) - 1 ) :
+            chart.plot( [min(x)], [miny], linewidth=0, label=" ")
+        pass
+    pass  # use_gpus
 
     title = f"Zernike Moment Run-time"
     
@@ -242,7 +250,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
         sub_legends = [ ]
 
-        for idx, key in enumerate( fit_datas ) :
+        for pidx, key in enumerate( fit_datas ) :
             fit_data = fit_datas[ key ]
             
             fas = numpy.polyfit( numpy.array( Ps ), numpy.array( fit_data[ "as" ] ), 1 )
