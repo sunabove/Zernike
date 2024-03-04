@@ -182,9 +182,8 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                 if len( use_gpus ) > 1 :
                     color = colors[ gidx%len(colors) ]
                     linestyle = "solid" if use_gpu else "dashed"
-                pass
-
-                if len( use_caches ) > 1 : 
+                elif len( use_caches ) > 1 : 
+                    color = colors[ cidx%len(colors) ]
                     linestyle = "dashed" if use_cache else "solid"
                 pass
 
