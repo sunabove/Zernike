@@ -51,7 +51,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
             fit_data = { "as" : [], "bs" : [] }
             cache_label = ""
-            if len( use_caches ) > 1 :
+            if 1 or len( use_caches ) > 1 :
                 cache_label = ":CACHE" if use_cache else ":NOCAC"
             pass
 
@@ -183,6 +183,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                 pass
 
                 fit_data[ "linestyle" ] = linestyle
+                fit_data[ "color" ] = color
                 
                 label = f"{dn}: {P:2d}$P$"
                 if len( use_caches ) > 1 :
@@ -211,14 +212,18 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
     
     pass  # use_gpu
 
-    dn = ""
+    title = f"Zernike Moment Run-time"
+    
     if len( use_gpus ) == 1 :
         use_gpu = use_gpus[0]
-        dn = "GPU" if use_gpu else "CPU"
-        dn += " "
+        if use_gpu :
+            title = "GPU " + title
+        else :
+            title = "CPU " + title
+        pass
     pass
 
-    chart.set_title( f"{dn}Zernike Moment Run-time" )
+    chart.set_title( title )
 
     chart.set_xlabel( f"Grid Tick Count" )
     chart.set_ylabel( f"$log_{'{10}'}(seconds)$")
@@ -230,35 +235,30 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
     chart.grid( axis='y', linestyle="dotted" )
 
     chart.legend( loc="lower center", bbox_to_anchor=(0.5, -0.36), fontsize=fs-4, ncols=3 )
-    leg_1 = chart.legend( loc="upper left", fontsize=fs-5 )
+    main_legend = chart.legend( loc="upper left", fontsize=fs-5 )
 
-    if 1 : 
-
+    if 1 :
         import matplotlib.patches as mpatches
 
-        legends = [ ]
-        lines = [ ]
+        sub_legends = [ ]
 
         for idx, key in enumerate( fit_datas ) :
             fit_data = fit_datas[ key ]
             
-            fa_mean = numpy.mean( fit_data[ "as" ][1:] )
-            fbs = numpy.polyfit( numpy.array( Ps[1:] ), numpy.array( fit_data[ "bs" ][1:] ), 1 )
+            fas = numpy.polyfit( numpy.array( Ps ), numpy.array( fit_data[ "as" ] ), 1 )
+            fbs = numpy.polyfit( numpy.array( Ps ), numpy.array( fit_data[ "bs" ] ), 1 )
 
-            label = f"{key}: $y = {fa_mean:.3f}*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$"
+            label = f"{key}: $y = ({fas[0]:.3f}*P {fas[1]:+.2f})*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$"
             linestyle = fit_data[ "linestyle" ]
+            color = fit_data[ "color" ]
 
-            legend = mpatches.Patch( label=label, linestyle=linestyle )
-            legends.append( legend )
-
-            line = chart.plot( [ min(Ks) ] , [ miny ] )
-            lines.append( line )
+            legend = mpatches.Patch( label=label, linestyle=linestyle, color=color )
+            sub_legends.append( legend )
         pass
 
-        chart.legend( handles=legends, loc="lower right", fontsize=fs-5 )
-        #leg_2 = chart.legend( lines, legends, fontsize=fs-4 )
+        chart.legend( handles=sub_legends, loc="lower right", fontsize=fs-5 )
 
-        chart.add_artist(leg_1)
+        chart.add_artist( main_legend )
     pass
 
     plt.show()
