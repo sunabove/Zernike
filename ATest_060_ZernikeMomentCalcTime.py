@@ -254,7 +254,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
             fas = numpy.polyfit( numpy.array( Ps ), numpy.array( fit_data[ "as" ] ), 1 )
             fbs = numpy.polyfit( numpy.array( Ps ), numpy.array( fit_data[ "bs" ] ), 1 )
 
-            label = f"{key}: $y = ({fas[1]:+.2f} {fas[0]:+.3f}*P)*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$"
+            label = f"{key}: $Y = ({fas[1]:+.2f} {fas[0]:+.3f}*P)*log_{'{10}'}(K) {fbs[0]:+.3f}*P {fbs[1]:+.2f}$"
             linestyle = fit_data[ "linestyle" ]
             color = fit_data[ "color" ]
             labelcolor = color
@@ -270,9 +270,13 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
     plt.show()
 
+    device_names = "_".join( [ ["CPU", "GPU"][use_gpu] for use_gpu in use_gpus ] )
+    use_cache_names = "_".join( [ ["NOC", "CAC"][use_cache] for use_cache in use_caches ] )
+
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    file_stem = Path( __file__ ).stem    
-    result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{device_name}_{int(max(Ps))}P_{int(max(Ks))}K.png"
+    file_stem = Path( __file__ ).stem
+
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{device_names}_{use_cache_names}_{int(max(Ps))}P_{int(max(Ks))}K.png"
     plt.savefig( result_figure_file )
     print( f"\nresult_figure_file = {result_figure_file}" )
 
@@ -288,8 +292,9 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
     excelData.append( tab_header )
     excelData.extend( tab_rows )
     df = pd.DataFrame( excelData )
-    file_stem = Path( __file__ ).stem  
-    excel_file = f"{src_dir}/result/{file_stem.lower()}_{device_name}_{int(max(Ps))}P_{int(max(Ks))}K.xlsx"
+    file_stem = Path( __file__ ).stem
+
+    excel_file = f"{src_dir}/result/{file_stem.lower()}_{device_names}_{use_cache_names}_{int(max(Ps))}P_{int(max(Ks))}K.xlsx"
     df.to_excel( excel_file, index=False, header=False )
     print( f"\nExcel file = {excel_file}" )
 
