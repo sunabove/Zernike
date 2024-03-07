@@ -1,10 +1,9 @@
 from AZernike import *
 
-def test_image_restore(img_org, Ks, Ps, debug=0) :
+def test_image_restore(img_org, Ks, Ps, use_cache=1, debug=0) :
     print( line2 )
     
     use_gpu = 1
-    use_cache = 1
     circle_type = "outer"
 
     device_no = 0 
@@ -50,8 +49,8 @@ def test_image_restore(img_org, Ks, Ps, debug=0) :
         
             then = time.time()
 
-            moments, run_time = calc_moments(img, P, resolution, circle_type, device=device, cache=cache, debug=debug )
-            img_restored, restore_run_time = restore_image(moments, grid, device, cache, debug=debug)
+            moments, run_time = calc_moments( img, P, resolution, circle_type, device=device, cache=cache, debug=debug )
+            img_restored, restore_run_time = restore_image( moments, grid, device, cache, debug=debug )
             
             img_real = img_restored.real
 
@@ -60,7 +59,7 @@ def test_image_restore(img_org, Ks, Ps, debug=0) :
 
             elapsed = time.time() - then
 
-            print( f"K = {K}, P = {P}, elapsed = {elapsed:.2f}(sec.)" )
+            print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.)" )
         pass # P
     pass # K
 
