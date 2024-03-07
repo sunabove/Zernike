@@ -1,6 +1,6 @@
 from AZernike import *
 
-def test_image_restore(img_org, Ks, Ps, use_cache=1, debug=0) :
+def test_image_restore( img_org, Ks, Ps, use_cache=1, debug=0 ) :
     print( line2 )
     
     use_gpu = 1
@@ -27,13 +27,15 @@ def test_image_restore(img_org, Ks, Ps, use_cache=1, debug=0) :
 
     w = 2.5
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=1 )
-    charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
-    chart_idx = 0 
-
-    chart = charts[ chart_idx ] ; chart_idx += 1
+    charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts] 
 
     for kidx, K in enumerate( Ks ) : 
         print( line2 )
+
+        chart = charts[ col_cnt*kidx ] 
+        chart.imshow( img_org, cmap="gray" )
+
+        chart = charts[ chart_idx ] ; chart_idx += 1
 
         resolution = int( 1000*K )
 
@@ -60,6 +62,9 @@ def test_image_restore(img_org, Ks, Ps, use_cache=1, debug=0) :
             elapsed = time.time() - then
 
             print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.)" )
+
+            chart = charts[ col_cnt*kidx + pidx + 1 ]
+            chart.imshow( img_real, cmap="gray" )
         pass # P
     pass # K
 
