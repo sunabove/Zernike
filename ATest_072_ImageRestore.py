@@ -23,17 +23,18 @@ def test_image_restore( img_org, Ks, Ps, use_cache=1, debug=0 ) :
     # 서브 챠트 생성 
     col_cnt = 5
     
-    row_cnt = int( ( len( Ps ) + 1 + 0.5) / col_cnt )*len(Ks) 
+    row_cnt = int( (len(Ps) + 1)*len(Ks)/col_cnt ) 
 
-    w = 2.5
+    fs = fontsize = 16 ; w = 2.5
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=1 )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts] 
 
     for kidx, K in enumerate( Ks ) : 
         print( line2 )
 
-        chart = charts[ col_cnt*kidx ] 
+        chart = charts[ kidx*(len( Ps ) + 1) ] 
         chart.imshow( img_org, cmap="gray" )
+        chart.set_title( f"Image Org $({K}K)$", fontsize=fs )
 
         resolution = int( 1000*K )
 
@@ -59,10 +60,11 @@ def test_image_restore( img_org, Ks, Ps, use_cache=1, debug=0 ) :
 
             elapsed = time.time() - then
 
-            print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.)" )
+            print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.), psnr = {psnr:7.4f}, rmse = {rmse:.1f}", flush=1 )
 
-            chart = charts[ col_cnt*kidx + pidx + 1 ]
+            chart = charts[ kidx*(len( Ps ) + 1) + pidx + 1 ] 
             chart.imshow( img_real.to( "cpu" ).numpy(), cmap="gray" )
+            chart.set_title( f"${K}K, {P}P, PSNR = {psnr:.3f}$", fontsize=fs-4 )
         pass # P
     pass # K
 
