@@ -34,7 +34,7 @@ def test_image_restore( img_org, Ks, Ps, use_cache=1, debug=0 ) :
 
         chart = charts[ kidx*(len( Ps ) + 1) ] 
         chart.imshow( img_org, cmap="gray" )
-        chart.set_title( f"Image Org $({K}K)$", fontsize=fs )
+        chart.set_title( f"Image Org $({K}K)$", fontsize=fs-6 )
 
         resolution = int( 1000*K )
 
@@ -54,17 +54,17 @@ def test_image_restore( img_org, Ks, Ps, use_cache=1, debug=0 ) :
             img_restored, restore_run_time = restore_image( moments, grid, device, cache, debug=debug )
             
             img_real = img_restored.real
-
+            
             psnr = calc_psnr( img, img_real )
             rmse = calc_rmse( img, img_real ) 
 
             elapsed = time.time() - then
 
-            print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.), psnr = {psnr:7.4f}, rmse = {rmse:.1f}", flush=1 )
+            print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.), psnr = {psnr:7.4f}, rmse = {rmse:.1e}", flush=1 )
 
             chart = charts[ kidx*(len( Ps ) + 1) + pidx + 1 ] 
             chart.imshow( img_real.to( "cpu" ).numpy(), cmap="gray" )
-            chart.set_title( f"${K}K, {P}P, PSNR = {psnr:.3f}$", fontsize=fs-4 )
+            chart.set_title( f"${K}K, {P}P, PSNR = {psnr:.2f}$", fontsize=fs-6 )
         pass # P
     pass # K
 
