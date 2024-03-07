@@ -9,21 +9,22 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
     device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
     
     K = 2
-    res = resolution = 1_000*K
-    h = resolution
-    w = h
-
     T = 2*col_cnt 
 
-    cache = None
+    cache = { } if use_cache else None
 
     if use_cache :
-        cache = load_vpq_cache( T, resolution, circle_type, device=device, debug=debug)
+        cache = load_vpq_cache( T, K, circle_type, cache, device=device, debug=debug)
     pass
 
     print( f"use_gpu = {use_gpu}, circle_type = {circle_type}, K = {K:_}, cache = {cache != None}" )
+
+    res = resolution = 1_000*K
     
     grid = rho_theta( resolution, circle_type, device=device, debug=0 )
+
+    h = resolution
+    w = h
     
     pq_title_imgs = [] 
     
@@ -50,25 +51,27 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
 
                 print( f"p = {p:3d}, q = {q:3d}, img type = {img_type}" )
                             
-                v_pl = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
+                v_pl, cache_device = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
 
                 z_img = None # zernike image
                 
+                z_title = f"Z_{'{'+str(p)+'}'}^{'{'+str(q)+'}'}"
+                z_title = f"Z({p}, {q})"
                 if "im" in img_type : 
                     z_img = v_pl.imag 
 
-                    title = f"$Im(Z({p}, {q}))$"
+                    title = f"$Im({z_title})$"
                 elif "abs" in img_type : 
                     z_img = torch.abs( v_pl )
 
-                    title = f"$|Z({p}, {q})|$"
+                    title = f"$|{z_title}|$"
                 else :
                     z_img = v_pl.real
 
-                    title = f"$Re(Z({p}, {q}))$"
+                    title = f"$Re({z_title})$"
                 pass 
 
-                img = torch.zeros( (h, w), dtype=torch.float, device=device )
+                img = torch.zeros( (h, w), dtype=torch.float, device=cache_device )
                 img_rav = img.ravel()
                 img_rav[ grid.kidx ] = z_img
                 
