@@ -35,8 +35,6 @@ def test_image_restore( img_org, Ks, Ps, use_cache=1, debug=0 ) :
         chart = charts[ col_cnt*kidx ] 
         chart.imshow( img_org, cmap="gray" )
 
-        chart = charts[ chart_idx ] ; chart_idx += 1
-
         resolution = int( 1000*K )
 
         grid = rho_theta( resolution, circle_type, device, debug=debug ) 
@@ -64,7 +62,7 @@ def test_image_restore( img_org, Ks, Ps, use_cache=1, debug=0 ) :
             print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.)" )
 
             chart = charts[ col_cnt*kidx + pidx + 1 ]
-            chart.imshow( img_real, cmap="gray" )
+            chart.imshow( img_real.to( "cpu" ).numpy(), cmap="gray" )
         pass # P
     pass # K
 
