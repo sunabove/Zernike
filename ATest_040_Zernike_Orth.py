@@ -2,7 +2,7 @@ from AZernike import *
 from tqdm import tqdm
 import time
 
-def test_radial_function_validation() :
+def test_radial_polynomail_validation() :
     debug = 0
 
     datas = []
@@ -48,6 +48,7 @@ def test_radial_function_validation() :
     rho = torch.arange( 0, 1 + step, step, device=device )
     rho = rho[ torch.where( rho <= 1 ) ]
 
+    colors  = [ mcolors.TABLEAU_COLORS[key] for key in mcolors.TABLEAU_COLORS ]
     markers = [ ".", "o", "s", "p", "*", "D", "d" ]
 
     for data in datas : 
@@ -57,21 +58,25 @@ def test_radial_function_validation() :
         p = order[0]
         q = order[1]
         
-        r_pl_numeric = Rpq( p, q, rho, device=device, hash=hash, debug=debug )
+        r_pl_numeric = Rpq( p, q, rho, device=device, debug=debug )
         r_pl_analytic = torch.zeros_like( rho, device=device )
 
         for idx, coeff in enumerate( coeffs ) : 
             r_pl_analytic += coeff*torch.pow( rho, p - 2*idx )
         pass 
 
+        marker = markers[ p%len(markers) ]
+        color = colors[ p%len(colors) ]
+        label = f"$R_{'{' + str(p) + '}'}^{'{' + str(q) + '}'}$"
         chart = charts[q]
-        chart.plot( rho.cpu(), r_pl_analytic.cpu(), linestyle="solid" )
-        chart.plot( rho.cpu(), r_pl_numeric.cpu(), markers[p], label=r"$R_{" + f"{p}{q}" + "}$" )
+        chart.plot( rho.cpu(), r_pl_analytic.cpu(), color=color, linestyle="solid" )
+        chart.plot( rho.cpu(), r_pl_numeric.cpu(),  color=color, marker=marker, label=label )
         chart.set_xlim( -0.01, 1.01 )
         chart.set_ylim( -1.05, 1.05 )
 
         chart.set_title( rf"$q$ = {q}" )
-        chart.set_ylabel( r"$R_{pq}$($\rho)$" )
+        chart.set_ylabel( r"$R_{p}^{q}$($\rho)$" )
+        #chart.set_ylabel( r"$R_{pq}$($\rho)$" )
         chart.set_xlabel( rf"$\rho$", fontsize=fs + 2 )
         chart.legend(loc="upper center", ncol=len(coeffs) )
         chart.legend()
@@ -84,7 +89,7 @@ def test_radial_function_validation() :
 
 pass ## test_radial_function_validation
 
-def validte_radial_function_ortho( T, Ks, debug=0 ) : 
+def validte_radial_polynomial_ortho( T, Ks, debug=0 ) : 
     print_curr_time()
 
     print( "\nZernike Radial polynomial orthogonality validation\n" ) 
