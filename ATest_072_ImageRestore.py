@@ -1,6 +1,6 @@
 from AZernike import *
 
-def test_image_restore( img_org, Ks, Ps, use_cache=1, debug=0 ) :
+def test_image_restore( img_lbls, Ks, Ps, use_cache=1, debug=0 ) :
     print( line2 )
     
     use_gpu = 1
@@ -23,50 +23,60 @@ def test_image_restore( img_org, Ks, Ps, use_cache=1, debug=0 ) :
     # 서브 챠트 생성 
     col_cnt = 5
     
-    row_cnt = int( (len(Ps) + 1)*len(Ks)/col_cnt ) 
+    row_cnt = int( (len(Ps) + 1)*len(Ks)*len(img_lbls)/col_cnt ) 
 
     fs = fontsize = 16 ; w = 2.5
     fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=1 )
     charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts] 
 
-    for kidx, K in enumerate( Ks ) : 
-        print( line2 )
+    for i_idx, [ img_org, img_label ] in enumerate( img_lbls ): 
+        shape = img_org.shape
+        channel = shape[ -1 ] if len( shape ) > 2 else 1
+        if channel == 3 : 
+            img_org = skimage.color.rgb2gray( img_org ) 
+        pass
 
-        chart = charts[ kidx*(len( Ps ) + 1) ] 
-        chart.imshow( img_org, cmap="gray" )
-        chart.set_title( f"Image Org $({K}K)$", fontsize=fs-6 )
+        print( f"[{i_idx:2d}] {img_label} shape = {img_org.shape}" )  
 
-        resolution = int( 1000*K )
+        for kidx, K in enumerate( Ks ) : 
+            print( line2 )
 
-        grid = rho_theta( resolution, circle_type, device, debug=debug ) 
+            chart = charts[ kidx*(len( Ps ) + 1) ] 
+            chart.imshow( img_org, cmap="gray" )
+            chart.set_title( f"Image Org $({K}K)$", fontsize=fs-6 )
 
-        img = cv.resize( img_org, (resolution, resolution), interpolation=cv.INTER_AREA )
+            resolution = int( 1000*K )
 
-        for pidx, P in enumerate( Ps ) : 
-            if cache is not None and use_gpu :
-                # zernike cache load on gpu
-                load_vpq_cache( P, K, circle_type, cache, device=torch.device("cuda:0"), debug=debug)
-            pass
-        
-            then = time.time()
+            grid = rho_theta( resolution, circle_type, device, debug=debug ) 
 
-            moments, run_time = calc_moments( img, P, resolution, circle_type, device=device, cache=cache, debug=debug )
-            img_restored, restore_run_time = restore_image( moments, grid, device, cache, debug=debug )
+            img = cv.resize( img_org, (resolution, resolution), interpolation=cv.INTER_AREA )
+
+            for pidx, P in enumerate( Ps ) : 
+                if cache is not None and use_gpu :
+                    # zernike cache load on gpu
+                    load_vpq_cache( P, K, circle_type, cache, device=torch.device("cuda:0"), debug=debug)
+                pass
             
-            img_real = img_restored.real
-            
-            psnr = calc_psnr( img, img_real )
-            rmse = calc_rmse( img, img_real ) 
+                then = time.time()
 
-            elapsed = time.time() - then
+                moments, run_time = calc_moments( img, P, resolution, circle_type, device=device, cache=cache, debug=debug )
+                img_restored, restore_run_time = restore_image( moments, grid, device, cache, debug=debug )
+                
+                img_real = img_restored.real
+                
+                psnr = calc_psnr( img, img_real )
+                rmse = calc_rmse( img, img_real ) 
 
-            print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.), psnr = {psnr:7.4f}, rmse = {rmse:.1e}", flush=1 )
+                elapsed = time.time() - then
 
-            chart = charts[ kidx*(len( Ps ) + 1) + pidx + 1 ] 
-            chart.imshow( img_real.to( "cpu" ).numpy(), cmap="gray" )
-            chart.set_title( f"${K}K, {P}P, PSNR = {psnr:.2f}$", fontsize=fs-6 )
-        pass # P
-    pass # K
+                print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}", flush=1 )
+
+                chart = charts[ kidx*(len( Ps ) + 1) + pidx + 1 ] 
+                chart.imshow( img_real.to( "cpu" ).numpy(), cmap="gray" )
+                chart.set_title( f"${K}K, {P}P, PSNR = {psnr:.2f}$", fontsize=fs-6 )
+            pass # P
+        pass # K
+    pass # img_orgs
 
     plt.show() 
 

@@ -7,9 +7,8 @@ import psutil, GPUtil, pandas as pd
 import torch
 import numpy, scipy
 import ray # ray for parallel computing
+import skimage
 
-from skimage import data
-from skimage import io
 from skimage.color import rgb2gray
 
 from matplotlib import pyplot as plt
@@ -834,7 +833,7 @@ def restore_image( moments, grid, device, cache, debug=0) :
     
     run_time = time.time() - then
     
-    return img , run_time
+    return img, run_time
 pass ## restore_image
 
 def calc_psnr( img_org, img_restored ) :
