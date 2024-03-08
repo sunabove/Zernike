@@ -51,7 +51,8 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
 
                 print( f"p = {p:3d}, q = {q:3d}, img type = {img_type}" )
                             
-                v_pl, cache_device = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
+                v_pl = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
+                cache_device = v_pl.get_device()
 
                 z_img = None # zernike image
                 

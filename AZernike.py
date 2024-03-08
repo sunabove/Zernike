@@ -257,9 +257,9 @@ def get_cache_device( curr_device, resolution ) :
     pass
 pass
 
-def Vpq_file_path( p, q, resolution, circle_type ) :
+def Vpq_file_path( p, q, resolution, circle_type, dtype ) :
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    cache_file = f"{src_dir}/pyramid/v_{circle_type}_R{int(resolution):04d}_P{p:02d}_Q{q:02d}.pth"
+    cache_file = f"{src_dir}/pyramid/v_{dtype}_{circle_type}_R{int(resolution):04d}_P{p:02d}_Q{q:02d}.pth"
 
     return cache_file
 pass # Vpq_file_path
@@ -399,7 +399,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
         pass
 
         if v_pq is None :
-            cache_file = Vpq_file_path( p, q, resolution, circle_type )
+            cache_file = Vpq_file_path( p, q, resolution, circle_type, dtype=torch.complex64 )
             
             if os.path.exists( cache_file ) :
                 cache_device = torch.device("cpu")
@@ -435,7 +435,7 @@ def _vpq_save_file( v_pq, p, q, resolution, circle_type, pct=None, debug=0 ) :
         _vpq_save_file( v_pq, p, abs(q), resolution, circle_type, debug=debug )
     else :
         # save to file
-        cache_file = Vpq_file_path( p, q, resolution, circle_type )
+        cache_file = Vpq_file_path( p, q, resolution, circle_type, v_pq.dtype )
         torch.save( v_pq, cache_file )
 
         if debug:
