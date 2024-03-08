@@ -736,7 +736,7 @@ def get_core_count(**options) :
     return core_count
 pass
 
-def get_device_list( device ) :
+def get_device_no_list( device ) :
 
     # make device list
     device_list = [ ]
@@ -753,7 +753,7 @@ def get_device_list( device ) :
     pass
 
     return device_list
-pass # get_device_list
+pass # get_device_no_list
 
 # 모멘트 계산
 def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 ) : 
@@ -767,10 +767,11 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     pass
 
     cache_imgs = { }
-    for cache_device in get_device_list( device ) :
+    for device_no in get_device_no_list( device ) :
+        cache_device = f"cuda:{0}" if device_no > -1 else "cpu:0"
         cache_img = torch.tensor( img, dtype=torch.complex64, device=cache_device )
         cache_img = cache_img.ravel()
-        cache_imgs[ cache_device ] = cache_img
+        cache_imgs[ device_no ] = cache_img
     pass
 
     moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
@@ -779,9 +780,9 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     
     for p, q in get_pq_list( T ) : 
         v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
-        cache_device = v_pq.get_device()
+        device_no = v_pq.get_device()
 
-        cache_img = cache_imgs[ cache_device ]
+        cache_img = cache_imgs[ device_no ]
         
         moment = torch.dot( v_pq, cache_img )
         moment = moment*grid.dx*grid.dy
