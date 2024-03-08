@@ -2,7 +2,8 @@
 
 print( f"Hello... Good morning!" )
 
-import numpy, cupy
+import numpy
+import cupy
 import math, logging as log, cv2 as cv
 import psutil , igpu , GPUtil, pandas as pd
 import threading, ray # ray for parallel computing
@@ -18,7 +19,7 @@ from datetime import datetime
 from tqdm.notebook import tqdm
 from tabulate import tabulate
 from IPython.display import clear_output
-from AProfiler import *
+from Profiler import *
 
 log.basicConfig(level=log.DEBUG) 
 
