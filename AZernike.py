@@ -737,16 +737,19 @@ def get_core_count(**options) :
 pass
 
 def get_device_list( device ) :
+
     # make device list
     device_list = [ ]
 
     if "cuda" in f"{device}" :
         device_cnt = len( GPUtil.getGPUs() )
         for device_no in range( device_cnt ) :
-            device_list.append( torch.device( f"cuda:{device_no}" ) )
+            #device_list.append( torch.device( f"cuda:{device_no}" ) )
+
+            device_list.append( device_no )
         pass
     else :
-        device_list.append( torch.device("cpu") )
+        device_list.append( -1 )
     pass
 
     return device_list
@@ -775,7 +778,8 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     grid = rho_theta( resolution, circle_type, device=device, debug=0 )
     
     for p, q in get_pq_list( T ) : 
-        v_pq, cache_device = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
+        v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
+        cache_device = v_pq.get_device()
 
         cache_img = cache_imgs[ cache_device ]
         

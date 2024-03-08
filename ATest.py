@@ -20,6 +20,7 @@ def is_scalar( data ) :
 pass # is_scalar
 
 Ks = torch.arange( 1,  6 + 1, 1 )
+print( f"device = {Ks.get_device()}" )
 print( f"dtype = {Ks.dtype}" )
 print( f"type Ks[0] = {type(Ks[0])}" )
 print( f"is_scalar = {is_scalar(Ks[0])}" )
