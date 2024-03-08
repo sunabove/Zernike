@@ -775,7 +775,10 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         cache_imgs[ device_no ] = cache_img
     pass
 
-    moments = torch.zeros( (T, 2*T), dtype=torch.complex64, device=device )
+    #moments = torch.zeros( (T +1, 2*(T +1)), dtype=torch.complex64, device=device )
+    moments = { }
+
+    moments[ "dimension" ] = T
 
     grid = rho_theta( resolution, circle_type, device=device, debug=0 )
     
@@ -790,7 +793,11 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
 
         moment = torch.conj( moment )
 
-        moments[ p, T + q ] = moment.to( device )
+        if not p in moments :
+            moments[p] = { }
+        pass
+
+        moments[p][q] = moment.to( device )
     pass
 
     run_time = time.time() - then
