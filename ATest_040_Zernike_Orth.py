@@ -303,7 +303,12 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
                 
                 then = time.time() 
 
-                rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
+                grid = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
+
+                rho = grid.rho
+                theta = grid.theta
+                dx = grid.dx
+                dy = grid.dy
                 
                 error_sum = 0
                 error_cnt = 0
