@@ -305,8 +305,6 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
 
                 grid = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
 
-                rho = grid.rho
-                theta = grid.theta
                 dx = grid.dx
                 dy = grid.dy
                 
@@ -318,8 +316,8 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
                     for q in range( -p, p + 1, 2 ) :
                         for n in range( 0, P + 1 ) :
                             for m in range( -n, n + 1, 2 ) : 
-                                v_pl = Vpq( p, q, rho, theta, device=device, debug=debug )
-                                v_ql = Vpq( n, m, rho, theta, device=device, debug=debug )
+                                v_pl = Vpq( p, q, grid, device=device, debug=debug )
+                                v_ql = Vpq( n, m, grid, device=device, debug=debug )
 
                                 sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
                                 sum_integration = sum_arr*dx*dy*(p +1)/pi

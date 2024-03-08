@@ -143,7 +143,7 @@ def _pqs_facotrial_numpy( p, q, device ) :
     
     R_ps = torch.pow( -1, torch.tensor( k, device=device ) )*( fact4 )    
 
-    if 1 or R_ps.isnan().any() :
+    if R_ps.isnan().any() :
         log.info( "_pqs_factorial( ....) : Nan encountered." )
     pass
 
