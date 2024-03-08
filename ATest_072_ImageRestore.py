@@ -41,7 +41,7 @@ def test_image_restore( img_lbls, Ks, Ps, use_cache=1, debug=0 ) :
         for kidx, K in enumerate( Ks ) : 
             print( line2 )
 
-            chart = charts[ kidx*(len( Ps ) + 1) ] 
+            chart = charts[ (i_idx + kidx)*(len( Ps ) + 1) ] 
             chart.imshow( img_org, cmap="gray" )
             chart.set_title( f"Image Org $({K}K)$", fontsize=fs-6 )
 
@@ -71,7 +71,7 @@ def test_image_restore( img_lbls, Ks, Ps, use_cache=1, debug=0 ) :
 
                 print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}", flush=1 )
 
-                chart = charts[ kidx*(len( Ps ) + 1) + pidx + 1 ] 
+                chart = charts[ (i_idx + kidx)*(len( Ps ) + 1) + pidx + 1 ] 
                 chart.imshow( img_real.to( "cpu" ).numpy(), cmap="gray" )
                 chart.set_title( f"${K}K, {P}P, PSNR = {psnr:.2f}$", fontsize=fs-6 )
             pass # P

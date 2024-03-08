@@ -19,6 +19,15 @@ def is_scalar( data ) :
     return not is_array( data, )
 pass # is_scalar
 
+print()
+
+m = torch.tensor( [1, 2] )
+n = torch.tensor( [3, 4] )
+
+print( f"dot(m, n) = {torch.dot(m,n)}" )
+print( f"m*n = {m*n}" )
+print()
+
 Ks = torch.arange( 1,  6 + 1, 1 )
 print( f"device = {Ks.get_device()}" )
 print( f"dtype = {Ks.dtype}" )

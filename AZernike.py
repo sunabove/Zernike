@@ -766,11 +766,15 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         print( line )
     pass
 
+    grid = rho_theta( resolution, circle_type, device=device, debug=0 )
+    dx = grid.dx
+    dy = grid.dy 
+    
     cache_imgs = { }
     for device_no in get_device_no_list( device ) :
         cache_device = f"cuda:{device_no}" if device_no > -1 else "cpu:0"
         cache_img = torch.tensor( img, dtype=torch.complex64, device=cache_device )
-        cache_img = cache_img.ravel()
+        cache_img = cache_img.ravel()*dy
         cache_imgs[ device_no ] = cache_img
     pass
 
@@ -779,16 +783,14 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
 
     moments[ "dimension" ] = T
 
-    grid = rho_theta( resolution, circle_type, device=device, debug=0 )
-    
     for p, q in get_pq_list( T ) : 
         v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
-        device_no = v_pq.get_device()
 
+        device_no = v_pq.get_device()
         cache_img = cache_imgs[ device_no ]
         
-        moment = torch.dot( v_pq, cache_img )
-        moment = moment*grid.dx*grid.dy
+        moment = torch.dot( v_pq*dx, cache_img )
+        #moment = moment*dx*dy
 
         moment = torch.conj( moment )
 
