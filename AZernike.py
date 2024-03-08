@@ -818,14 +818,14 @@ def restore_image( moments, grid, device, cache, debug=0) :
 
     img = torch.zeros_like( rho, dtype=torch.complex64 )
 
-    T = moments.shape[0] - 1 
+    T = moments[ "dimension" ]
 
     for p, q in get_pq_list( T ) :
         v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
 
         v_pq = v_pq.to( device )
 
-        img += ((p+1)/area)*moments[p, q]*v_pq
+        img += ((p+1)/area)*(moments[p][q]*v_pq)
     pass 
 
     s = int( math.sqrt( len( img ) ) )
