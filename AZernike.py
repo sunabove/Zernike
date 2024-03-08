@@ -389,6 +389,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
 
                 cache_device = get_cache_device( device, resolution )
                 v_pq = v_pq.to( cache_device ) 
+
                 cache[dn][resolution][p][q] = v_pq
 
                 if debug :
@@ -700,7 +701,7 @@ def get_pq_list( T ) :
 
     for p in range( 0, T + 1 ) : 
         for q in range( -p, p + 1, 2 ) :
-            pqs.append( [p, q] )
+            pqs.append( [ p, q ] )
         pass
     pass
 
@@ -768,13 +769,13 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
 
     cache_imgs = { }
     for device_no in get_device_no_list( device ) :
-        cache_device = f"cuda:{0}" if device_no > -1 else "cpu:0"
+        cache_device = f"cuda:{device_no}" if device_no > -1 else "cpu:0"
         cache_img = torch.tensor( img, dtype=torch.complex64, device=cache_device )
         cache_img = cache_img.ravel()
         cache_imgs[ device_no ] = cache_img
     pass
 
-    moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
+    moments = torch.zeros( (T, 2*T), dtype=torch.complex64, device=device )
 
     grid = rho_theta( resolution, circle_type, device=device, debug=0 )
     
@@ -789,7 +790,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
 
         moment = torch.conj( moment )
 
-        moments[ p, q ] = moment.to( device )
+        moments[ p, T + q ] = moment.to( device )
     pass
 
     run_time = time.time() - then
@@ -813,7 +814,7 @@ def restore_image( moments, grid, device, cache, debug=0) :
     T = moments.shape[0] - 1 
 
     for p, q in get_pq_list( T ) :
-        v_pq, cache_device = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
+        v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
 
         v_pq = v_pq.to( device )
 

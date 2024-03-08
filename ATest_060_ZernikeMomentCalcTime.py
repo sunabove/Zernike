@@ -306,14 +306,17 @@ if __name__ == "__main__" :
         Ks = torch.arange( 1,  6 + 1, 1 )
         Ks = torch.arange( 1,  5 + 1, 1 )
 
-        Ps = torch.arange( 5, 10 + 1, 5 )
-        Ks = torch.arange( 1,  2 + 1, 1 )
-
         Ps = torch.arange( 5, 30 + 1, 5 )
         Ks = torch.arange( 1,  6 + 1, 1 )
 
+        Ps = torch.arange( 5, 10 + 1, 5 )
+        Ks = torch.arange( 1,  2 + 1, 1 )
+
         use_gpus  = [ 1 ] 
         use_caches = [ 0, 1 ]
+
+        use_gpus   = [ 1 ] 
+        use_caches = [ 1 ]
 
         debug = 0
 
