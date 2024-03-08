@@ -26,7 +26,7 @@ from tqdm import tqdm
 from tqdm import tqdm_notebook
 from pathlib import Path
 
-log.basicConfig(level=log.DEBUG) 
+log.basicConfig(level=log.WARNING) 
 
 pi = torch.pi
 
@@ -97,7 +97,7 @@ pass
 
 #@profile
 def _pqs_facotrial( p, q, device ) :
-    use_torch = 1
+    use_torch = 0
 
     if use_torch : 
         return _pqs_facotrial_torch( p, q, device )
@@ -107,7 +107,8 @@ def _pqs_facotrial( p, q, device ) :
 pass # _pqs_facotrial
 
 def _pqs_facotrial_torch( p, q, device ) :
-    kmax = max( (p - q)/2, 0 ) 
+    q = abs(q)
+    kmax = max( (p - q)/2, 0 )
 
     k = torch.arange( 0, kmax + 1, device=device ) 
 
@@ -120,28 +121,30 @@ def _pqs_facotrial_torch( p, q, device ) :
     R_ps = torch.pow( -1, k )*( fact3 )
 
     if R_ps.isnan().any() :
-        print( "_pqs_factorial( ....) : Nan encountered." )
+        log.info( "_pqs_factorial( ....) : Nan encountered." )
     pass
 
     return R_ps, k 
 pass # _pqs_facotrial_torch
 
 def _pqs_facotrial_numpy( p, q, device ) :
+    q = abs(q)
     kmax = max( (p - q)/2, 0 ) 
 
     k = numpy.arange( 0, kmax + 1 ) 
 
-    #fact = factorial( p - s )/factorial( s )/factorial( (p + q)/2 - s)/factorial( (p - q)/2 - s )
+    #fact = factorial( p - k )/factorial( k )/factorial( (p + q)/2 - k)/factorial( (p - q)/2 - k )
     fact = factorial( p - k )
     fact1 = fact/factorial( k )
     fact2 = fact1/factorial( (p + q)/2 - k )
     fact3 = fact2/factorial( (p - q)/2 - k )
+
     fact4 = torch.tensor( fact3 ).to( device )
     
     R_ps = torch.pow( -1, torch.tensor( k, device=device ) )*( fact4 )    
 
-    if R_ps.isnan().any() :
-        print( "_pqs_factorial( ....) : Nan encountered." )
+    if 1 or R_ps.isnan().any() :
+        log.info( "_pqs_factorial( ....) : Nan encountered." )
     pass
 
     return R_ps, k 
@@ -310,14 +313,14 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
                 print( pct_txt, end="", flush=1 )
             pass
 
-            v_pq, cache_device = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
+            v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
 
             if v_pq is None :
-                v_pq, cache_device = Vpq( p, q, grid, device=device, cache=None, debug=debug ) 
+                v_pq = Vpq( p, q, grid, device=device, cache=None, debug=debug ) 
 
                 _vpq_save_file( v_pq, p, q, resolution, circle_type, pct=pct, debug=debug ) 
 
-                v_pq, cache_device = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
+                v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
             pass
 
             if not debug and not is_jupyter() :
@@ -334,9 +337,7 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
         elapsed_human = f"{timedelta(seconds=elapsed)}".split('.')[0]
 
         print( f"--- Loading done. {elapsed:.2f} (secs.) {elapsed_human}" )
-    pass
-
-    return cache
+    pass 
 pass # load_vpq_cache
 
 def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None, debug=0 ) : 
@@ -344,10 +345,9 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
     resolution = int( resolution )
 
     v_pq = None
-    cache_device = None
 
     if q < 0 :
-        v_pq, cache_device = _vpq_load_from_cache( p, abs(q), resolution, circle_type, device, cache, pct=pct, debug=debug )
+        v_pq = _vpq_load_from_cache( p, abs(q), resolution, circle_type, device, cache, pct=pct, debug=debug )
 
         if v_pq is not None:
             v_pq = torch.conj( v_pq )  
@@ -368,7 +368,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
         pass
 
         if q in cache[dn][resolution][p] : 
-            v_pq, cache_device = cache[dn][resolution][p][q]
+            v_pq = cache[dn][resolution][p][q]
         pass
 
         if v_pq is None and "GPU" in device_name :
@@ -385,11 +385,11 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
             pass
 
             if q in cache["CPU"][resolution][p] :
-                v_pq, cache_device = cache["CPU"][resolution][p][q]
+                v_pq = cache["CPU"][resolution][p][q]
 
                 cache_device = get_cache_device( device, resolution )
                 v_pq = v_pq.to( cache_device ) 
-                cache[dn][resolution][p][q] = [ v_pq, cache_device ]
+                cache[dn][resolution][p][q] = v_pq
 
                 if debug :
                     pct_desc = f"[{pct:05.1%}]" if pct is not None else "" 
@@ -405,13 +405,13 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
                 cache_device = torch.device("cpu")
                 v_pq = torch.load( cache_file, map_location=cache_device, weights_only=1 )
 
-                cache["CPU"][resolution][p][q] = [ v_pq, cache_device ]
+                cache["CPU"][resolution][p][q] = v_pq
 
                 if "GPU" in dn : 
                     cache_device = get_cache_device( device, resolution )
                     v_pq = v_pq.to( cache_device )
 
-                    cache["GPU"][resolution][p][q] = [ v_pq, cache_device ] 
+                    cache["GPU"][resolution][p][q] = v_pq
                 pass
                 
                 if debug :
@@ -424,7 +424,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
         pass
     pass
 
-    return v_pq, cache_device
+    return v_pq
 pass # _vpq_load_from_cache
 
 def _vpq_save_file( v_pq, p, q, resolution, circle_type, pct=None, debug=0 ) :
@@ -457,16 +457,15 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
     if 0 and debug :
         print( f"V p = {p}, q = {q}, circle_type = {circle_type}, K = {resolution/1000}, cache = {cache != None}" )
 
-    v_pq = None
-    cache_device = device
+    v_pq = None 
 
     if cache is not None :
-        v_pq, cache_device = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=debug)
+        v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, debug=debug)
     else : 
         q = int(q)
         
         if q < 0 : 
-            v_pq, cache_device = Vpq( p, abs(q), grid, device=device, cache=cache, debug=debug )
+            v_pq = Vpq( p, abs(q), grid, device=device, cache=cache, debug=debug )
             
             v_pq = torch.conj( v_pq )
         else : 
@@ -484,7 +483,7 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
         print( f"Vpq({p}, {q}) = ", v_pq )
     pass
 
-    return v_pq, cache_device
+    return v_pq
 pass
 
 #@profile

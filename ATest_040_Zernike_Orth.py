@@ -49,7 +49,7 @@ def test_radial_polynomail_validation() :
     rho = rho[ torch.where( rho <= 1 ) ]
 
     colors  = [ mcolors.TABLEAU_COLORS[key] for key in mcolors.TABLEAU_COLORS ]
-    markers = [ ".", "o", "s", "p", "*", "D", "d" ]
+    markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
 
     for data in datas : 
         order  = data[ "order" ]
@@ -128,9 +128,10 @@ def validte_radial_polynomial_ortho( T, Ks, debug=0 ) :
 
             circle_type = "inner"
             
-            rho, theta, x, y, dx, dy, kidx, area = rho_theta( resolution, circle_type, device=device, debug=debug )
+            grid = rho_theta( resolution, circle_type, device=device, debug=debug )
 
-            ds = dx*dy
+            ds = grid.dx*grid.dy
+            rho = grid.rho
 
             error_sum = 0
             error_cnt = 0
@@ -149,8 +150,8 @@ def validte_radial_polynomial_ortho( T, Ks, debug=0 ) :
                                 continue
                             pass
 
-                            r_pq = Rpq( p, q, rho, device=device, hash=hash, debug=0 )
-                            r_nm = Rpq( n, m, rho, device=device, hash=hash, debug=0 )
+                            r_pq = Rpq( p, q, rho, device=device, debug=0 )
+                            r_nm = Rpq( n, m, rho, device=device, debug=0 )
                             
                             sum = torch.sum( r_pq*r_nm*rho )*( ds*2*(p + 1) )
 
