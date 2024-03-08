@@ -24,6 +24,7 @@ print()
 m = torch.tensor( [1, 2] )
 n = torch.tensor( [3, 4] )
 
+print( f"pi = {torch.pi}")
 print( f"dot(m, n) = {torch.dot(m,n)}" )
 print( f"m*n = {m*n}" )
 print()

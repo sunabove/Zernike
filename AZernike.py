@@ -190,10 +190,8 @@ def Rpq( p, q, rho, device, debug=0 ) :
 
     r_pq_rho = None
     
-    if p == 1 and q == 1 :
-        r_pq_rho = rho
-    elif p == 2 and q == 2 :
-        r_pq_rho = rho*rho
+    if p == q :
+        r_pq_rho = torch.pow( rho, p )
     else :
         R_ps, k = _pqs_facotrial( p, q, device=device )
 
@@ -493,7 +491,8 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     h = img.shape[0]
     w = img.shape[1]
     
-    radius = math.sqrt( w*w + h*h )
+    mwh = max( h - 1, w -1 )
+    radius = math.sqrt( 2*mwh*mwh )
     
     debug and print( f"H = {h}, W = {w}, r = {radius}" )
     
@@ -505,12 +504,12 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
         print( f"y size = { y.size()}" )
     pass
 
-    dy = dx = 2.0/w    
+    dy = dx = 2.0/max(h, w)    
     area = pi
     
     if "inner" in circle_type : 
-        y = (y/h*2 - 1.0).flatten()
-        x = (x/w*2 - 1.0).flatten()
+        y = (y/mwh*2 - 1.0).flatten()
+        x = (x/mwh*2 - 1.0).flatten()
         
         dy = dx = 2.0/max(h, w)
         
@@ -518,8 +517,8 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     else : # outer cirlce
         sqrt_2 = math.sqrt(2)
         
-        y = (y/h*sqrt_2 - (1.0/sqrt_2) ).flatten()
-        x = (x/w*sqrt_2 - (1.0/sqrt_2) ).flatten()
+        y = (y/mwh*sqrt_2 - (1.0/sqrt_2) ).flatten()
+        x = (x/mwh*sqrt_2 - (1.0/sqrt_2) ).flatten()
         
         dy = dx = sqrt_2/max(h, w)
         
@@ -700,7 +699,9 @@ def get_pq_list( T ) :
 
     for p in range( 0, T + 1 ) : 
         for q in range( -p, p + 1, 2 ) :
-            pqs.append( [ p, q ] )
+            if ( p - abs(q) )%2 == 0 :
+                pqs.append( [p, q] )
+            pass
         pass
     pass
 
@@ -759,7 +760,7 @@ pass # get_device_no_list
 def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 ) : 
     then = time.time()
 
-    img = cv.resize( img, ( int(resolution), int(resolution) ), interpolation=cv.INTER_AREA )
+    #img = cv.resize( img, ( int(resolution), int(resolution) ), interpolation=cv.INTER_AREA )
 
     if 0 and debug : 
         print( "img shape= ", img.shape ) 
@@ -778,9 +779,8 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         cache_imgs[ device_no ] = cache_img
     pass
 
-    #moments = torch.zeros( (T +1, 2*(T +1)), dtype=torch.complex64, device=device )
+    #moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
     moments = { }
-
     moments[ "dimension" ] = T
 
     for p, q in get_pq_list( T ) : 
@@ -794,7 +794,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
 
         moment = torch.conj( moment )
 
-        if not p in moments :
+        if p not in moments :
             moments[p] = { }
         pass
 
@@ -819,6 +819,7 @@ def restore_image( moments, grid, device, cache, debug=0) :
 
     img = torch.zeros_like( rho, dtype=torch.complex64 )
 
+    #T = moments.shape[0] - 1
     T = moments[ "dimension" ]
 
     for p, q in get_pq_list( T ) :
@@ -826,7 +827,7 @@ def restore_image( moments, grid, device, cache, debug=0) :
 
         v_pq = v_pq.to( device )
 
-        img += ((p+1)/area)*(moments[p][q]*v_pq)
+        img += moments[p][q]*(p+1)/area*v_pq
     pass 
 
     s = int( math.sqrt( len( img ) ) )

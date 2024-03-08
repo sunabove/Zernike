@@ -556,7 +556,9 @@ def pq_list( T ) :
 
     for p in range( 0, T + 1 ) : 
         for q in range( -p, p + 1, 2 ) :
-            pqs.append( [p, q] )        
+            if ( p - abs(q) )%2 == 0 :
+                pqs.append( [p, q] )
+            pass
         pass
     pass
 

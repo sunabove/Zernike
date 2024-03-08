@@ -49,7 +49,7 @@ def test_image_restore( img_lbls, Ks, Ps, use_cache=1, debug=0 ) :
 
             grid = rho_theta( resolution, circle_type, device, debug=debug ) 
 
-            img = cv.resize( img_org, (resolution, resolution), interpolation=cv.INTER_AREA )
+            img = cv.resize( img_org + 0, (resolution, resolution), interpolation=cv.INTER_AREA )
 
             for pidx, P in enumerate( Ps ) : 
                 if cache is not None and use_gpu :
