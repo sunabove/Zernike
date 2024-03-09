@@ -486,15 +486,14 @@ pass
 
 #@profile
 def rho_theta( resolution, circle_type, device, debug=0 ) :
-    img = torch.ones( ( int(resolution), int( resolution) ), dtype=torch.float64, device=device ) 
+    img = torch.zeros( ( int(resolution), int(resolution) ), dtype=torch.int8, device=device ) 
     
     h = img.shape[0]
     w = img.shape[1]
+
+    mwh = max( h , w )
     
-    mwh = max( h - 1, w -1 )
-    radius = math.sqrt( 2*mwh*mwh )
-    
-    debug and print( f"H = {h}, W = {w}, r = {radius}" )
+    debug and print( f"circle type ={circle_type}, H = {h}, W = {w}" )
     
     # 영상 인덱스를 직교 좌표계 값으로 변환
     y, x = torch.where( img >= 0 ) 
@@ -502,56 +501,63 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     if debug : 
         print( f"x size = { x.size()}" )
         print( f"y size = { y.size()}" )
+
+        print( "x = ", x )
+        print( "y = ", y )
     pass
 
-    dy = dx = 2.0/max(h, w)    
     area = pi
+    width = 2
     
     if "inner" in circle_type : 
-        y = (y/mwh*2 - 1.0).flatten()
-        x = (x/mwh*2 - 1.0).flatten()
-        
-        dy = dx = 2.0/max(h, w)
-        
         area = pi # 3.14 area of the whole circle
+        width = 2
     else : # outer cirlce
-        sqrt_2 = math.sqrt(2)
-        
-        y = (y/mwh*sqrt_2 - (1.0/sqrt_2) ).flatten()
-        x = (x/mwh*sqrt_2 - (1.0/sqrt_2) ).flatten()
-        
-        dy = dx = sqrt_2/max(h, w)
-        
         area = 2  # area of the rectangle inside
-    pass 
+        width = math.sqrt(2)
+    pass
 
-    if debug : 
-        print( f"x size = {x.size()}" )
-        print( f"y size = {y.size()}" )
+    dy = dx = width/max( h, w )
+
+    y = (y/mwh*(width) - (width - dx)/2.0).flatten()
+    x = (x/mwh*(width) - (width - dy)/2.0).flatten()
+
+    if debug :
+        print( "width = ", width )
+        print( "width/2 = ", width/2.0 )
+        print( "dx = ", dx )
+        print( "dy = ", dy )
+
+        print( "x = ", x )
+        print( "y = ", y )
     pass
     
     rho_square = x**2 + y**2
-    
-    kidx = None
-    
-    if "inner" in circle_type : 
-        kidx = torch.where( rho_square <= 1.0 )
-    else :
-        # all index of outer circle
-        kidx = torch.where( rho_square <= 2.0 )
+
+    if debug :
+        print( f"rho_square size = {len(rho_square)}" )
+        print( f"rho_square = {rho_square}" )
     pass
+    
+    kidx = torch.where( rho_square <= 1.0 )
     
     y = y[ kidx ]
     x = x[ kidx ]    
     rho_square = rho_square[ kidx ]
     
     if debug : 
+        print( "kidx = ", kidx )
+
         print( "x[k] = ", x )
         print( "y[k] = ", y )
     pass
 
     rho = torch.sqrt( rho_square )
     theta = torch.arctan2( y, x )
+
+    if debug : 
+        print( "rho = ", rho )
+    pass
     
     grid = Grid()
 
@@ -699,9 +705,7 @@ def get_pq_list( T ) :
 
     for p in range( 0, T + 1 ) : 
         for q in range( -p, p + 1, 2 ) :
-            if ( p - abs(q) )%2 == 0 :
-                pqs.append( [p, q] )
-            pass
+            pqs.append( [p, q] )
         pass
     pass
 
@@ -1131,7 +1135,27 @@ print( "Zernike functions are defined.\n")
 
 if __name__ == "__main__" :
     
-    if 0 :
+    if 1 :
+        resolution = 1000
+        circle_type = "outer"
+        circle_type = "inner"
+        device = torch.device( "cuda:0" )
+        debug = 1
+
+        rho_theta( resolution, circle_type, device, debug=debug )
+    elif 1 :
+        x = torch.tensor([-1 + 1j, -2 + 2j, 3 - 3j])
+        y = torch.conj( x )
+        print( x )
+        print( y )
+    elif 1 :
+        for P in range( 10 ) :
+            print( f"PQ List : P = {P:2d}" )
+            pq_list = get_pq_list( P )
+            txt = ", ".join( [ f"({p}, {q})" for [p, q] in pq_list ] )
+            print( txt )
+        pass
+    elif 0 :
         t = 5
         s = torch.arange( -t, t + 1 ) 
         print( f"torch s = {s}")
@@ -1140,7 +1164,7 @@ if __name__ == "__main__" :
         s = numpy.arange( -t, t + 1 ) 
         print( f"numpy s = {s}")
         print( "numpy facotrial(0) = ", factorial( s ) )
-    elif 1 :
+    elif 0 :
         print_cpu_info()    
         print()
         print_gpu_info()

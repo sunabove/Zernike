@@ -59,10 +59,8 @@ def test_moment_restore(img_infos, img_input, Ks, Ts, **options) :
         if "hash" in options : 
             del options[ "hash" ]
         pass
-    pass
-pass # test_moment_restore
+    pass 
 
-def plot_moment_restore(img_infos, Ks, Ts, **options ) :
     # 서브 챠트 생성 
     col_cnt = len(Ks) if len(Ks) > len(Ts) else len(Ts)
     col_cnt += 2 
