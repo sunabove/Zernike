@@ -572,6 +572,7 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
 
     grid.resolution = resolution
     grid.circle_type = circle_type
+    grid.device = device
     
     #return rho, theta, x, y, dx, dy, kidx, area
     return grid
@@ -774,6 +775,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     grid = rho_theta( resolution, circle_type, device=device, debug=0 )
     dx = grid.dx
     dy = grid.dy 
+    kidx = grid.kidx
     
     cache_imgs = { }
     for device_no in get_device_no_list( device ) :
@@ -793,7 +795,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         device_no = v_pq.get_device()
         cache_img = cache_imgs[ device_no ]
         
-        moment = torch.dot( v_pq*dx, cache_img )
+        moment = torch.dot( v_pq*dx, cache_img[kidx] )
         #moment = moment*dx*dy
 
         moment = torch.conj( moment )
@@ -820,6 +822,7 @@ def restore_image( moments, grid, device, cache, debug=0) :
     
     rho = grid.rho
     area = grid.area
+    resolution = grid.resolution
 
     img = torch.zeros_like( rho, dtype=torch.complex64 )
 
@@ -832,11 +835,9 @@ def restore_image( moments, grid, device, cache, debug=0) :
         v_pq = v_pq.to( device )
 
         img += moments[p][q]*(p+1)/area*v_pq
-    pass 
-
-    s = int( math.sqrt( len( img ) ) )
+    pass
     
-    img = img.reshape( s, s )
+    img = img.reshape( resolution, resolution )
     
     run_time = time.time() - then
     
@@ -1137,8 +1138,8 @@ if __name__ == "__main__" :
     
     if 1 :
         resolution = 1000
-        circle_type = "outer"
         circle_type = "inner"
+        circle_type = "outer"
         device = torch.device( "cuda:0" )
         debug = 1
 
