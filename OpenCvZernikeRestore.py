@@ -2,7 +2,7 @@ import numpy as np
 from math import atan2
 from numpy import cos, sin, conjugate, sqrt
 
-def _slow_zernike_poly(Y,X,n,l):
+def _zernike_poly(Y, X, n, l):
 
     def _polar(r,theta):
         x = r * cos(theta)
@@ -15,11 +15,11 @@ def _slow_zernike_poly(Y,X,n,l):
         return n * _factorial(n - 1)
     pass
 
-    y,x = Y[0],X[0]
+    y, x = Y[0], X[0]
     vxy = np.zeros(Y.size, dtype=complex)
-    index = 0
+    
 
-    for x,y in zip(X,Y):
+    for index, [x, y] in enumerate( zip(X, Y) ):
         Vnl = 0.0
 
         for m in range( int( (n-l)//2 ) + 1 ):
@@ -29,7 +29,6 @@ def _slow_zernike_poly(Y,X,n,l):
         pass
     
         vxy[index] = Vnl
-        index = index + 1
     pass
 
     return vxy
@@ -38,33 +37,35 @@ pass # _slow_zernike_poly
 def zernike_reconstruct(img, radius, D, cof):
     idx = np.ones(img.shape)
 
-    cofy,cofx = cof
+    cofy, cofx = cof
     cofy = float(cofy)
     cofx = float(cofx)
     radius = float(radius)    
 
-    Y,X = np.where(idx > 0)
-    P = img[Y,X].ravel()
+    Y, X = np.where(idx > 0)
+    P = img[Y, X].ravel()
     Yn = ( (Y -cofy)/radius).ravel()
     Xn = ( (X -cofx)/radius).ravel()
 
     k = (np.sqrt(Xn**2 + Yn**2) <= 1.)
     frac_center = np.array(P[k], np.double)
+
     Yn = Yn[k]
     Xn = Xn[k]
     frac_center = frac_center.ravel()
 
-    # in the discrete case, the normalization factor is not pi but the number of pixels within the unit disk
+    # in the discrete case, the normalization factor is not pi 
+    # but the number of pixels within the unit disk
     npix = float(frac_center.size)
 
     reconstr = np.zeros(img.size, dtype=complex)
     accum = np.zeros(Yn.size, dtype=complex)
 
-    for n in range(D+1):
-        for l in range(n+1):
-            if (n-l)%2 == 0:
+    for n in range( D + 1 ):
+        for l in range( n + 1 ):
+            if (n - l)%2 == 0:
                 # get the zernike polynomial
-                vxy = _slow_zernike_poly(Yn, Xn, float(n), float(l))
+                vxy = _zernike_poly(Yn, Xn, float(n), float(l))
                 # project the image onto the polynomial and calculate the moment
                 a = sum(frac_center * conjugate(vxy)) * (n + 1)/npix
                 # reconstruct
@@ -84,14 +85,14 @@ def test_zernike_reconstruct() :
     import pylab as pl
     from matplotlib import cm
 
-    D = 12
-
     src_dir = os.path.dirname( os.path.abspath(__file__) )
 
     img = cv2.imread( f'{src_dir}/image/f.png', 0 )
 
     rows, cols = img.shape
     radius = cols//2 if rows > cols else rows//2
+
+    D = 12
 
     reconst = zernike_reconstruct(img, radius, D, (rows/2., cols/2.))
 
