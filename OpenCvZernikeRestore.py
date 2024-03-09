@@ -110,9 +110,9 @@ def test_zernike_reconstruct( img, D=12 ) :
     reconst = ( reconst + 0 ).reshape( img.shape )
 
     pl.figure(1)
-    pl.imshow( cupy.asnumpy( img ), cmap=cm.jet, origin = 'upper')
+    pl.imshow( cupy.asnumpy( img ), cmap="gray", origin = 'upper')
     pl.figure(2)    
-    pl.imshow( cupy.asnumpy( reconst.real ), cmap=cm.jet, origin = 'upper')
+    pl.imshow( cupy.asnumpy( reconst.real ), cmap="gray", origin = 'upper')
 
 pass # test_zernike_reconstruct
 
