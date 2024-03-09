@@ -1,31 +1,49 @@
-import numpy as np
+import os
+import cv2
+import pylab as pl
+import scipy
+
+from matplotlib import cm
 from math import atan2
-from numpy import cos, sin, conjugate, sqrt
+
+#import numpy as np
+#from numpy import cos, sin, conjugate, sqrt
+
+import cupy as np
+from cupy import cos, sin, conjugate, sqrt
+import numpy, cupy
+
+def _polar(r, theta):
+    x = r * cos(theta)
+    y = r * sin(theta)
+
+    return 1.*x + 1.j*y
+pass
+
+def _factorial( n ):    
+    fact = scipy.special.factorial( cupy.asnumpy( n ) )
+
+    fact = cupy.array( fact )
+
+    return fact
+
+    #return n * _factorial(n - 1)
+pass
 
 def _zernike_poly(Y, X, n, l):
 
-    def _polar(r,theta):
-        x = r * cos(theta)
-        y = r * sin(theta)
-        return 1.*x+1.j*y
-    pass
-
-    def _factorial(n):
-        if n == 0: return 1.
-        return n * _factorial(n - 1)
-    pass
-
     y, x = Y[0], X[0]
+
     vxy = np.zeros(Y.size, dtype=complex)
 
-    for index, [x, y] in enumerate( zip(X, Y) ) :
-        Vnl = 0.0
+    m = np.arange( 0, int( (n-l)//2 ) + 1 )
 
-        for m in range( int( (n-l)//2 ) + 1 ):
-            Vnl += (-1.)**m * _factorial(n-m) /  \
-                ( _factorial(m) * _factorial((n - 2*m + l) // 2) * _factorial((n - 2*m - l) // 2) ) * \
-                ( sqrt(x*x + y*y)**(n - 2*m) * _polar(1.0, l*atan2(y,x)) )
-        pass
+    fact = (-1.)**m*_factorial(n-m)/( _factorial(m)*_factorial((n - 2*m + l) // 2)*_factorial((n - 2*m - l) // 2) )
+
+    for index, [x, y] in enumerate( zip(X, Y) ) :        
+        Vnl =  fact * ( sqrt(x*x + y*y)**(n - 2*m) * _polar(1.0, l*atan2(y, x)) )
+        
+        Vnl = np.sum( Vnl )
     
         vxy[index] = Vnl
     pass
@@ -78,32 +96,30 @@ def zernike_reconstruct(img, radius, D, cof):
     return reconstr
 pass # zernike_reconstruct
 
-def test_zernike_reconstruct() :
-    import os
-    import cv2
-    import pylab as pl
-    from matplotlib import cm
+def test_zernike_reconstruct( img, D=12 ) :
 
-    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    import cupy
 
-    img = cv2.imread( f'{src_dir}/image/f.png', 0 )
+    img = np.array( img + 0 )
 
     rows, cols = img.shape
     radius = cols//2 if rows > cols else rows//2
 
-    D = 12
-
     reconst = zernike_reconstruct(img, radius, D, (rows/2., cols/2.))
 
-    reconst = reconst.reshape(img.shape)
+    reconst = ( reconst + 0 ).reshape( img.shape )
 
     pl.figure(1)
-    pl.imshow(img, cmap=cm.jet, origin = 'upper')
+    pl.imshow( cupy.asnumpy( img ), cmap=cm.jet, origin = 'upper')
     pl.figure(2)    
-    pl.imshow(reconst.real, cmap=cm.jet, origin = 'upper')
+    pl.imshow( cupy.asnumpy( reconst.real ), cmap=cm.jet, origin = 'upper')
 
 pass # test_zernike_reconstruct
 
 if __name__ == '__main__':
-    test_zernike_reconstruct()
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+
+    img = cv2.imread( f'{src_dir}/image/f.png', 0 )
+    
+    test_zernike_reconstruct( img )
 pass

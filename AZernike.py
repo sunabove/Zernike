@@ -126,21 +126,25 @@ def _pqs_facotrial_torch( p, q, device ) :
     return R_ps, k 
 pass # _pqs_facotrial_torch
 
-def _pqs_facotrial_numpy( p, q, device ) :
+def _pqs_facotrial_numpy( p, q, device ) : 
     q = abs(q)
     kmax = max( (p - q)/2, 0 ) 
 
     k = numpy.arange( 0, kmax + 1 ) 
 
-    #fact = factorial( p - k )/factorial( k )/factorial( (p + q)/2 - k)/factorial( (p - q)/2 - k )
+    fact = factorial( p - k )/factorial( k )/factorial( (p + q)/2 - k)/factorial( (p - q)/2 - k )
+    R_ps = numpy.power( -1, k )*fact
+    R_ps = torch.tensor( R_ps, device=device )
+
+    """
     fact = factorial( p - k )
     fact1 = fact/factorial( k )
     fact2 = fact1/factorial( (p + q)/2 - k )
     fact3 = fact2/factorial( (p - q)/2 - k )
-
     fact4 = torch.tensor( fact3 ).to( device )
     
-    R_ps = torch.pow( -1, torch.tensor( k, device=device ) )*( fact4 )    
+    R_ps = torch.pow( -1, torch.tensor( k, device=device ) )*( fact4 )
+    """
 
     if R_ps.isnan().any() :
         log.info( "_pqs_factorial( ....) : Nan encountered." )
@@ -847,11 +851,11 @@ pass ## restore_image
 def calc_psnr( img_org, img_restored ) :
     img_org = torch.tensor( img_org, device=img_restored.get_device() )
 
+    gmax = max( max(img_org), max(img_restored) )
+
     img_diff = img_org - img_restored
 
     mse = torch.sum( img_diff*img_diff ) / img_diff.numel()
-
-    gmax = 255
 
     psnr = 10*torch.log10( gmax*gmax/mse )
     
@@ -864,7 +868,7 @@ def calc_rmse(img_org, img_restored, **options ) :
         
     img_diff = img_org - img_restored 
 
-    rmse = torch.sum( img_diff*img_diff ) / img_diff.numel()
+    rmse = torch.sqrt( torch.sum( img_diff*img_diff ) / img_diff.numel() )
     
     return rmse
 pass # calc_mad

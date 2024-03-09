@@ -716,8 +716,8 @@ def calc_psnr(img_org, img_restored, **options ) :
     
     img_diff = img_org - img_restored
 
-    #gmax = np.max( img_org ) # 최대값 
-    gmax = 255
+    #gmax = np.max( img_org ) # 최대값 255
+    gmax = max( max(img_org), max(img_restored) )
     
     mse = np.sum( np.square( img_diff ) ) / img_diff.size
     psnr = 10*math.log10(gmax*gmax/mse)
