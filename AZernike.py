@@ -777,6 +777,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     pass
 
     grid = rho_theta( resolution, circle_type, device=device, debug=0 )
+    area = grid.area
     dx = grid.dx
     dy = grid.dy 
     kidx = grid.kidx
@@ -785,7 +786,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     for device_no in get_device_no_list( device ) :
         cache_device = f"cuda:{device_no}" if device_no > -1 else "cpu:0"
         cache_img = torch.tensor( img, dtype=torch.complex64, device=cache_device )
-        cache_img = cache_img.ravel()*dy
+        cache_img = cache_img.ravel()
         cache_imgs[ device_no ] = cache_img
     pass
 
@@ -799,10 +800,8 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         device_no = v_pq.get_device()
         cache_img = cache_imgs[ device_no ]
         
-        moment = torch.dot( v_pq*dx, cache_img[kidx] )
-        #moment = moment*dx*dy
-
-        moment = torch.conj( moment )
+        v_pq = torch.conj( v_pq )
+        moment = torch.dot( v_pq*dx, cache_img[kidx]*dy ) 
 
         if p not in moments :
             moments[p] = { }
@@ -826,22 +825,26 @@ def restore_image( moments, grid, device, cache, debug=0) :
     
     rho = grid.rho
     area = grid.area
+    kidx = grid.kidx
     resolution = grid.resolution
 
-    img = torch.zeros_like( rho, dtype=torch.complex64 )
+    img = torch.zeros( (resolution, resolution), dtype=torch.complex64, device=device )
+    img_rvl = img.ravel()
 
     #T = moments.shape[0] - 1
     T = moments[ "dimension" ]
 
-    for p, q in get_pq_list( T ) :
-        v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
+    for p in range( 0, T + 1 ) :
+        for q in range( -p, p + 1, 2 ) :
+            if (p - abs(q))%2 == 0 : 
+                v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
 
-        v_pq = v_pq.to( device )
+                v_pq = v_pq.to( device )
 
-        img += moments[p][q]*(p+1)/area*v_pq
+                img_rvl[kidx] += moments[p][q]*(p+1)/area*v_pq
+            pass
+        pass
     pass
-    
-    img = img.reshape( resolution, resolution )
     
     run_time = time.time() - then
     
@@ -851,7 +854,7 @@ pass ## restore_image
 def calc_psnr( img_org, img_restored ) :
     img_org = torch.tensor( img_org, device=img_restored.get_device() )
 
-    gmax = max( max(img_org), max(img_restored) )
+    gmax = torch.max( torch.max(img_org), torch.max(img_restored) )
 
     img_diff = img_org - img_restored
 
