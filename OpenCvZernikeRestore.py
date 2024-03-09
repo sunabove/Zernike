@@ -17,9 +17,8 @@ def _zernike_poly(Y, X, n, l):
 
     y, x = Y[0], X[0]
     vxy = np.zeros(Y.size, dtype=complex)
-    
 
-    for index, [x, y] in enumerate( zip(X, Y) ):
+    for index, [x, y] in enumerate( zip(X, Y) ) :
         Vnl = 0.0
 
         for m in range( int( (n-l)//2 ) + 1 ):
