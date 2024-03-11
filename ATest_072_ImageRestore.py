@@ -46,7 +46,9 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
         for kidx, K in enumerate( Ks ) : 
             print( line2 )
 
-            if not K in restore_times_k :
+            K = int(K)
+
+            if K not in restore_times_k :
                 restore_times_k[ K ] = [ ]
             pass
 
@@ -139,8 +141,11 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             cidx += 1
             chart.plot( x, numpy.array( psnrs )*5, marker=markers[cidx%len(markers)], label="$PSNR*5$", linestyle=ls )
             cidx += 1
-            chart.plot( x, numpy.array( restore_times )*10, marker=markers[cidx%len(markers)], label="Restore time(centi sec.)$", linestyle=ls )
-            cidx += 1
+
+            if 0 :
+                chart.plot( x, numpy.array( restore_times )*10, marker=markers[cidx%len(markers)], label="Restore time(centi sec.)$", linestyle=ls )
+                cidx += 1
+            pass
 
             chart.set_title( f"Restoration Rate$({K}K)$", fontsize=fs )
             #chart.set_xlabel( f"$Order(P)$", fontsize=fs-4 )
@@ -175,37 +180,37 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
     chart = charts[ 0 ] 
     
     for cidx, K in enumerate( Ks ) :
-        restore_times_k = restore_times_k[ K ]
+        K = int(K)
 
         restore_times_sum = numpy.zeros( len(Ps), dtype=numpy.float_ )
         
-        for restore_times in restore_times_k :
+        for restore_times in restore_times_k[ K ] :
             restore_times_sum += restore_times
         pass
         
-        restore_times_avg = restore_times_sum/len(restore_times_k)
+        restore_times_avg = restore_times_sum/len( restore_times_k[ K ] )
 
         cidx = 0 
         ls = "solid"
         x = numpy.array( Ps.cpu() )
-        chart.plot( x, restore_times_avg, marker=markers[cidx%len(markers)], label=f"${K}$", linestyle=ls )
+        chart.plot( x, restore_times_avg, marker=markers[cidx%len(markers)], label=f"Grid Tick Count: ${int(K)} K$", linestyle=ls )
     pass
 
     chart.set_title( f"Restoration Time", fontsize=fs )
-    chart.set_xlabel( f"Order", fontsize=fs-2 )
+    chart.set_xlabel( f"Moment Order", fontsize=fs-2 )
     chart.set_ylabel( f"Times(sec.)", fontsize=fs-2 )
-    
-    xticks = torch.linspace( min(Ps), max(Ps), 5 )
+
+    xticks = numpy.array( Ps )
     chart.set_xticks( xticks )
     chart.set_xticklabels( [ f"${int(t)}P$" for t in xticks ])
-    chart.legend( fontsize=fontsize/2 )
+    chart.legend( fontsize=fontsize - 2 )
 
     plt.show()
 
     src_dir = os.path.dirname( os.path.abspath(__file__) )
     file_stem = Path( __file__ ).stem
 
-    result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{int(max(Ps))}P_{int(max(Ks))}K_{i_idx:02}_restore_times.png"
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{int(max(Ps))}P_{int(max(Ks))}K_restore_times.png"
     plt.savefig( result_figure_file )
     print( f"\nresult_figure_file = {result_figure_file}" )
  
