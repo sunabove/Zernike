@@ -1,6 +1,6 @@
 from AZernike import *
 
-def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, pmin=4, pmax=46, use_cache=1, debug=0 ) :
+def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1, debug=0 ) :
     print( line2 )
     
     use_gpu = 1
@@ -9,9 +9,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, pmin=4, pmax=46, use
     device_no = 0 
     device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
 
-    step = int( (pmax)/(row_cnt*col_cnt -1) )
-
-    Ps = torch.arange( pmin, pmax - step, step )
+    Ps = torch.arange( step, step*(row_cnt*col_cnt -1), step )
     
     cache = { } if use_cache else None 
 
