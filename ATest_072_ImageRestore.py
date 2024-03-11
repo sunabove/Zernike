@@ -110,7 +110,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
                 img_cpu = img_real
                 im = chart.imshow( img_cpu, cmap="gray" )
                 if 0 : plt.colorbar(im)
-                chart.set_title( f"$PSNR={psnr:.1f} ({P} P, {K} K)$", fontsize=fs )
+                chart.set_title( f"PSNR={psnr:.1f} $({P} P,{K} K)$", fontsize=fs-2)
                 #chart.set_xlabel( f"${K}K,{P}P$", fontsize=fs )
 
                 if 1 or pidx == 0 : 
@@ -156,7 +156,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
             chart.grid( axis='x', linestyle="dotted" )
             chart.grid( axis='y', linestyle="dotted" )
-            
+
             chart.legend( fontsize=fontsize/2 )
 
             plt.show()
@@ -200,7 +200,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
         chart.plot( x, restore_times_avg, marker=markers[cidx%len(markers)], label=f"Grid Tick Count: ${int(K)} K$", linestyle=ls )
     pass
 
-    chart.set_title( f"Restoration Time", fontsize=fs )
+    chart.set_title( f"Image Restoration Time", fontsize=fs )
     chart.set_xlabel( f"Moment Order", fontsize=fs-2 )
     chart.set_ylabel( f"Times(sec.)", fontsize=fs-2 )
 
