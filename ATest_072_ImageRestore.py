@@ -24,11 +24,8 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
     pass
 
     # 서브 챠트 생성 
-    for i_idx, [ img_org, img_label ] in enumerate( img_lbls ): 
+    for i_idx, [ img_org, img_label ] in enumerate( img_lbls ):
         
-        fs = fontsize = 16 ; w = 2.5
-        fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=0 )
-        charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     
         shape = img_org.shape
         channel = shape[ -1 ] if len( shape ) > 2 else 1
@@ -45,7 +42,11 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
         for kidx, K in enumerate( Ks ) : 
             print( line2 )
 
-            chart = charts[ (kidx)*row_cnt*col_cnt ] 
+            fs = fontsize = 16 ; w = 2.5
+            fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=0 )
+            charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
+
+            chart = charts[ 0 ] 
             chart.imshow( img_org, cmap="gray" )
             chart.set_title( f"[{img_label.capitalize()}] Image Org.", fontsize=fs )
             img_width  = img_org.shape[1]
@@ -86,7 +87,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
                 print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:7.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {numpy.min( img_real):.1f}, max = {numpy.max( img_real):.1f}", flush=1 )
 
-                chart = charts[ kidx**row_cnt*col_cnt + pidx + 1 ] 
+                chart = charts[ pidx + 1 ] 
                 img_cpu = img_real
                 im = chart.imshow( img_cpu, cmap="gray" )
                 if 0 : plt.colorbar(im)
@@ -111,7 +112,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
             #plot psnr
         
-            chart = charts[ kidx**row_cnt*col_cnt + len(Ps) + 1 ]
+            chart = charts[ -1 ]
             chart.plot( numpy.array( Ps.cpu() ) , numpy.array( psnrs ), marker="*" )
             chart.set_title( f"$PSNR({K}K)$", fontsize=fs )
             #chart.set_xlabel( f"$Order(P)$", fontsize=fs-4 )
@@ -119,17 +120,17 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             xticks = torch.linspace( min(Ps), max(Ps), 5 )
             chart.set_xticks( xticks )
             chart.set_xticklabels( [ f"${int(t)}P$" for t in xticks ])
+
+            plt.show()
+
+            src_dir = os.path.dirname( os.path.abspath(__file__) )
+            file_stem = Path( __file__ ).stem
+
+            result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{int(max(Ps))}P_{K}K_{i_idx:02}_{img_label}.png"
+            plt.savefig( result_figure_file )
+            print( f"\nresult_figure_file = {result_figure_file}" )
         
-        pass # K
-
-        plt.show()
-
-        src_dir = os.path.dirname( os.path.abspath(__file__) )
-        file_stem = Path( __file__ ).stem
-
-        result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{int(max(Ps))}P_{int(max(Ks))}K_{i_idx:02}_{img_label}.png"
-        plt.savefig( result_figure_file )
-        print( f"\nresult_figure_file = {result_figure_file}" )
+        pass # K 
     pass # img_orgs
 
     def plot_psnr( chart, Ts, psnrs, rmses ) :
