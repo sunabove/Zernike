@@ -850,7 +850,7 @@ def restore_image( moments, grid, device, cache, debug=0) :
 
                 v_pq = v_pq.to( device )
 
-                img_rvl += moments[p, q]*(p+1)/area*v_pq
+                img_rvl[kidx] += moments[p, q]*v_pq*(p+1)/area
             pass
         pass
     pass
@@ -860,10 +860,12 @@ def restore_image( moments, grid, device, cache, debug=0) :
     return img, run_time
 pass ## restore_image
 
-def calc_psnr( img_org, img_restored ) :
+def calc_psnr( img_org, img_restored, debug=0) :
     img_org = torch.tensor( img_org, device=img_restored.get_device() )
 
     gmax = torch.max( torch.max(img_org), torch.max(img_restored) )
+    
+    if debug : print( f"gmax = {gmax}" )
 
     img_diff = img_org - img_restored
 
@@ -1153,6 +1155,15 @@ print( "Zernike functions are defined.\n")
 if __name__ == "__main__" :
     
     if 1 :
+        t = 3
+        s = torch.tensor( [ [ 1, 2, 3 ], [ 1, 2, 3 ], [ 1, 2, 3 ] ] )
+        t = s + 1 
+
+        print( f"s = {s}")
+        print( f"t = {t}")
+
+        print( f"s*t = {s*t}") 
+    elif 1 :
         resolution = 1000
         circle_type = "inner"
         circle_type = "outer"
