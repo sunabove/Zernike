@@ -500,10 +500,14 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     debug and print( f"circle type ={circle_type}, H = {h}, W = {w}" )
     
     # 영상 인덱스를 직교 좌표계 값으로 변환
-    y, x = torch.where( img >= 0 ) 
+    y, x = torch.where( img >= 0 )
+    
+    y = torch.tensor( y, dtype=torch.float64, device=device )
+    x = torch.tensor( x, dtype=torch.float64, device=device )
 
-    y = torch.tensor( y.clone().detach(), dtype=torch.float64, device=device )
-    x = torch.tensor( x.clone().detach(), dtype=torch.float64, device=device )
+    #print( f"y = {y.dtype}" )
+    #print( f"x = {x.dtype}" )
+    
 
     if debug : 
         print( f"x size = { x.size()}" )
