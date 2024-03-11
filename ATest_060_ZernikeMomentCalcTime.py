@@ -139,7 +139,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                             torch.cuda.empty_cache()
                         pass
 
-                        desc = f"[ {pct:3.0f} % ] {dn}: Cache = {use_cache}, P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}, img lbl = {img_lbl}"
+                        desc = f"[ {pct:3.1f} % ] {dn}: Cache = {use_cache}, P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}, img lbl = {img_lbl}"
 
                         if 1 : print( desc )
                     pass # img_lbls                    
