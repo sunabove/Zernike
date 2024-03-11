@@ -23,6 +23,8 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
         warm_up_gpus( debug=1 )
     pass
 
+    restore_times_k = { }
+
     max_idx = len( img_lbls )*len(Ps)*len(Ks)
     cur_idx = 0.0 
 
@@ -43,6 +45,10 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
         for kidx, K in enumerate( Ks ) : 
             print( line2 )
+
+            if not K in restore_times_k :
+                restore_times_k[ K ] = [ ]
+            pass
 
             fs = fontsize = 16 ; w = 2.5
             fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=0 )
@@ -66,6 +72,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
             psnrs = [ ]
             rmses = [ ]
+            restore_times = [ ]
 
             for pidx, P in enumerate( Ps ) : 
                 cur_idx += 1
@@ -79,7 +86,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
                 then = time.time()
 
                 moments, run_time = calc_moments( img, P, resolution, circle_type, device=device, cache=cache, debug=debug )
-                img_restored, restore_run_time = restore_image( moments, grid, device, cache, debug=debug )
+                img_restored, restore_time = restore_image( moments, grid, device, cache, debug=debug )
                 
                 img_real = img_restored.real
                 #img_real = torch.abs( img_restored )
@@ -89,12 +96,13 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
                 psnr = calc_psnr( img_org, img_real )
                 rmse = calc_rmse( img_org, img_real )
 
-                elapsed = time.time() - then
-
                 psnrs.append( float( psnr ) )
                 rmses.append( float( rmse ) )
+                restore_times.append( restore_time )
 
-                print( f"[ {pct*100:5.1f} % ]  K = {K}, P = {P:02d}, elapsed = {elapsed:7.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {numpy.min( img_real):.1f}, max = {numpy.max( img_real):.1f}", flush=1 )
+                elapsed = time.time() - then
+
+                print( f"[ {pct*100:5.1f} % ]  K = {K}, P = {P:02d}, elapsed = {elapsed:7.2f}(sec.), restore = {restore_time:7.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {numpy.min( img_real):.1f}, max = {numpy.max( img_real):.1f}", flush=1 )
 
                 chart = charts[ pidx + 1 ] 
                 img_cpu = img_real
@@ -119,15 +127,21 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
                 pass
             pass # P
 
+            restore_times_k[ K ].append( numpy.array( restore_times ) )
+
             #plot psnr
         
             chart = charts[ -1 ]
+            x = numpy.array( Ps.cpu() )
             cidx = 0 
-            linestyle = "solid"
-            chart.plot( numpy.array( Ps.cpu() ) , numpy.array( rmses ), marker=markers[cidx%len(markers)], label="$RMSE$", linestyle=linestyle )
+            ls = "solid"
+            chart.plot( x, numpy.array( rmses ), marker=markers[cidx%len(markers)], label="$RMSE$", linestyle=ls )
             cidx += 1
-            chart.plot( numpy.array( Ps.cpu() ) , numpy.array( psnrs )*5, marker=markers[cidx%len(markers)], label="$PSNR*5$", linestyle=linestyle )
+            chart.plot( x, numpy.array( psnrs )*5, marker=markers[cidx%len(markers)], label="$PSNR*5$", linestyle=ls )
             cidx += 1
+            chart.plot( x, numpy.array( restore_times )*10, marker=markers[cidx%len(markers)], label="Restore time(centi sec.)$", linestyle=ls )
+            cidx += 1
+
             chart.set_title( f"Restoration Rate$({K}K)$", fontsize=fs )
             #chart.set_xlabel( f"$Order(P)$", fontsize=fs-4 )
             #chart.set_ylabel( f"$PSNR$", fontsize=fs-4 )
@@ -146,6 +160,53 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             print( f"\nresult_figure_file = {result_figure_file}" )
         
         pass # K 
-    pass # img_orgs 
+    pass # img_orgs
+
+    # plot restore times of k resolution vs. order p
+
+    fs = fontsize = 16 ; w = 2.5
+    row_cnt = 1
+    col_cnt = 1
+    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(8*col_cnt, 6*row_cnt), tight_layout=0 )
+    charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
+    markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
+    colors  = [ mcolors.TABLEAU_COLORS[key] for key in mcolors.TABLEAU_COLORS ]
+
+    chart = charts[ 0 ] 
+    
+    for cidx, K in enumerate( Ks ) :
+        restore_times_k = restore_times_k[ K ]
+
+        restore_times_sum = numpy.zeros( len(Ps), dtype=numpy.float_ )
+        
+        for restore_times in restore_times_k :
+            restore_times_sum += restore_times
+        pass
+        
+        restore_times_avg = restore_times_sum/len(restore_times_k)
+
+        cidx = 0 
+        ls = "solid"
+        x = numpy.array( Ps.cpu() )
+        chart.plot( x, restore_times_avg, marker=markers[cidx%len(markers)], label=f"${K}$", linestyle=ls )
+    pass
+
+    chart.set_title( f"Restoration Time", fontsize=fs )
+    chart.set_xlabel( f"Order", fontsize=fs-2 )
+    chart.set_ylabel( f"Times(sec.)", fontsize=fs-2 )
+    
+    xticks = torch.linspace( min(Ps), max(Ps), 5 )
+    chart.set_xticks( xticks )
+    chart.set_xticklabels( [ f"${int(t)}P$" for t in xticks ])
+    chart.legend( fontsize=fontsize/2 )
+
+    plt.show()
+
+    src_dir = os.path.dirname( os.path.abspath(__file__) )
+    file_stem = Path( __file__ ).stem
+
+    result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{int(max(Ps))}P_{int(max(Ks))}K_{i_idx:02}_restore_times.png"
+    plt.savefig( result_figure_file )
+    print( f"\nresult_figure_file = {result_figure_file}" )
  
 pass # test image restore
