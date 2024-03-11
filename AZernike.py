@@ -260,7 +260,8 @@ pass
 
 def Vpq_file_path( p, q, resolution, circle_type, dtype ) :
     src_dir = os.path.dirname( os.path.abspath(__file__) )
-    cache_file = f"{src_dir}/pyramid/v_{dtype}_{circle_type}_R{int(resolution):04d}_P{p:02d}_Q{q:02d}.pth"
+    type_txt = f"{dtype}".split(".")[-1]
+    cache_file = f"{src_dir}/pyramid/v_{type_txt}_{circle_type}_R{int(resolution):04d}_P{p:02d}_Q{q:02d}.pth"
 
     return cache_file
 pass # Vpq_file_path
@@ -811,11 +812,6 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         cache_img = cache_imgs[ device_no ]
         
         v_pq = torch.conj( v_pq )
-
-        #c = 1.0*cache_img[kidx] + 0.0j
-        #c = torch.tensor( c, dtype=torch.complex128 )
-        #print( f"v_pt dtype = {v_pq.dtype}" )
-        #print( f"cache_img dtype = {c.dtype}" )
 
         moment = torch.dot( v_pq, cache_img )*area/resolution/resolution
 

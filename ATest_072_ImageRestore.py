@@ -114,8 +114,9 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             chart.set_title( f"$PSNR({K}K)$", fontsize=fs )
             #chart.set_xlabel( f"$Order(P)$", fontsize=fs-4 )
             #chart.set_ylabel( f"$PSNR$", fontsize=fs-4 )
-            chart.set_xticks( torch.arange( 0, max(Ps + 1), step ) )
-            chart.set_xticklabels( [ f"${int(t)}P$" for t in torch.arange( 0, max(Ps + 1), step ) ])
+            xticks = torch.arange( min(Ps), max(Ps + 1), 5 )
+            chart.set_xticks( xticks )
+            chart.set_xticklabels( [ f"${int(t)}P$" for t in xticks ])
         
         pass # K
 
