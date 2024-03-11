@@ -814,7 +814,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         #print( f"v_pt dtype = {v_pq.dtype}" )
         #print( f"cache_img dtype = {c.dtype}" )
 
-        moment = torch.dot( v_pq, c )*area/len(kidx)
+        moment = torch.dot( v_pq, c )*area/resolution/resolution
 
         moments[p, q] = moment.to( device )
     pass
@@ -864,7 +864,7 @@ def calc_psnr( img_org, img_restored, debug=0) :
     img_org = torch.tensor( img_org, device=img_restored.get_device() )
 
     gmax = torch.max( torch.max(img_org), torch.max(img_restored) )
-    
+
     if debug : print( f"gmax = {gmax}" )
 
     img_diff = img_org - img_restored

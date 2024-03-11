@@ -1,6 +1,6 @@
 from AZernike import *
 
-def test_image_restore( img_lbls, Ks, Ps, use_cache=1, debug=0 ) :
+def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1, debug=0 ) :
     print( line2 )
     
     use_gpu = 1
@@ -8,6 +8,8 @@ def test_image_restore( img_lbls, Ks, Ps, use_cache=1, debug=0 ) :
 
     device_no = 0 
     device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
+
+    Ps = torch.arange( step, step*(col_cnt*row_cnt), step )
     
     cache = { } if use_cache else None 
 
@@ -21,15 +23,12 @@ def test_image_restore( img_lbls, Ks, Ps, use_cache=1, debug=0 ) :
     pass
 
     # 서브 챠트 생성 
-    col_cnt = 5
-    
-    row_cnt = int( (len(Ps) + 1)*len(Ks)*len(img_lbls)/col_cnt ) 
-
-    fs = fontsize = 16 ; w = 2.5
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=1 )
-    charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts] 
-
     for i_idx, [ img_org, img_label ] in enumerate( img_lbls ): 
+        
+        fs = fontsize = 16 ; w = 2.5
+        fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=1 )
+        charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
+    
         shape = img_org.shape
         channel = shape[ -1 ] if len( shape ) > 2 else 1
         if channel == 3 : 
@@ -41,9 +40,13 @@ def test_image_restore( img_lbls, Ks, Ps, use_cache=1, debug=0 ) :
         for kidx, K in enumerate( Ks ) : 
             print( line2 )
 
-            chart = charts[ (i_idx + kidx)*(len( Ps ) + 1) ] 
+            chart = charts[ (kidx)*row_cnt*col_cnt ] 
             chart.imshow( img_org, cmap="gray" )
-            chart.set_title( f"Image Org $({K}K)$", fontsize=fs-6 )
+            chart.set_title( f"Image Org. $({K}K)$", fontsize=fs-2 )
+            img_width  = img_org.shape[1]
+            img_height = img_org.shape[0]
+            chart.set_xticks( torch.arange( 0, img_width, math.pow(10, int(math.log10(img_width) ) ) ) )
+            chart.set_yticks( torch.arange( 0, img_height, math.pow(10, int(math.log10(img_height) ) ) ) )
 
             resolution = int( 1000*K )
 
@@ -71,14 +74,23 @@ def test_image_restore( img_lbls, Ks, Ps, use_cache=1, debug=0 ) :
 
                 print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}", flush=1 )
 
-                chart = charts[ (i_idx + kidx)*(len( Ps ) + 1) + pidx + 1 ] 
+                chart = charts[ kidx**row_cnt*col_cnt + pidx + 1 ] 
                 chart.imshow( img_real.to( "cpu" ).numpy(), cmap="gray" )
-                chart.set_title( f"${K}K, {P}P, PSNR = {psnr:.2f}$", fontsize=fs-6 )
+                chart.set_title( f"${K}K, {P}P, PSNR = {psnr:.2f}$", fontsize=fs-2 )
+                chart.set_xticks( [] )
+                chart.set_yticks( [] )
             pass # P
         pass # K
-    pass # img_orgs
 
-    plt.show() 
+        plt.show()
+
+        src_dir = os.path.dirname( os.path.abspath(__file__) )
+        file_stem = Path( __file__ ).stem
+
+        result_figure_file = f"{src_dir}/result/{file_stem.lower()}_{int(max(Ps))}P_{int(max(Ks))}K_{i_idx:02}_{img_label}.png"
+        plt.savefig( result_figure_file )
+        print( f"\nresult_figure_file = {result_figure_file}" )
+    pass # img_orgs
 
     def plot_psnr( chart, Ts, psnrs, rmses ) :
         chart.plot( Ts, psnrs, marker="D", label=f"PSNR(K={K})", color="tab:orange" )
