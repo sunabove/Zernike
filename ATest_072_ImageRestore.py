@@ -57,7 +57,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
             grid = rho_theta( resolution, circle_type, device, debug=debug ) 
 
-            img = cv.resize( img_org + 0, (resolution, resolution), interpolation=cv.INTER_AREA )
+            img = cv.resize( img_org , (resolution, resolution), interpolation=cv.INTER_AREA )
 
             psnrs = []
 
@@ -75,31 +75,33 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
                 img_real = img_restored.real
                 #img_real = torch.abs( img_restored )
 
-                psnr = calc_psnr( img, img_real )
-                rmse = calc_rmse( img, img_real ) 
+                img_real = cv.resize( numpy.array( img_real.cpu() ), img_org.shape[:2], interpolation=cv.INTER_AREA )
+
+                psnr = calc_psnr( img_org, img_real )
+                rmse = calc_rmse( img_org, img_real )
 
                 elapsed = time.time() - then
 
                 psnrs.append( int( psnr ) )
 
-                print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:7.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {torch.min( img_real):.1f}, max = {torch.max( img_real):.1f}", flush=1 )
+                print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:7.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {numpy.min( img_real):.1f}, max = {numpy.max( img_real):.1f}", flush=1 )
 
                 chart = charts[ kidx**row_cnt*col_cnt + pidx + 1 ] 
-                img_cpu = img_real.cpu().numpy()
+                img_cpu = img_real
                 im = chart.imshow( img_cpu, cmap="gray" )
                 if 0 : plt.colorbar(im)
-                chart.set_title( f"$PSNR = {psnr:.1f} ({P} P)$", fontsize=fs )
+                chart.set_title( f"$PSNR={psnr:.1f} ({P} P, {K} K)$", fontsize=fs )
                 #chart.set_xlabel( f"${K}K,{P}P$", fontsize=fs )
 
                 if 1 or pidx == 0 : 
-                    kstep = 1000
-                    yticks = numpy.arange( 0, img.shape[0] + 1, kstep )
-                    xticks = numpy.arange( kstep, img.shape[1] + 1, kstep )
+                    kstep = 100
+                    yticks = numpy.arange( 0, img_cpu.shape[0] + 1, kstep )
+                    xticks = numpy.arange( kstep, img_cpu.shape[1] + 1, kstep )
                     chart.set_yticks( yticks )
                     chart.set_xticks( xticks )
-                    chart.set_yticklabels( [ f"${t/1000:.0f}K$" for t in numpy.flip( yticks ) ] )
-                    chart.set_xticklabels( [ f"${t/1000:.0f}K$" for t in xticks ] )
-                else :
+                    chart.set_yticklabels( [ f"${t/1:.0f}$" for t in numpy.flip( yticks ) ] )
+                    chart.set_xticklabels( [ f"${t/1:.0f}$" for t in xticks ] )
+                elif 1 :
                     chart.set_yticks( [] )
                     chart.set_xticks( [] )
                 pass

@@ -860,28 +860,24 @@ def restore_image( moments, grid, device, cache, debug=0) :
 pass ## restore_image
 
 def calc_psnr( img_org, img_restored, debug=0) :
-    img_org = torch.tensor( img_org, device=img_restored.get_device() )
-
-    gmax = torch.max( torch.max(img_org), torch.max(img_restored) )
+    gmax = max( numpy.max(img_org), numpy.max(img_restored) )
 
     if debug : print( f"gmax = {gmax}" )
 
     img_diff = img_org - img_restored
 
-    mse = torch.sum( img_diff*img_diff ) / img_diff.numel()
+    mse = numpy.sum( img_diff*img_diff ) / img_diff.size
 
-    psnr = 10*torch.log10( gmax*gmax/mse )
+    psnr = 10*numpy.log10( gmax*gmax/mse )
     
     return psnr
 pass # calc_psnr
 
 # root mean squre error
-def calc_rmse(img_org, img_restored, **options ) :      
-    img_org = torch.tensor( img_org, device=img_restored.get_device() )
-        
+def calc_rmse(img_org, img_restored, **options ) : 
     img_diff = img_org - img_restored 
 
-    rmse = torch.sqrt( torch.sum( img_diff*img_diff ) / img_diff.numel() )
+    rmse = numpy.sqrt( numpy.sum( img_diff*img_diff ) / img_diff.size )
     
     return rmse
 pass # calc_mad
