@@ -792,7 +792,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
     
     cache_imgs = { }
 
-    img = torch.tensor( img, device=device )
+    img = torch.tensor( img + 0, device=device )
     img = img.ravel()[ kidx ]
     for device_no in get_device_no_list( device ) :
         cache_device = f"cuda:{device_no}" if device_no > -1 else "cpu:0"

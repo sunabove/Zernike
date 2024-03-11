@@ -72,7 +72,7 @@ def test_zernike_pyramid( row_cnt, col_cnt, circle_type, img_type, use_gpu, use_
                     title = f"$Re({z_title})$"
                 pass 
 
-                img = torch.zeros( (h, w), dtype=torch.float, device=cache_device )
+                img = torch.zeros( (h, w), dtype=torch.float64, device=cache_device )
                 img_rav = img.ravel()
                 img_rav[ grid.kidx ] = z_img
                 

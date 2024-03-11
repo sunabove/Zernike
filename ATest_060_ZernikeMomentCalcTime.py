@@ -73,9 +73,9 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
             pass
             
             src_dir = os.path.dirname( os.path.abspath(__file__) )
-            img = cv.imread( f"{src_dir}/image/lenna.png", 0 )
+            img_org = cv.imread( f"{src_dir}/image/lenna.png", 0 )
 
-            if debug : print( "img shape= ", img.shape )
+            if debug : print( "img org shape= ", img_org.shape )
 
             cache = { } if use_cache else None 
 
@@ -105,6 +105,8 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                         # zernike cache load on gpu
                         load_vpq_cache( P, K, circle_type, cache, device=torch.device("cuda:0"), debug=debug)
                     pass
+
+                    img = cv.resize( img_org, (resolution, resolution), interpolation=cv.INTER_AREA )
 
                     run_time = _get_moment_calc_time( img, P, resolution, device=device, circle_type=circle_type, cache=cache, debug=debug )
                     run_times.append( run_time )
