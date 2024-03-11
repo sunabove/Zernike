@@ -89,13 +89,19 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
                 if 0 : plt.colorbar(im)
                 chart.set_title( f"$PSNR = {psnr:.1f} ({P} P)$", fontsize=fs )
                 #chart.set_xlabel( f"${K}K,{P}P$", fontsize=fs )
-                kstep = 1000
-                yticks = numpy.arange( 0, img.shape[0] + 1, kstep )[::-1]
-                xticks = numpy.arange( kstep, img.shape[1] + 1, kstep )
-                chart.set_yticks( yticks )
-                chart.set_xticks( xticks )                
-                chart.set_yticklabels( [ f"${t/1000:.0f}K$" for t in yticks ] )
-                chart.set_xticklabels( [ f"${t/1000:.0f}K$" for t in xticks ] )
+
+                if pidx == 0 : 
+                    kstep = 1000
+                    yticks = numpy.arange( 0, img.shape[0] + 1, kstep )
+                    xticks = numpy.arange( kstep, img.shape[1] + 1, kstep )
+                    chart.set_yticks( yticks )
+                    chart.set_xticks( xticks )
+                    chart.set_yticklabels( [ f"${t/1000:.0f}K$" for t in numpy.flip( yticks ) ] )
+                    chart.set_xticklabels( [ f"${t/1000:.0f}K$" for t in xticks ] )
+                else :
+                    chart.set_yticks( [] )
+                    chart.set_xticks( [] )
+                pass
 
                 pass
             pass # P
