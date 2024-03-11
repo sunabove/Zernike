@@ -46,7 +46,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
             chart = charts[ (kidx)*row_cnt*col_cnt ] 
             chart.imshow( img_org, cmap="gray" )
-            chart.set_title( f"$Image Org.$", fontsize=fs )
+            chart.set_title( f"Image Org.", fontsize=fs )
             img_width  = img_org.shape[1]
             img_height = img_org.shape[0]
             chart.set_xticks( torch.arange( 0, img_width, math.pow(10, int(math.log10(img_width) ) ) ) )
@@ -84,13 +84,19 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
                 print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {torch.min( img_real):.1f}, max = {torch.max( img_real):.1f}", flush=1 )
 
                 chart = charts[ kidx**row_cnt*col_cnt + pidx + 1 ] 
-                im = chart.imshow( img_real.to( "cpu" ).numpy(), cmap="gray" )
+                img_cpu = img_real.cpu().numpy()
+                im = chart.imshow( img_cpu, cmap="gray" )
                 if 0 : plt.colorbar(im)
-                chart.set_title( f"$PSNR = {psnr:.1f}$", fontsize=fs )
-                chart.set_xlabel( f"${K}K,{P}P$", fontsize=fs )
-                if pidx > 0 :
-                    chart.set_xticks( [] )
-                    chart.set_yticks( [] )
+                chart.set_title( f"$PSNR = {psnr:.1f} ({P} P)$", fontsize=fs )
+                #chart.set_xlabel( f"${K}K,{P}P$", fontsize=fs )
+                kstep = 1000
+                yticks = numpy.arange( 0, img.shape[0] + 1, kstep )[::-1]
+                xticks = numpy.arange( kstep, img.shape[1] + 1, kstep )
+                chart.set_yticks( yticks )
+                chart.set_xticks( xticks )                
+                chart.set_yticklabels( [ f"${t/1000:.0f}K$" for t in yticks ] )
+                chart.set_xticklabels( [ f"${t/1000:.0f}K$" for t in xticks ] )
+
                 pass
             pass # P
 
