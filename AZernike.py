@@ -790,9 +790,9 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         cache_imgs[ device_no ] = cache_img
     pass
 
-    #moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex64, device=device )
-    moments = { }
-    moments[ "dimension" ] = T
+    moments = torch.zeros( (T + 1, 2*T + 1), dtype=torch.complex128, device=device )
+    #moments = { }
+    #moments[ "dimension" ] = T
 
     for p, q in get_pq_list( T ) : 
         v_pq = Vpq( p, q, grid, device=device, cache=cache, debug=debug )
@@ -803,11 +803,7 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         v_pq = torch.conj( v_pq )
         moment = torch.dot( v_pq, cache_img[kidx] )*area/len(kidx)
 
-        if p not in moments :
-            moments[p] = { }
-        pass
-
-        moments[p][q] = moment.to( device )
+        moments[p, q] = moment.to( device )
     pass
 
     run_time = time.time() - then
@@ -828,11 +824,11 @@ def restore_image( moments, grid, device, cache, debug=0) :
     kidx = grid.kidx
     resolution = grid.resolution
 
-    img = torch.zeros( (resolution, resolution), dtype=torch.complex64, device=device )
+    img = torch.zeros( (resolution, resolution), dtype=torch.complex128, device=device )
     img_rvl = img.ravel()
 
-    #T = moments.shape[0] - 1
-    T = moments[ "dimension" ]
+    T = moments.shape[0] - 1
+    #T = moments[ "dimension" ]
 
     for p in range( 0, T + 1 ) :
         for q in range( - p, p + 1, 2 ) :
@@ -841,7 +837,7 @@ def restore_image( moments, grid, device, cache, debug=0) :
 
                 v_pq = v_pq.to( device )
 
-                img_rvl += moments[p][q]*(p+1)/area*v_pq
+                img_rvl += moments[p, q]*(p+1)/area*v_pq
             pass
         pass
     pass
