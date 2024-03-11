@@ -47,7 +47,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
             chart = charts[ (kidx)*row_cnt*col_cnt ] 
             chart.imshow( img_org, cmap="gray" )
-            chart.set_title( f"Image Org.", fontsize=fs )
+            chart.set_title( f"[{img_label.capitalize()}] Image Org.", fontsize=fs )
             img_width  = img_org.shape[1]
             img_height = img_org.shape[0]
             chart.set_xticks( torch.arange( 0, img_width, math.pow(10, int(math.log10(img_width) ) ) ) )
@@ -114,7 +114,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             chart.set_title( f"$PSNR({K}K)$", fontsize=fs )
             #chart.set_xlabel( f"$Order(P)$", fontsize=fs-4 )
             #chart.set_ylabel( f"$PSNR$", fontsize=fs-4 )
-            xticks = torch.arange( min(Ps), max(Ps + 1), 5 )
+            xticks = torch.linspace( min(Ps), max(Ps), 5 )
             chart.set_xticks( xticks )
             chart.set_xticklabels( [ f"${int(t)}P$" for t in xticks ])
         
