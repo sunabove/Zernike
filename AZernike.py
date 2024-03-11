@@ -506,10 +506,6 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     y = torch.tensor( y, dtype=torch.float64, device=device )
     x = torch.tensor( x, dtype=torch.float64, device=device )
 
-    #print( f"y = {y.dtype}" )
-    #print( f"x = {x.dtype}" )
-    
-
     if debug : 
         print( f"x size = { x.size()}" )
         print( f"y size = { y.size()}" )
