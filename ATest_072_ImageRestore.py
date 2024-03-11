@@ -26,23 +26,27 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
     for i_idx, [ img_org, img_label ] in enumerate( img_lbls ): 
         
         fs = fontsize = 16 ; w = 2.5
-        fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=1 )
+        fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=0 )
         charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
     
         shape = img_org.shape
         channel = shape[ -1 ] if len( shape ) > 2 else 1
+
+        print( f"[{i_idx:2d}] {img_label} img org shape = {img_org.shape}, min={numpy.min(img_org)}, max={numpy.max(img_org)}" )
+        
         if channel == 3 : 
-            img_org = skimage.color.rgb2gray( img_org ) 
+            img_org = cv2.cvtColor(img_org, cv2.COLOR_BGR2GRAY)
+            #img_org = skimage.color.rgb2gray( img_org ) 
         pass
 
-        print( f"[{i_idx:2d}] {img_label} shape = {img_org.shape}" )  
+        print( f"[{i_idx:2d}] {img_label} img gry shape = {img_org.shape}, min={numpy.min(img_org)}, max={numpy.max(img_org)}" )  
 
         for kidx, K in enumerate( Ks ) : 
             print( line2 )
 
             chart = charts[ (kidx)*row_cnt*col_cnt ] 
             chart.imshow( img_org, cmap="gray" )
-            chart.set_title( f"Image Org. $({K}K)$", fontsize=fs-2 )
+            chart.set_title( f"$Image Org.$", fontsize=fs )
             img_width  = img_org.shape[1]
             img_height = img_org.shape[0]
             chart.set_xticks( torch.arange( 0, img_width, math.pow(10, int(math.log10(img_width) ) ) ) )
@@ -53,6 +57,8 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             grid = rho_theta( resolution, circle_type, device, debug=debug ) 
 
             img = cv.resize( img_org + 0, (resolution, resolution), interpolation=cv.INTER_AREA )
+
+            psnrs = []
 
             for pidx, P in enumerate( Ps ) : 
                 if cache is not None and use_gpu :
@@ -66,20 +72,38 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
                 img_restored, restore_run_time = restore_image( moments, grid, device, cache, debug=debug )
                 
                 img_real = img_restored.real
-                
+                #img_real = torch.abs( img_restored )
+
                 psnr = calc_psnr( img, img_real )
                 rmse = calc_rmse( img, img_real ) 
 
                 elapsed = time.time() - then
 
-                print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}", flush=1 )
+                psnrs.append( int( psnr ) )
+
+                print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {torch.min( img_real):.1f}, max = {torch.max( img_real):.1f}", flush=1 )
 
                 chart = charts[ kidx**row_cnt*col_cnt + pidx + 1 ] 
-                chart.imshow( img_real.to( "cpu" ).numpy(), cmap="gray" )
-                chart.set_title( f"${K}K, {P}P, PSNR = {psnr:.2f}$", fontsize=fs-2 )
-                chart.set_xticks( [] )
-                chart.set_yticks( [] )
+                im = chart.imshow( img_real.to( "cpu" ).numpy(), cmap="gray" )
+                if 0 : plt.colorbar(im)
+                chart.set_title( f"$PSNR = {psnr:.1f}$", fontsize=fs )
+                chart.set_xlabel( f"${K}K,{P}P$", fontsize=fs )
+                if pidx > 0 :
+                    chart.set_xticks( [] )
+                    chart.set_yticks( [] )
+                pass
             pass # P
+
+            #plot psnr
+        
+            chart = charts[ kidx**row_cnt*col_cnt + len(Ps) + 1 ]
+            chart.plot( numpy.array( Ps.cpu() ) , numpy.array( psnrs ), marker="*" )
+            chart.set_title( f"$PSNR({K}K)$", fontsize=fs )
+            #chart.set_xlabel( f"$Order(P)$", fontsize=fs-4 )
+            #chart.set_ylabel( f"$PSNR$", fontsize=fs-4 )
+            chart.set_xticks( torch.arange( 0, max(Ps + 1), step ) )
+            chart.set_xticklabels( [ f"${int(t)}P$" for t in torch.arange( 0, max(Ps + 1), step ) ])
+        
         pass # K
 
         plt.show()

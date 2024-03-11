@@ -2,7 +2,7 @@
 
 print( f"Hello... Good morning!\n" )
 
-import sys, os, time, math, logging as log, cv2 as cv
+import sys, os, time, math, logging as log, cv2 as cv, cv2 as cv2
 import psutil, GPUtil, pandas as pd
 import torch
 import numpy, scipy
