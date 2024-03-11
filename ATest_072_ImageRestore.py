@@ -153,6 +153,10 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             xticks = torch.linspace( min(Ps), max(Ps), 5 )
             chart.set_xticks( xticks )
             chart.set_xticklabels( [ f"${int(t)}P$" for t in xticks ])
+
+            chart.grid( axis='x', linestyle="dotted" )
+            chart.grid( axis='y', linestyle="dotted" )
+            
             chart.legend( fontsize=fontsize/2 )
 
             plt.show()
@@ -203,6 +207,10 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
     xticks = numpy.array( Ps )
     chart.set_xticks( xticks )
     chart.set_xticklabels( [ f"${int(t)}P$" for t in xticks ])
+
+    chart.grid( axis='x', linestyle="dotted" )
+    chart.grid( axis='y', linestyle="dotted" )
+
     chart.legend( fontsize=fontsize - 2 )
 
     plt.show()
