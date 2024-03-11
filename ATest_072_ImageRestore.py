@@ -23,9 +23,11 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
         warm_up_gpus( debug=1 )
     pass
 
+    max_idx = len( img_lbls )*len(Ps)*len(Ks)
+    cur_idx = 0.0 
+
     # 서브 챠트 생성 
     for i_idx, [ img_org, img_label ] in enumerate( img_lbls ):
-        
     
         shape = img_org.shape
         channel = shape[ -1 ] if len( shape ) > 2 else 1
@@ -66,6 +68,9 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             rmses = [ ]
 
             for pidx, P in enumerate( Ps ) : 
+                cur_idx += 1
+                pct = cur_idx/max_idx
+
                 if cache is not None and use_gpu :
                     # zernike cache load on gpu
                     load_vpq_cache( P, K, circle_type, cache, device=torch.device("cuda:0"), debug=debug)
@@ -89,7 +94,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
                 psnrs.append( float( psnr ) )
                 rmses.append( float( rmse ) )
 
-                print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:7.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {numpy.min( img_real):.1f}, max = {numpy.max( img_real):.1f}", flush=1 )
+                print( f"[ {pct*100:5.1f} % ]  K = {K}, P = {P:02d}, elapsed = {elapsed:7.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {numpy.min( img_real):.1f}, max = {numpy.max( img_real):.1f}", flush=1 )
 
                 chart = charts[ pidx + 1 ] 
                 img_cpu = img_real
@@ -117,15 +122,19 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             #plot psnr
         
             chart = charts[ -1 ]
-            chart.plot( numpy.array( Ps.cpu() ) , numpy.array( psnrs ), marker=markers[0%len(markers)], label="psnr" )
-            chart.plot( numpy.array( Ps.cpu() ) , numpy.array( rmses ), marker=markers[1%len(markers)], label="rmse" )
-            chart.set_title( f"$PSNR({K}K)$", fontsize=fs )
+            cidx = 0 
+            linestyle = "solid"
+            chart.plot( numpy.array( Ps.cpu() ) , numpy.array( rmses ), marker=markers[cidx%len(markers)], label="$RMSE$", linestyle=linestyle )
+            cidx += 1
+            chart.plot( numpy.array( Ps.cpu() ) , numpy.array( psnrs )*5, marker=markers[cidx%len(markers)], label="$PSNR*5$", linestyle=linestyle )
+            cidx += 1
+            chart.set_title( f"Restoration Rate$({K}K)$", fontsize=fs )
             #chart.set_xlabel( f"$Order(P)$", fontsize=fs-4 )
             #chart.set_ylabel( f"$PSNR$", fontsize=fs-4 )
             xticks = torch.linspace( min(Ps), max(Ps), 5 )
             chart.set_xticks( xticks )
             chart.set_xticklabels( [ f"${int(t)}P$" for t in xticks ])
-            chart.legend()
+            chart.legend( fontsize=fontsize/2 )
 
             plt.show()
 
