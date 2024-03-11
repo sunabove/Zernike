@@ -476,7 +476,7 @@ def Vpq( p, q, grid, device=None, cache=None, debug=0) :
             if q != 0 :
                 v_pq = r_pq*torch.exp( (1j*q)*theta )
             else :
-                v_pq = r_pq + 0j
+                v_pq = r_pq + 0.0j
             pass
         pass
     pass
@@ -501,6 +501,9 @@ def rho_theta( resolution, circle_type, device, debug=0 ) :
     
     # 영상 인덱스를 직교 좌표계 값으로 변환
     y, x = torch.where( img >= 0 ) 
+
+    y = torch.tensor( y.clone().detach(), dtype=torch.float64, device=device )
+    x = torch.tensor( x.clone().detach(), dtype=torch.float64, device=device )
 
     if debug : 
         print( f"x size = { x.size()}" )
@@ -801,7 +804,13 @@ def calc_moments( img, T, resolution, circle_type, device, cache=None, debug=0 )
         cache_img = cache_imgs[ device_no ]
         
         v_pq = torch.conj( v_pq )
-        moment = torch.dot( v_pq, cache_img[kidx] )*area/len(kidx)
+
+        c = 1.0*cache_img[kidx] + 0.0j
+        c = torch.tensor( c, dtype=torch.complex128 )
+        #print( f"v_pt dtype = {v_pq.dtype}" )
+        #print( f"cache_img dtype = {c.dtype}" )
+
+        moment = torch.dot( v_pq, c )*area/len(kidx)
 
         moments[p, q] = moment.to( device )
     pass
