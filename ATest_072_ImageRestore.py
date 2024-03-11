@@ -45,6 +45,8 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             fs = fontsize = 16 ; w = 2.5
             fig, charts = plt.subplots( row_cnt, col_cnt, figsize=(w*col_cnt, w*row_cnt), tight_layout=0 )
             charts = charts.ravel() if row_cnt*col_cnt > 1 else [charts]
+            markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
+            colors  = [ mcolors.TABLEAU_COLORS[key] for key in mcolors.TABLEAU_COLORS ]
 
             chart = charts[ 0 ] 
             chart.imshow( img_org, cmap="gray" )
@@ -60,7 +62,8 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
             img = cv.resize( img_org , (resolution, resolution), interpolation=cv.INTER_AREA )
 
-            psnrs = []
+            psnrs = [ ]
+            rmses = [ ]
 
             for pidx, P in enumerate( Ps ) : 
                 if cache is not None and use_gpu :
@@ -83,7 +86,8 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
                 elapsed = time.time() - then
 
-                psnrs.append( int( psnr ) )
+                psnrs.append( float( psnr ) )
+                rmses.append( float( rmse ) )
 
                 print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:7.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {numpy.min( img_real):.1f}, max = {numpy.max( img_real):.1f}", flush=1 )
 
@@ -113,13 +117,15 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             #plot psnr
         
             chart = charts[ -1 ]
-            chart.plot( numpy.array( Ps.cpu() ) , numpy.array( psnrs ), marker="*" )
+            chart.plot( numpy.array( Ps.cpu() ) , numpy.array( psnrs ), marker=markers[0%len(markers)], label="psnr" )
+            chart.plot( numpy.array( Ps.cpu() ) , numpy.array( rmses ), marker=markers[1%len(markers)], label="rmse" )
             chart.set_title( f"$PSNR({K}K)$", fontsize=fs )
             #chart.set_xlabel( f"$Order(P)$", fontsize=fs-4 )
             #chart.set_ylabel( f"$PSNR$", fontsize=fs-4 )
             xticks = torch.linspace( min(Ps), max(Ps), 5 )
             chart.set_xticks( xticks )
             chart.set_xticklabels( [ f"${int(t)}P$" for t in xticks ])
+            chart.legend()
 
             plt.show()
 
@@ -131,52 +137,6 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             print( f"\nresult_figure_file = {result_figure_file}" )
         
         pass # K 
-    pass # img_orgs
-
-    def plot_psnr( chart, Ts, psnrs, rmses ) :
-        chart.plot( Ts, psnrs, marker="D", label=f"PSNR(K={K})", color="tab:orange" )
-        chart.plot( Ts, rmses, marker="s", label=f"MAD(K={K})", color="tab:blue" )
-        
-        chart.set_title( f"PSNR(K={K})" )
-        chart.set_xlabel( f"T" )
-        chart.legend()
-    pass
-    
-    for img_info in [] : 
-        t_img = img_info[ "img" ]
-        title = img_info[ "title" ]
-        
-        K = img_info[ "K" ]        
-        
-        if K_prev is not None and K != K_prev and len(Ts) > 0 : 
-            chart = charts[ chart_idx ] ; chart_idx += 1
-            
-            plot_psnr( chart, Ts, psnrs, mads )
-            
-            psnrs = []
-            mads = []
-        pass
-    
-        if "psnr" in img_info : 
-            psnr = img_info[ "psnr"]
-            psnrs.append( psnr )
-            
-            mad = img_info[ "mad"] 
-            mads.append( mad )
-        pass
-            
-        colorbar = False 
-        if "colorbar" in img_info :
-            colorbar = img_info[ "colorbar" ]
-
-        chart = charts[ chart_idx ] ; chart_idx += 1
-        
-        chart.set_title( title )
-        
-        pos = chart.imshow( cupy.asnumpy( t_img ) if options["use_gpu"] else t_img, cmap='gray' )
-        colorbar and fig.colorbar(pos, ax=chart) 
-        
-        K_prev = K
-    pass
+    pass # img_orgs 
  
 pass # test image restore
