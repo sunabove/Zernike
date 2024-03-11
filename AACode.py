@@ -107,3 +107,7 @@ clear_output()
 print( "Path( __file__ ).stem = ", Path( __file__ ).stem) 
 print( "Path( __file__ ).name = ", Path( __file__ ).name)
 
+# 경고 메시지 숨기기
+torch.set_warn_always( False )
+import warnings
+warnings.filterwarnings( "ignore" )

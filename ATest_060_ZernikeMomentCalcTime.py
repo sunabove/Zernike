@@ -26,7 +26,18 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
     markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
     colors  = [ mcolors.TABLEAU_COLORS[key] for key in mcolors.TABLEAU_COLORS ]
 
-    tot_idx = len( use_gpus )*len( use_caches )*len( Ps )*len( Ks )
+    src_dir = os.path.dirname( os.path.abspath(__file__) ) 
+
+    img_lbls = [ ]
+
+    img_lbls.append( [ cv.imread( f'{src_dir}/image/lenna.png', 0 ), "lenna" ] )
+    img_lbls.append( [ skimage.color.rgb2gray( skimage.data.astronaut() ), "astronaut" ] )
+    img_lbls.append( [ skimage.data.camera(), "camera" ] )
+    img_lbls.append( [ skimage.data.brick(), "brick" ] )
+    img_lbls.append( [ skimage.data.moon(), "moon" ] )
+    img_lbls.append( [ skimage.data.grass(), "grass" ] )
+
+    tot_idx = len( use_gpus )*len( use_caches )*len( Ps )*len( Ks )*len( img_lbls )
     cur_idx = 0 
 
     warm_up = { }
@@ -72,11 +83,6 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                 temp = None
             pass
             
-            src_dir = os.path.dirname( os.path.abspath(__file__) )
-            img_org = cv.imread( f"{src_dir}/image/lenna.png", 0 )
-
-            if debug : print( "img org shape= ", img_org.shape )
-
             cache = { } if use_cache else None 
 
             if cache is not None :
@@ -93,10 +99,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
                 run_times = [ ]
 
-                pct = float( (100.0*cur_idx)/tot_idx )
-
                 for K in Ks :
-                    cur_idx += 1
                     curr_K = K
 
                     resolution = int( 1_000*K )
@@ -106,30 +109,42 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                         load_vpq_cache( P, K, circle_type, cache, device=torch.device("cuda:0"), debug=debug)
                     pass
 
-                    img = cv.resize( img_org, (resolution, resolution), interpolation=cv.INTER_AREA )
+                    run_time_sum = 0 
 
-                    run_time = _get_moment_calc_time( img, P, resolution, device=device, circle_type=circle_type, cache=cache, debug=debug )
-                    run_times.append( run_time )
+                    for [img_org, img_lbl ] in img_lbls : 
+                        cur_idx += 1
+                        pct = float( (100.0*cur_idx)/tot_idx )
 
-                    pct = float( (100.0*cur_idx)/tot_idx )
-                    run_time_human = f"{timedelta(seconds=run_time)}".split('.')[0]
+                        if debug : print( "img org shape= ", img_org.shape )
 
-                    if cache is not None and "cuda" in f"{device}" :
-                        # clear gpu cache only
+                        img = cv.resize( img_org, (resolution, resolution), interpolation=cv.INTER_AREA )
 
-                        if 1 : print( f"--- clearing gpu cache resolution = {resolution}" )
+                        run_time = _get_moment_calc_time( img, P, resolution, device=device, circle_type=circle_type, cache=cache, debug=debug )
 
-                        a = cache["GPU"][resolution]
+                        run_time_sum += run_time
 
-                        del cache["GPU"][resolution]
-                        a = None
+                        pct = float( (100.0*cur_idx)/tot_idx )
+                        run_time_human = f"{timedelta(seconds=run_time)}".split('.')[0]
 
-                        torch.cuda.empty_cache()
-                    pass
+                        if cache is not None and "cuda" in f"{device}" :
+                            # clear gpu cache only
 
-                    desc = f"[ {pct:3.0f} % ] {dn}: Cache = {use_cache}, P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}"
+                            if 1 : print( f"--- clearing gpu cache resolution = {resolution}" )
 
-                    if 1 : print( desc )
+                            a = cache["GPU"][resolution]
+
+                            del cache["GPU"][resolution]
+                            a = None
+
+                            torch.cuda.empty_cache()
+                        pass
+
+                        desc = f"[ {pct:3.0f} % ] {dn}: Cache = {use_cache}, P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}, img lbl = {img_lbl}"
+
+                        if 1 : print( desc )
+                    pass # img_lbls
+
+                    run_times.append( run_time_sum/len( img_lbls ) )
                 pass # K
 
                 y = torch.log10( torch.tensor( run_times ) )

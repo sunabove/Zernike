@@ -3,7 +3,7 @@ import math
 import torch
 import matplotlib.pyplot as plt
 
-import skimage as sk
+import skimage
 import cv2 as cv
 
 from pathlib import Path
@@ -15,11 +15,11 @@ def plot_dataset_image_restore() :
     img_lbls = [ ]
 
     img_lbls.append( [ cv.imread( f'{src_dir}/image/lenna.png', 0 ), "lenna" ] )
-    img_lbls.append( [ sk.data.astronaut(), "astronaut" ] )
-    img_lbls.append( [ sk.data.camera(), "camera" ] )
-    img_lbls.append( [ sk.data.brick(), "brick" ] )
-    img_lbls.append( [ sk.data.moon(), "moon" ] )
-    img_lbls.append( [ sk.data.grass(), "grass" ] )
+    img_lbls.append( [ skimage.color.rgb2gray( skimage.data.astronaut() ), "astronaut" ] )
+    img_lbls.append( [ skimage.data.camera(), "camera" ] )
+    img_lbls.append( [ skimage.data.brick(), "brick" ] )
+    img_lbls.append( [ skimage.data.moon(), "moon" ] )
+    img_lbls.append( [ skimage.data.grass(), "grass" ] )
 
     fs = fontsize = 16
     plt.rcParams["font.family"] = "sans-serif"
@@ -42,15 +42,6 @@ def plot_dataset_image_restore() :
 
         if channel == 3 : 
             img = sk.color.rgb2gray( img ) 
-        pass
-
-        if 0 and h > 500 and w > 500 :
-            # image croping
-            img = img[ :500, :500 ]
-
-            shape = img.shape
-            h = shape[ 0 ]
-            w = shape[ 1 ]
         pass
 
         xticks = torch.arange( 0, w + 1, pow( 10, int( math.log10( w ) ) ) )
