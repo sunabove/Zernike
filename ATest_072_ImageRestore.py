@@ -18,6 +18,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
         load_vpq_cache( max(Ps), Ks, circle_type, cache, device=torch.device("cpu"), debug=debug)
     pass
 
+    print( f"use_gpu = {bool(use_gpu)}" )
     if use_gpu :
         warm_up_gpus( debug=1 )
     pass
@@ -35,7 +36,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
         print( f"[{i_idx:2d}] {img_label} img org shape = {img_org.shape}, min={numpy.min(img_org)}, max={numpy.max(img_org)}" )
         
         if channel == 3 : 
-            img_org = cv2.cvtColor(img_org, cv2.COLOR_BGR2GRAY)
+            img_org = cv2.cvtColor(img_org, cv2.COLOR_RGB2GRAY)
             #img_org = skimage.color.rgb2gray( img_org ) 
         pass
 
@@ -81,7 +82,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
                 psnrs.append( int( psnr ) )
 
-                print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {torch.min( img_real):.1f}, max = {torch.max( img_real):.1f}", flush=1 )
+                print( f"K = {K}, P = {P:02d}, elapsed = {elapsed:7.2f}(sec.), psnr = {psnr:7.3f}, rmse = {rmse:.1e}, img restored min = {torch.min( img_real):.1f}, max = {torch.max( img_real):.1f}", flush=1 )
 
                 chart = charts[ kidx**row_cnt*col_cnt + pidx + 1 ] 
                 img_cpu = img_real.cpu().numpy()
@@ -90,7 +91,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
                 chart.set_title( f"$PSNR = {psnr:.1f} ({P} P)$", fontsize=fs )
                 #chart.set_xlabel( f"${K}K,{P}P$", fontsize=fs )
 
-                if pidx == 0 : 
+                if 1 or pidx == 0 : 
                     kstep = 1000
                     yticks = numpy.arange( 0, img.shape[0] + 1, kstep )
                     xticks = numpy.arange( kstep, img.shape[1] + 1, kstep )
