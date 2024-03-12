@@ -91,7 +91,6 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
                 img_restored, restore_time = restore_image( moments, grid, device, cache, debug=debug )
                 
                 img_real = img_restored.real
-                #img_real = torch.abs( img_restored )
 
                 img_real = cv.resize( numpy.array( img_real.cpu() ), img_org.shape[:2], interpolation=cv.INTER_AREA )
 
@@ -150,14 +149,16 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
             chart.set_title( f"Restoration Rate$({K}K)$", fontsize=fs )
             #chart.set_xlabel( f"$Order(P)$", fontsize=fs-4 )
             #chart.set_ylabel( f"$PSNR$", fontsize=fs-4 )
-            xticks = torch.linspace( min(Ps), max(Ps), 5 )
+            xticks = numpy.array( Ps )
             chart.set_xticks( xticks )
-            chart.set_xticklabels( [ f"${int(t)}P$" for t in xticks ])
+            chart.set_xticklabels( [ f"${int(t)}P$" if tidx%3 == 0 else "" for tidx, t in enumerate(xticks) ])
 
             chart.grid( axis='x', linestyle="dotted" )
             chart.grid( axis='y', linestyle="dotted" )
 
             chart.legend( fontsize=fontsize/2 )
+
+            # // plot psnr
 
             plt.show()
 
