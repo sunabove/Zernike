@@ -60,7 +60,7 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
 
             chart = charts[ 0 ] 
             chart.imshow( img_org, cmap="gray" )
-            chart.set_title( f"[{img_label.capitalize()}] Image Org.", fontsize=fs )
+            chart.set_title( f"Image Org. [{img_label.capitalize()}]", fontsize=fs )
             img_width  = img_org.shape[1]
             img_height = img_org.shape[0]
             chart.set_xticks( torch.arange( 0, img_width, math.pow(10, int(math.log10(img_width) ) ) ) )
