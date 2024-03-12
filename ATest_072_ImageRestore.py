@@ -34,14 +34,14 @@ def test_image_restore( img_lbls, Ks, col_cnt=4, row_cnt=2, step=4, use_cache=1,
         shape = img_org.shape
         channel = shape[ -1 ] if len( shape ) > 2 else 1
 
-        print( f"[{i_idx:2d}] {img_label} img org shape = {img_org.shape}, min={numpy.min(img_org)}, max={numpy.max(img_org)}" )
+        print( f"[{i_idx:d}] {img_label} img org shape = {img_org.shape}, min={numpy.min(img_org)}, max={numpy.max(img_org)}" )
         
         if channel == 3 : 
             img_org = cv2.cvtColor(img_org, cv2.COLOR_RGB2GRAY)
             #img_org = skimage.color.rgb2gray( img_org ) 
         pass
 
-        print( f"[{i_idx:2d}] {img_label} img gry shape = {img_org.shape}, min={numpy.min(img_org)}, max={numpy.max(img_org)}" )  
+        print( f"[{i_idx:d}] {img_label} img gry shape = {img_org.shape}, min={numpy.min(img_org)}, max={numpy.max(img_org)}" )  
 
         for kidx, K in enumerate( Ks ) : 
             print( line2 )
