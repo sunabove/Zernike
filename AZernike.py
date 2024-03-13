@@ -258,7 +258,7 @@ def get_cache_device( curr_device, resolution ) :
     pass
 pass
 
-def Vpq_file_path( p, q, resolution, circle_type, dtype ) :
+def Vpq_file_path( p, q, resolution, circle_type, dtype=torch.complex128 ) :
     src_dir = os.path.dirname( os.path.abspath(__file__) )
     type_txt = f"{dtype}".split(".")[-1]
     cache_file = f"{src_dir}/pyramid/v_{type_txt}_{circle_type}_R{int(resolution):04d}_P{p:02d}_Q{q:02d}.pth"
@@ -290,7 +290,7 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
         Ks = [ Ks ]
     pass
 
-    if 1 or debug : print( f"--- Loading vpq cache P = {P:2d}, MaxK = {max(Ks)}, circle_type = {circle_type}, device = {device}" )
+    if 1 or debug : print( f"--- Loading vpq cache P = {P:2d}, MaxK = {max(Ks)}, circle_type = {circle_type}, device = {device}, jupyter = {is_jupyter()}" )
 
     then = time.time()
 
@@ -402,7 +402,7 @@ def _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=None
         pass
 
         if v_pq is None :
-            cache_file = Vpq_file_path( p, q, resolution, circle_type, dtype=torch.complex64 )
+            cache_file = Vpq_file_path( p, q, resolution, circle_type )
             
             if os.path.exists( cache_file ) :
                 cache_device = torch.device("cpu")

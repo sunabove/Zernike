@@ -16,7 +16,7 @@ def plot_dataset_image_restore() :
 
     img_lbls.append( [ cv.imread( f'{src_dir}/image/lenna.png', 0 ), "lenna" ] )
     img_lbls.append( [ skimage.color.rgb2gray( skimage.data.astronaut() ), "astronaut" ] )
-    img_lbls.append( [ skimage.data.camera(), "camera" ] )
+    img_lbls.append( [ skimage.data.camera(), "CameraMan" ] )
     img_lbls.append( [ skimage.data.brick(), "brick" ] )
     img_lbls.append( [ skimage.data.moon(), "moon" ] )
     img_lbls.append( [ skimage.data.grass(), "grass" ] )

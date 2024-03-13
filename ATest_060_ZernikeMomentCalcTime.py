@@ -320,6 +320,10 @@ pass # test_plot_zernike_moment_calc_times
 
 if __name__ == "__main__" :
     if 1 :
+        torch.set_warn_always( False )
+        import warnings
+        warnings.filterwarnings( "ignore" )
+
         Ps = torch.arange( 5, 25 + 1, 5 )
         Ks = torch.arange( 1,  6 + 1, 1 )
         Ks = torch.arange( 1,  5 + 1, 1 )
