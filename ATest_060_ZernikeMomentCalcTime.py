@@ -126,19 +126,6 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                         pct = float( (100.0*cur_idx)/tot_idx )
                         run_time_human = f"{timedelta(seconds=run_time)}".split('.')[0]
 
-                        if cache is not None and "cuda" in f"{device}" :
-                            # clear gpu cache only
-
-                            if 1 : print( f"--- clearing gpu cache resolution = {resolution}" )
-
-                            a = cache["GPU"][resolution]
-
-                            del cache["GPU"][resolution]
-                            a = None
-
-                            torch.cuda.empty_cache()
-                        pass
-
                         desc = f"[ {pct:3.1f} % ] {dn}: Cache = {use_cache}, P = {P:3}, K = {K:2}, Run-time = {run_time:7.2f} (sec.) {run_time_human}, img lbl = {img_lbl}"
 
                         if 1 : print( desc )
@@ -147,6 +134,20 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
                     run_times.append( run_time_sum/len( img_lbls ) )
 
                     print()
+                    
+                    if cache is not None and "cuda" in f"{device}" :
+                        # clear gpu cache only
+
+                        if 1 : print( f"--- clearing gpu cache resolution = {resolution}" )
+
+                        a = cache["GPU"][resolution]
+
+                        del cache["GPU"][resolution]
+                        a = None
+
+                        torch.cuda.empty_cache()
+                    pass
+                    
                 pass # K
 
                 y = torch.log10( torch.tensor( run_times ) )
