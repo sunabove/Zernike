@@ -32,7 +32,7 @@ def test_zernike_moments_calc_times( use_gpus, use_caches, Ps, Ks, debug=0 ) :
 
     img_lbls.append( [ cv.imread( f'{src_dir}/image/lenna.png', 0 ), "lenna" ] )
     img_lbls.append( [ skimage.color.rgb2gray( skimage.data.astronaut() ), "astronaut" ] )
-    img_lbls.append( [ skimage.data.camera(), "camera" ] )
+    img_lbls.append( [ skimage.data.camera(), "cameraman" ] )
     img_lbls.append( [ skimage.data.brick(), "brick" ] )
     img_lbls.append( [ skimage.data.moon(), "moon" ] )
     img_lbls.append( [ skimage.data.grass(), "grass" ] )
