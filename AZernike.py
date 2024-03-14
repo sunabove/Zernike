@@ -302,6 +302,8 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
 
     pct_txt = ""
 
+    prev_pct = pct = (idx + 1)/tot_cnt
+
     for K in Ks :
         resolution = int( 1000*K )
 
@@ -310,10 +312,15 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
         for [ p, q ] in pq_list :
             pct = (idx + 1)/tot_cnt
 
-            if not debug and not is_jupyter() :
+            if not debug and is_jupyter() and (pct - prev_pct) > 1 :
+                pct_txt = f"{pct:3.0%}, "
+                print( pct_txt, end="", flush=1 )
+            elif not debug and not is_jupyter() :
                 pct_txt = f"{pct:3.2%}"
                 print( pct_txt, end="", flush=1 )
             pass
+
+            prev_pct = pct
 
             v_pq = _vpq_load_from_cache( p, q, resolution, circle_type, device, cache, pct=pct, debug=debug)
 
@@ -330,8 +337,10 @@ def load_vpq_cache( P, Ks, circle_type, cache, device=None, debug=0) :
             pass
 
             idx += 1
-        pass
+        pass # p, q
     pass # K
+    
+    print()
 
     elapsed = time.time() - then
 
