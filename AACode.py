@@ -111,3 +111,15 @@ print( "Path( __file__ ).name = ", Path( __file__ ).name)
 torch.set_warn_always( False )
 import warnings
 warnings.filterwarnings( "ignore" )
+
+# 히트맵 그리기
+import matplotlib.pyplot as plt
+import numpy as np
+
+arr = np.random.standard_normal((30, 40))
+
+plt.matshow(arr)
+#plt.imshow(arr)
+plt.colorbar(shrink=0.8, aspect=10) 
+
+plt.show()
