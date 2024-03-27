@@ -1,6 +1,4 @@
 from AZernike import *
-from tqdm import tqdm
-import time
 
 def test_radial_polynomail_validation() :
     debug = 0
