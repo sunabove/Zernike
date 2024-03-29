@@ -12,6 +12,7 @@ def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) :
 
     tot_idx = len( use_gpus )*len( Ks )*len( get_pq_list(P) )*len( get_pq_list(P) )
     cur_idx = 0 
+    pct = 0
 
     for use_gpu in use_gpus : 
 
@@ -22,8 +23,10 @@ def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) :
         print( f"device = {device_name}" )
 
         for idx, K in enumerate( Ks )  :
-            fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8.1*col_cnt, 5*row_cnt), tight_layout=1 )
+            fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 8*row_cnt), tight_layout=1 )
             charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
+            chart_idx = 0
+            chart = charts[ chart_idx ]
     
             resolution = int( 1_000*K )
 
@@ -41,10 +44,10 @@ def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) :
             pq_list = get_pq_list( P )
             nm_list = get_pq_list( P )
 
-            array = torch.tensor( ( len(pq_list), len(nm_list)), dtype=torch.float64, device=device )
+            array = torch.zeros( ( len(pq_list), len(nm_list) ), dtype=torch.float64, device=device )
 
-            for p, q in pq_list :
-                for n, m in nm_list :
+            for i, [p, q] in enumerate( pq_list ) :
+                for k, [n, m] in enumerate( nm_list ) :
                     pct = int( (100.0*cur_idx)/tot_idx ); cur_idx += 1
             
                     v_pl = Vpq( p, q, grid, device=device, debug=debug )
@@ -57,14 +60,16 @@ def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) :
                     expect = [ 0, 1 ][ p == n and q == m ]
                     error = abs( expect - sum )
 
+                    array[i,k] = sum
+
                     if True : # memory clear
                         del v_pl, v_ql, sum_arr, sum_integration
                         v_pl = v_ql = sum_arr = sum_integration = None
                     pass
 
-                    if debug : print( f"[{pct:3.1}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.6f}", flush=1 )
+                    if debug : print( f"[{pct:3}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.6f}", flush=1 )
                 pass
-            pass # pq
+            pass # pq, nm
 
             elapsed = time.time() - then
 
@@ -73,57 +78,31 @@ def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) :
                 
             if 1 or debug : 
                 run_time_human = f"{timedelta(seconds=elapsed)}".split('.')[0]
-                print( f"[ {pct:3d} % ] Error avg. = {error_avg:_.10f}, Elapsed time = {elapsed:_.4f}, {run_time_human}" )
+                print( f"[ {pct:3d} % ] Elapsed time = {elapsed:_.4f}, {run_time_human}" )
                 #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
             pass
 
-            chart_idx = 0
-            chart = charts[ chart_idx ]
+            #chart.matshow( array.cpu() )
+            chart.imshow( array.cpu() )
+            #plt.imshow( arr )
+            #chart.colorbar(shrink=0.8, aspect=10) 
 
-            Ks = Ks.clone().detach()
-            error_avgs = torch.log10( torch.tensor( error_avgs ) )
-            elapsed_list = torch.log10( torch.tensor( elapsed_list ) )
+            dev_info = "GPU" if use_gpu else "CPU"
+            title = f"Zerinike Function Orthogonality ({dev_info}, {K}K, {P}P)"
 
-            if idx == 0 :
-                min_y = torch.min( error_avgs)
-                max_y = torch.max( error_avgs)
-            else : 
-                min_y = min( min_y, torch.min( error_avgs) )
-                max_y = max( max_y, torch.max( error_avgs) )
-            pass
+            chart.set_title( title )
 
-            marker = markers[ idx%len( markers ) ]
-            linestyle = "solid" if use_gpu else "dashed"
-            label = f"{dn}:(${P}P$)"
+            plt.show()
 
-            chart.plot( Ks, error_avgs, marker=marker, linestyle=linestyle, label=label )
-            #chart.plot( Ks, elapsed_list, marker=".", label="Elapsed Time (Sec.)" )
+            src_dir = os.path.dirname( os.path.abspath(__file__) )
+            file_stem = Path( __file__ ).stem.lower()
+            result_figure_file = f"{src_dir}/result/{file_stem}_func_orth_{dev_info}_{K}K_{P}P.png"
+            plt.savefig( result_figure_file )
+            print( f"\nresult_figure_file = {result_figure_file}" )
 
-            chart.set_title( f"Zerinike Function Orthogonality Error Average" )
-            chart.set_xlabel( "Grid Tick Count" )
-            chart.set_ylabel( "Error Average : $log_{10}(y)$" )
-            chart.set_xticks( Ks ) 
-            chart.set_xticklabels( [ f"{int(x)}$K$" for x in Ks ] )
-            chart.grid( axis='x', linestyle="dotted" )
-            chart.grid( axis='y', linestyle="dotted" )
-            chart.legend( fontsize=fs-2 ) 
         pass # P
     pass # use_gpus
 
-    if 1 : 
-        min_y = math.floor( min_y )
-        max_y = math.ceil( max_y )
-
-        chart.set_ylim( min_y, max_y )
-    pass
-
-    src_dir = os.path.dirname( os.path.abspath(__file__) )
-    file_stem = Path( __file__ ).stem
-    result_figure_file = f"{src_dir}/result/{file_stem.lower}_func_orth.png"
-    plt.savefig( result_figure_file )
-    print( f"\nresult_figure_file = {result_figure_file}" ) 
-
-    plt.show()
 pass # test_zernike_function_orthogonality
 
 if __name__ == "__main__" :
