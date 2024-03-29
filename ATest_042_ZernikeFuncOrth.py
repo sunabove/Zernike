@@ -26,25 +26,25 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
 
         print( f"device = {device_name}" )
 
-        for idx, P in enumerate( Ps )  :
+        for idx, K in enumerate( Ks )  :
             error_avgs = []
             elapsed_list = []
 
-            for K in Ks :
-                pct = int( (100.0*cur_idx)/tot_idx ) 
+            resolution = int( 1_000*K )
 
-                resolution = int( 1_000*K )
+            grid = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
+
+            dx = grid.dx
+            dy = grid.dy
+
+            for P in Ps :
+                pct = int( (100.0*cur_idx)/tot_idx ) 
 
                 if 1 or debug : 
                     print( f"[ {pct:3d} % ] {device_name}, P = {P}, K = {K}, Resolution = {resolution:_}" , flush=1 )
                 pass
                 
-                then = time.time() 
-
-                grid = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
-
-                dx = grid.dx
-                dy = grid.dy
+                then = time.time()
                 
                 error_sum = 0
                 error_cnt = 0

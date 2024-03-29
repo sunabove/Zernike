@@ -136,40 +136,36 @@ def validte_radial_polynomial_ortho( T, Ks, debug=0 ) :
 
             hash= {}
 
-            for p in range( 0, T + 1 ) :
-                for q in range( 0, p + 1 ) :
-                    for n in range( 0, T + 1 ) :
-                        for m in range( 0, n + 1 ) :
-                            if abs(q) > p or abs(m) > n:
-                                continue
-                            elif ( p - abs(q) )%2 == 1 :
-                                continue
-                            elif ( n - abs(m) )%2 == 1 :
-                                continue
-                            pass
+            for p, q in get_pq_list( T ) :
+                for n, m in get_pq_list( T ) :
+                    if abs(q) > p or abs(m) > n:
+                        continue
+                    elif ( p - abs(q) )%2 == 1 :
+                        continue
+                    elif ( n - abs(m) )%2 == 1 :
+                        continue
+                    pass
 
-                            r_pq = Rpq( p, q, rho, device=device, debug=0 )
-                            r_nm = Rpq( n, m, rho, device=device, debug=0 )
-                            
-                            sum = torch.sum( r_pq*r_nm*rho )*( ds*2*(p + 1) )
+                    r_pq = Rpq( p, q, rho, device=device, debug=0 )
+                    r_nm = Rpq( n, m, rho, device=device, debug=0 )
+                    
+                    sum = torch.sum( r_pq*r_nm*rho )*( ds*2*(p + 1) )
 
-                            expect = [0, 1][ p == q and n == m ]
+                    expect = [0, 1][ p == q and n == m ]
 
-                            error = torch.abs( expect - sum )
+                    error = torch.abs( expect - sum )
 
-                            if math.isnan( error ) : 
-                                print( f"{__file__} : Nan is encountred." )
-                                True
-                            else :
-                                error_sum += error
-                                error_cnt += torch.numel( r_pq )
-                            pass
-                            
-                            if 0*debug :
-                                if expect == 1 : print( line )
-                                print( f"[{resolution:04d}] R[{p:02d}][{q:02d}] , [{n:02d}][{n:02d}] : exptect = {expect}, sum = {sum}, error = {error}", flush=1 )
-                            pass
-                        pass
+                    if math.isnan( error ) : 
+                        print( f"{__file__} : Nan is encountred." )
+                        True
+                    else :
+                        error_sum += error
+                        error_cnt += torch.numel( r_pq )
+                    pass
+                    
+                    if 0*debug :
+                        if expect == 1 : print( line )
+                        print( f"[{resolution:04d}] R[{p:02d}][{q:02d}] , [{n:02d}][{n:02d}] : exptect = {expect}, sum = {sum}, error = {error}", flush=1 )
                     pass
                 pass
             pass
@@ -310,37 +306,33 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
                 error_cnt = 0
                 pq_cnt = 0 
 
-                for p in range( 0, P + 1 ) :
-                    for q in range( -p, p + 1, 2 ) :
-                        for n in range( 0, P + 1 ) :
-                            for m in range( -n, n + 1, 2 ) : 
-                                v_pl = Vpq( p, q, grid, device=device, debug=debug )
-                                v_ql = Vpq( n, m, grid, device=device, debug=debug )
+                for p, q in get_pq_list( P ) : 
+                    for n, m in get_pq_list( P ) :
+                        v_pl = Vpq( p, q, grid, device=device, debug=debug )
+                        v_ql = Vpq( n, m, grid, device=device, debug=debug )
 
-                                sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
-                                sum_integration = sum_arr*dx*dy*(p +1)/pi
-                                sum = torch.absolute( sum_integration )
+                        sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
+                        sum_integration = sum_arr*dx*dy*(p +1)/pi
+                        sum = torch.absolute( sum_integration )
 
-                                expect = [ 0, 1 ][ p == n and q == m ]
-                                error = abs( expect - sum )
-                                error_sum += error
+                        expect = [ 0, 1 ][ p == n and q == m ]
+                        error = abs( expect - sum )
+                        error_sum += error
 
-                                result = error < 1e-4
+                        result = error < 1e-4
 
-                                if not result :
-                                    error_cnt += 1
-                                pass
-
-                                if True : # memory clear
-                                    del v_pl, v_ql, sum_arr, sum_integration
-                                    v_pl = v_ql = sum_arr = sum_integration = None
-                                pass
-
-                                if debug : print( f"[{pq_cnt:04d}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.6f} result = {result}", flush=1 )
-
-                                pq_cnt += 1
-                            pass
+                        if not result :
+                            error_cnt += 1
                         pass
+
+                        if True : # memory clear
+                            del v_pl, v_ql, sum_arr, sum_integration
+                            v_pl = v_ql = sum_arr = sum_integration = None
+                        pass
+
+                        if debug : print( f"[{pq_cnt:04d}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.6f} result = {result}", flush=1 )
+
+                        pq_cnt += 1
                     pass
                 pass # pq
 
@@ -412,7 +404,7 @@ pass # test_zernike_function_orthogonality
 if __name__ == "__main__" :
     if 0 : 
         T = 10 # 40 6 #10 # 20
-        validte_radial_function_ortho( T, debug=1 )
+        test_radial_polynomail_validation( T, debug=1 )
     elif 1 :
         T = 5 #20 #4 #5 #10 # 20 
         Ks = torch.arange( 0.5, 5.5, 0.5 )
