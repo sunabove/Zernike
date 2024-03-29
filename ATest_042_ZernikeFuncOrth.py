@@ -23,7 +23,7 @@ def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) :
         print( f"device = {device_name}" )
 
         for idx, K in enumerate( Ks )  :
-            fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 8*row_cnt), tight_layout=1 )
+            fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 7*row_cnt), tight_layout=1 )
             charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
             chart_idx = 0
             chart = charts[ chart_idx ]
@@ -82,10 +82,10 @@ def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) :
                 #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
             pass
 
-            #chart.matshow( array.cpu() )
-            chart.imshow( array.cpu() )
+            im = chart.matshow( array.cpu() )
+            #chart.imshow( array.cpu() )
             #plt.imshow( arr )
-            #chart.colorbar(shrink=0.8, aspect=10) 
+            plt.colorbar(im, shrink=0.9, aspect=10, ax=chart)
 
             dev_info = "GPU" if use_gpu else "CPU"
             title = f"Zerinike Function Orthogonality ({dev_info}, {K}K, {P}P)"
