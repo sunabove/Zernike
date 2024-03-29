@@ -20,8 +20,6 @@ def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) :
         device = torch.device( f"cuda:{device_no}" ) if use_gpu else torch.device( f"cpu" )
         dn = device_name = "GPU" if use_gpu else "CPU"
 
-        print( f"device = {device_name}" )
-
         for idx, K in enumerate( Ks )  :
             fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8*col_cnt, 7*row_cnt), tight_layout=1 )
             charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
@@ -85,12 +83,14 @@ def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) :
             im = chart.matshow( array.cpu() )
             #chart.imshow( array.cpu() )
             #plt.imshow( arr )
-            plt.colorbar(im, shrink=0.9, aspect=10, ax=chart)
+            plt.colorbar(im, shrink=0.93, aspect=10, ax=chart)
 
             dev_info = "GPU" if use_gpu else "CPU"
             title = f"Zerinike Function Orthogonality ({dev_info}, {K}K, {P}P)"
 
             chart.set_title( title )
+            chart.grid( axis='x', linestyle="dotted" )
+            chart.grid( axis='y', linestyle="dotted" )
 
             plt.show()
 
