@@ -44,7 +44,7 @@ def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) :
 
             array = torch.zeros( ( len(pq_list), len(nm_list) ), dtype=torch.float64, device=device )
 
-            for i, [p, q] in enumerate( pq_list ) :
+            for i, [p, q] in enumerate( tqdm( pq_list, desc="PQ" ) ) :
                 for k, [n, m] in enumerate( nm_list ) :
                     pct = int( (100.0*cur_idx)/tot_idx ); cur_idx += 1
             
@@ -80,17 +80,44 @@ def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) :
                 #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
             pass
 
-            im = chart.matshow( array.cpu() )
-            #chart.imshow( array.cpu() )
-            #plt.imshow( arr )
+            #im = chart.matshow( array.cpu(), cmap=plt.cm.Spectral_r, interpolation='none' )
+            #im = chart.matshow( array.cpu(), interpolation='none' )
+            #cmap = "rainbow"
+            cmap = "terrain"
+            cmap = "rainbow"
+            cmap = "Paired"
+            
+            im = chart.matshow( array.cpu(), cmap=cmap, interpolation='none' )
             plt.colorbar(im, shrink=0.93, aspect=10, ax=chart)
 
             dev_info = "GPU" if use_gpu else "CPU"
             title = f"Zerinike Function Orthogonality ({dev_info}, {K}K, {P}P)"
 
+            xticks = yticks = []
+            xtick_labels = ytick_labels = []
+
+            pre_p = -1
+            for i, [p, q] in enumerate( pq_list ) :
+                if i == 1 :
+                    pass
+                elif pre_p != p :
+                    xticks.append( i )
+                    xtick_labels.append( f"{p}" )
+                elif i == len( pq_list ) - 1 :
+                    xticks.append( i )
+                    xtick_labels.append( f"{p + 1}" )
+                pass
+
+                pre_p = p
+            pass
+
             chart.set_title( title )
             chart.grid( axis='x', linestyle="dotted" )
             chart.grid( axis='y', linestyle="dotted" )
+            chart.set_xticks( xticks )
+            chart.set_xticklabels( xtick_labels, fontsize=fs-2 )
+            chart.set_yticks( yticks )
+            chart.set_yticklabels( ytick_labels, fontsize=fs-2 )
 
             plt.show()
 
