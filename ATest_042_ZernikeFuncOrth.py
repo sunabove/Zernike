@@ -1,21 +1,16 @@
 from AZernike import *
 
-def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) : 
+def test_zernike_function_ortho( Ks, P, use_gpus=[0], debug = 0 ) : 
     print()
 
     fs = fontsize = 16
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.size"] = fontsize
-
     row_cnt = 1; col_cnt = 1
-    fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8.1*col_cnt, 5*row_cnt), tight_layout=1 )
-    charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
+
     markers = [ "o", "s", "p", "*", "D", "^", "X", "2", "p", "h", "+" ]
 
-    min_y = None
-    max_y = None
-
-    tot_idx = len( use_gpus )*len( Ps )*len( Ks )
+    tot_idx = len( use_gpus )*len( Ks )*len( get_pq_list(P) )*len( get_pq_list(P) )
     cur_idx = 0 
 
     for use_gpu in use_gpus : 
@@ -27,9 +22,9 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
         print( f"device = {device_name}" )
 
         for idx, K in enumerate( Ks )  :
-            error_avgs = []
-            elapsed_list = []
-
+            fig, charts = plt.subplots( row_cnt, col_cnt, figsize=( 8.1*col_cnt, 5*row_cnt), tight_layout=1 )
+            charts = charts.flatten() if row_cnt*col_cnt > 1 else [charts]
+    
             resolution = int( 1_000*K )
 
             grid = rho_theta( resolution, circle_type="inner", device=device, debug=debug )
@@ -37,64 +32,50 @@ def test_zernike_function_ortho( Ps, Ks, use_gpus=[0], debug = 0 ) :
             dx = grid.dx
             dy = grid.dy
 
-            for P in Ps :
-                pct = int( (100.0*cur_idx)/tot_idx ) 
+            if 1 or debug : 
+                print( f"[ {pct:3d} % ] {device_name}, P = {P}, K = {K}, Resolution = {resolution:_}" , flush=1 )
+            pass
+            
+            then = time.time()
+            
+            pq_list = get_pq_list( P )
+            nm_list = get_pq_list( P )
 
-                if 1 or debug : 
-                    print( f"[ {pct:3d} % ] {device_name}, P = {P}, K = {K}, Resolution = {resolution:_}" , flush=1 )
-                pass
-                
-                then = time.time()
-                
-                error_sum = 0
-                error_cnt = 0
-                pq_cnt = 0 
+            array = torch.tensor( ( len(pq_list), len(nm_list)), dtype=torch.float64, device=device )
 
-                for p, q in get_pq_list( P ) :
-                    for n, m in get_pq_list( P ) :
-                        v_pl = Vpq( p, q, grid, device=device, debug=debug )
-                        v_ql = Vpq( n, m, grid, device=device, debug=debug )
+            for p, q in pq_list :
+                for n, m in nm_list :
+                    pct = int( (100.0*cur_idx)/tot_idx ); cur_idx += 1
+            
+                    v_pl = Vpq( p, q, grid, device=device, debug=debug )
+                    v_ql = Vpq( n, m, grid, device=device, debug=debug )
 
-                        sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
-                        sum_integration = sum_arr*dx*dy*(p +1)/pi
-                        sum = torch.absolute( sum_integration )
+                    sum_arr = torch.sum( torch.conj(v_pl)*v_ql )
+                    sum_integration = sum_arr*dx*dy*(p +1)/pi
+                    sum = torch.absolute( sum_integration )
 
-                        expect = [ 0, 1 ][ p == n and q == m ]
-                        error = abs( expect - sum )
-                        error_sum += error
+                    expect = [ 0, 1 ][ p == n and q == m ]
+                    error = abs( expect - sum )
 
-                        result = error < 1e-4
-
-                        if not result :
-                            error_cnt += 1
-                        pass
-
-                        if True : # memory clear
-                            del v_pl, v_ql, sum_arr, sum_integration
-                            v_pl = v_ql = sum_arr = sum_integration = None
-                        pass
-
-                        if debug : print( f"[{pq_cnt:04d}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.6f} result = {result}", flush=1 )
-
-                        pq_cnt += 1
+                    if True : # memory clear
+                        del v_pl, v_ql, sum_arr, sum_integration
+                        v_pl = v_ql = sum_arr = sum_integration = None
                     pass
-                pass # pq
 
-                error_avg = error_sum/pq_cnt
-                error_avgs.append( error_avg )
-                
-                elapsed = time.time() - then
-                elapsed_list.append( elapsed )
-
-                cur_idx += 1
-                pct = int( (100.0*cur_idx)/tot_idx )
-                    
-                if 1 or debug : 
-                    run_time_human = f"{timedelta(seconds=elapsed)}".split('.')[0]
-                    print( f"[ {pct:3d} % ] Error avg. = {error_avg:_.10f}, Elapsed time = {elapsed:_.4f}, {run_time_human}" )
-                    #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
+                    if debug : print( f"[{pct:3.1}] : V*pl({p}, {q:2d})*Vpl({n}, {m:2d}) = {sum:.4f}, exptect = {expect}, error={error:.6f}", flush=1 )
                 pass
-            pass # K
+            pass # pq
+
+            elapsed = time.time() - then
+
+            cur_idx += 1
+            pct = int( (100.0*cur_idx)/tot_idx )
+                
+            if 1 or debug : 
+                run_time_human = f"{timedelta(seconds=elapsed)}".split('.')[0]
+                print( f"[ {pct:3d} % ] Error avg. = {error_avg:_.10f}, Elapsed time = {elapsed:_.4f}, {run_time_human}" )
+                #print( f"Success = {success_ratio*100:.2f}%, Fail count = {fail_cnt}, Good count = {good_cnt}", flush="True" )
+            pass
 
             chart_idx = 0
             chart = charts[ chart_idx ]
